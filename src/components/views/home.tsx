@@ -106,14 +106,18 @@ export function HomePage() {
                 <div
                   className="absolute inset-4 rounded-full border-2 border-dashed border-primary/20 animate-[spin_20s_linear_infinite]"
                 />
-                {/* Main image */}
-                <img
-                  src="/hero-illustration-v2.png"
-                  alt="Amar Earning illustration"
-                  className="relative w-full h-full object-contain animate-float drop-shadow-2xl"
-                />
+                {/* Main image - curved/rounded */}
+                <div className="absolute inset-6 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/10">
+                  <img
+                    src="/hero-illustration-v2.png"
+                    alt="Amar Earning illustration"
+                    className="relative w-full h-full object-cover animate-float"
+                  />
+                  {/* Gradient overlay for smooth blend */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent pointer-events-none" />
+                </div>
                 {/* Floating stat card - top right */}
-                <div className="absolute -top-2 -right-2 lg:-right-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float" style={{ animationDelay: "0.5s" }}>
+                <div className="absolute -top-2 -right-2 lg:-right-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float z-10" style={{ animationDelay: "0.5s" }}>
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-green-500/15 flex items-center justify-center">
                       <Wallet className="h-4 w-4 text-green-600" />
@@ -125,7 +129,7 @@ export function HomePage() {
                   </div>
                 </div>
                 {/* Floating stat card - bottom left */}
-                <div className="absolute -bottom-2 -left-2 lg:-left-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float" style={{ animationDelay: "1s" }}>
+                <div className="absolute -bottom-2 -left-2 lg:-left-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float z-10" style={{ animationDelay: "1s" }}>
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
                       <Users className="h-4 w-4 text-primary" />
@@ -137,7 +141,7 @@ export function HomePage() {
                   </div>
                 </div>
                 {/* Floating coin badge - top left */}
-                <div className="absolute top-8 -left-4 bg-amber-500/90 backdrop-blur-md text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center animate-float" style={{ animationDelay: "1.5s" }}>
+                <div className="absolute top-8 -left-4 bg-amber-500/90 backdrop-blur-md text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center animate-float z-10" style={{ animationDelay: "1.5s" }}>
                   <span className="text-lg font-bold">৳</span>
                 </div>
               </div>
