@@ -67,8 +67,10 @@ import {
   Globe,
   Star,
   StarOff,
+  Flag,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
+import { AdminCharts } from "@/components/shared/admin-charts";
 
 /* =========================================================================
  * Types
@@ -210,6 +212,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-submissions", labelBn: "সাবমিশন", labelEn: "Submissions", icon: ClipboardList },
   { route: "admin-withdrawals", labelBn: "উইথড্র", labelEn: "Withdrawals", icon: Banknote },
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
+  { route: "admin-reports", labelBn: "রিপোর্ট", labelEn: "Reports", icon: Flag },
   { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
   { route: "admin-settings", labelBn: "সেটিংস", labelEn: "Settings", icon: SettingsIcon },
 ];
@@ -456,6 +459,11 @@ function DashboardView() {
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Admin charts */}
+      <div className="mt-4">
+        <AdminCharts />
       </div>
     </div>
   );
@@ -2124,6 +2132,137 @@ function AnnounceView() {
 }
 
 /* =========================================================================
+ * ReportsView - manage user job reports
+ * =======================================================================*/
+function ReportsView() {
+  const lang = useLang();
+  const t = useI18n().t;
+  const [reports, setReports] = useState<Array<{
+    id: string;
+    reason: string;
+    detail: string | null;
+    status: string;
+    createdAt: string;
+    job: { id: string; title: string; status: string };
+    reporter: { name: string; username: string };
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("PENDING");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/reports?status=${filter}`, { cache: "no-store" });
+      const data = await res.json();
+      setReports(data.reports || []);
+    } catch {
+      toast.error(L(lang, "লোড ব্যর্থ", "Failed to load"));
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, lang]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const act = async (id: string, action: "review" | "dismiss") => {
+    try {
+      const res = await fetch("/api/admin/reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: id, action }),
+      });
+      if (res.ok) {
+        toast.success(L(lang, "সফল", "Done"));
+        load();
+      }
+    } catch {
+      toast.error("Error");
+    }
+  };
+
+  const reasonLabels: Record<string, { bn: string; en: string }> = {
+    spam: { bn: "স্প্যাম", en: "Spam" },
+    inappropriate: { bn: "অনুপ্রযোজ্য", en: "Inappropriate" },
+    scam: { bn: "প্রতারণা", en: "Scam" },
+    duplicate: { bn: "ডুপ্লিকেট", en: "Duplicate" },
+    other: { bn: "অন্যান্য", en: "Other" },
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title={L(lang, "রিপোর্ট", "Reports")}
+        description={L(lang, "ইউজারদের রিপোর্ট করা কাজ", "User-reported jobs")}
+      />
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4">
+        {["PENDING", "REVIEWED", "DISMISSED"].map((s) => (
+          <Button
+            key={s}
+            size="sm"
+            variant={filter === s ? "default" : "outline"}
+            onClick={() => setFilter(s)}
+          >
+            {s === "PENDING" ? L(lang, "অপেক্ষমাণ", "Pending") :
+             s === "REVIEWED" ? L(lang, "রিভিউ হয়েছে", "Reviewed") :
+             L(lang, "বাতিল", "Dismissed")}
+          </Button>
+        ))}
+      </div>
+
+      {loading ? (
+        <LoadingState text={L(lang, "লোড হচ্ছে...", "Loading...")} />
+      ) : reports.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          {L(lang, "কোনো রিপোর্ট নেই", "No reports")}
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {reports.map((r) => (
+            <Card key={r.id} className="p-4">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm truncate">{r.job.title}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {L(lang, "রিপোর্টকারী", "Reporter")}: {r.reporter.name} (@{r.reporter.username})
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-amber-600 border-amber-500/30 shrink-0">
+                  {reasonLabels[r.reason] ? L(lang, reasonLabels[r.reason].bn, reasonLabels[r.reason].en) : r.reason}
+                </Badge>
+              </div>
+              {r.detail && (
+                <p className="text-xs text-muted-foreground mb-2 p-2 rounded-lg bg-muted/30">
+                  {r.detail}
+                </p>
+              )}
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-muted-foreground">{formatDateTime(r.createdAt, lang)}</p>
+                {r.status === "PENDING" && (
+                  <div className="flex gap-2">
+                    <Button size="sm" className="h-7 text-xs" onClick={() => act(r.id, "review")}>
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      {L(lang, "রিভিউ", "Review")}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs text-destructive" onClick={() => act(r.id, "dismiss")}>
+                      <XCircle className="h-3 w-3 mr-1" />
+                      {L(lang, "বাতিল", "Dismiss")}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
  * Main AdminPage
  * =======================================================================*/
 
@@ -2156,6 +2295,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <WithdrawalsView />;
       case "admin-categories":
         return <CategoriesView />;
+      case "admin-reports":
+        return <ReportsView />;
       case "admin-announce":
         return <AnnounceView />;
       case "admin-settings":

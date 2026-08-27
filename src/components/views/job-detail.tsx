@@ -14,6 +14,7 @@ import { CategoryIcon } from "@/components/shared/category-icon";
 import { JobStatsCard } from "@/components/shared/job-stats-card";
 import { OwnerReputation } from "@/components/shared/owner-reputation";
 import { ShareButton } from "@/components/shared/share-button";
+import { ReportButton } from "@/components/shared/report-button";
 import { LoadingState } from "@/components/shared/states";
 import { useRecentJobs } from "@/lib/use-recent-jobs";
 import { toast } from "sonner";
@@ -175,7 +176,10 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
           <ArrowLeft className="h-4 w-4" />
           {t.common.back}
         </button>
-        <ShareButton jobId={job.id} />
+        <div className="flex items-center gap-1">
+          <ShareButton jobId={job.id} />
+          {!isOwner && <ReportButton jobId={job.id} />}
+        </div>
       </div>
 
       {/* Header */}

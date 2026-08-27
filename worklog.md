@@ -642,3 +642,65 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add a "verified" badge system for employers (admin-controlled, distinct from auto-verified).
 9. Add a job reporting/flagging system (users can report inappropriate jobs).
 10. Add a dark mode illustration variant for the hero.
+
+---
+Task ID: cron-review-8
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, job completion certificate, admin charts, job reporting system
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features work. No build failures or runtime errors. This round focused on user achievement (certificate), admin analytics (charts), and community moderation (job reporting).
+
+## Completed Modifications / New Features
+
+### 1. Job Completion Certificate (Achievement Feature)
+- **New API** `/api/certificate?submissionId=`: returns certificate data (recipient, job title, category, reward, owner, completed/issued dates, unique certificate ID) for approved submissions. Only the submission owner can access it.
+- **New component** `src/components/shared/certificate-button.tsx`: dialog with a beautifully designed certificate preview (gradient border, Award icon, verified badge, all certificate fields) + "Download Certificate" button that generates a printable HTML certificate (opens in new window with print dialog).
+- Integrated into MySubmissionsPage — certificate button appears only on APPROVED submissions.
+- Verified: dialog shows "কাজ সমাপ্তি সার্টিফিকেট" with Demo Worker, Facebook Page Follow job, verified badge, and download button.
+
+### 2. Admin Dashboard Charts (Analytics Feature)
+- **New API** `/api/admin/charts`: returns 30-day time series data (submissions, earnings, spending, new users per day) + submission status breakdown (pending/approved/rejected).
+- **New component** `src/components/shared/admin-charts.tsx`: interactive card with 3 switchable chart tabs (Submissions/Earnings/New Users), each showing a 30-day bar chart with hover tooltips + summary totals. Includes a submission status breakdown section with colored progress bars (yellow/green/red).
+- Integrated into admin DashboardView below the stat cards.
+- Verified: admin dashboard shows "৩০ দিনের পরিসংখ্যান" chart with submission counts and status breakdown.
+
+### 3. Job Reporting/Flagging System (Moderation Feature)
+- **DB schema change**: added `JobReport` model (id, jobId, reporterId, reason, detail, status, createdAt, reviewedAt) with `@@unique([jobId, reporterId])` to prevent duplicate reports. Added `reports` relations to User and Job models. Ran `db:push` + regenerated Prisma client + restarted dev server.
+- **New API** `/api/reports`: POST (create report with reason + detail, notifies admins, prevents self-reporting) + PUT (check if user already reported a job).
+- **New admin API** `/api/admin/reports`: GET (list reports with filters) + PATCH (review/dismiss reports, logs to admin_logs).
+- **New component** `src/components/shared/report-button.tsx`: dialog with reason dropdown (spam/inappropriate/scam/duplicate/other), optional detail textarea, submit button. Shows "already reported" state.
+- Integrated into JobDetailPage (appears for non-owner users next to the share button).
+- **New admin view** `ReportsView` in admin-page.tsx: filterable list (pending/reviewed/dismissed) of reported jobs with reporter info, reason badge, detail, and review/dismiss actions.
+- **New route** `#/admin/reports` + nav item "রিপোর্ট" with Flag icon.
+- Verified: worker reported Telegram job → admin reports page shows it with reason "স্প্যাম", detail, and review/dismiss buttons.
+
+### 4. i18n Expansion
+- Added 4 new translation sections to both bn/en: `certificate` (14 keys), `report` (8 keys + reasons), `adminReports` (8 keys), `adminCharts` (9 keys).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors (restarted after DB schema change) ✓
+- agent-browser verified:
+  - Certificate: dialog renders on approved submission with all fields + download button ✓
+  - Admin charts: 30-day bar chart with 3 tabs + status breakdown renders on admin dashboard ✓
+  - Report button: appears on job detail, dialog with reason dropdown works ✓
+  - Admin reports: reported job appears in admin reports view with review/dismiss ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- The certificate download opens a new window with print dialog; requires popup permissions in the browser.
+- Admin charts show 30-day data; demo data is limited so bars are small but functional.
+- The report button click via agent-browser had a stale session in testing, but the API confirmed the report was created successfully.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add user follow system (follow top earners/employers).
+4. Add a public jobs feed RSS/JSON endpoint for external integration.
+5. Add a "verified" badge system for employers (admin-controlled, distinct from auto-verified).
+6. Add a dark mode illustration variant for the hero.
+7. Add a dashboard achievements progress tracker (show progress to next badge).
+8. Add job categories with custom icons upload (admin).
+9. Add a withdrawal calendar showing expected payment dates.
+10. Add a job difficulty rating system (workers rate job difficulty after completion).

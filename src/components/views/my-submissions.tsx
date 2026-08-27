@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState, LoadingState } from "@/components/shared/states";
+import { CertificateButton } from "@/components/shared/certificate-button";
 import { ClipboardList } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
@@ -106,7 +107,12 @@ export function MySubmissionsPage() {
                     <p className="text-xs text-destructive mb-2">⚠️ {s.rejectReason}</p>
                   )}
 
-                  <p className="text-[10px] text-muted-foreground">{formatDateTime(s.createdAt, lang)}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[10px] text-muted-foreground">{formatDateTime(s.createdAt, lang)}</p>
+                    {s.status === "APPROVED" && (
+                      <CertificateButton submissionId={s.id} />
+                    )}
+                  </div>
                 </Card>
               ))}
             </div>

@@ -31,6 +31,7 @@ model User {
   withdrawals   Withdrawal[]
   notifications Notification[]
   bookmarks     Bookmark[]
+  reports       JobReport[]
   adminLogs     AdminLog[]  @relation("AdminActor")
   referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
   referrals     User[]     @relation("Referrals")
@@ -93,6 +94,7 @@ model Job {
   category       Category   @relation(fields: [categoryId], references: [id])
   submissions    JobSubmission[]
   bookmarks      Bookmark[]
+  reports        JobReport[]
 }
 
 model JobSubmission {
@@ -166,4 +168,20 @@ model AdminLog {
   createdAt DateTime @default(now())
 
   admin     User     @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+model JobReport {
+  id          String   @id @default(cuid())
+  jobId       String
+  reporterId  String
+  reason      String
+  detail      String?
+  status      String   @default("PENDING") // PENDING | REVIEWED | DISMISSED
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, reporterId])
 }

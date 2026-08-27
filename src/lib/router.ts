@@ -32,6 +32,7 @@ export type Route =
   | { name: "admin-submissions" }
   | { name: "admin-withdrawals" }
   | { name: "admin-categories" }
+  | { name: "admin-reports" }
   | { name: "admin-settings" }
   | { name: "admin-announce" };
 
@@ -94,6 +95,7 @@ function parseHash(): Route {
       if (parts[1] === "submissions") return { name: "admin-submissions" };
       if (parts[1] === "withdrawals") return { name: "admin-withdrawals" };
       if (parts[1] === "categories") return { name: "admin-categories" };
+      if (parts[1] === "reports") return { name: "admin-reports" };
       if (parts[1] === "settings") return { name: "admin-settings" };
       if (parts[1] === "announce") return { name: "admin-announce" };
       return { name: "admin" };
@@ -130,6 +132,8 @@ export function routeToHash(route: Route): string {
       return "#/admin/withdrawals";
     case "admin-categories":
       return "#/admin/categories";
+    case "admin-reports":
+      return "#/admin/reports";
     case "admin-settings":
       return "#/admin/settings";
     case "admin-announce":
