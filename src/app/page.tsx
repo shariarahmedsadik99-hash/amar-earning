@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect } from "react";
+import { Header } from "@/components/shared/header";
+import { Footer } from "@/components/shared/footer";
+import { BottomNav } from "@/components/shared/bottom-nav";
+import { useRouter } from "@/lib/router";
+import { useAuth } from "@/lib/auth-context";
+import { HomePage } from "@/components/views/home";
+import { HowItWorksPage } from "@/components/views/how-it-works";
+import { LoginPage } from "@/components/views/login";
+import { RegisterPage } from "@/components/views/register";
+import { JobsListPage } from "@/components/views/jobs-list";
+import { JobDetailPage } from "@/components/views/job-detail";
+import { PostJobPage } from "@/components/views/post-job";
+import { DashboardPage } from "@/components/views/dashboard";
+import { MyJobsPage } from "@/components/views/my-jobs";
+import { MySubmissionsPage } from "@/components/views/my-submissions";
+import { WalletPage } from "@/components/views/wallet";
+import { WithdrawPage } from "@/components/views/withdraw";
+import { ProfilePage } from "@/components/views/profile";
+import { NotificationsPage } from "@/components/views/notifications";
+import { AdminPage } from "@/components/admin/admin-page";
+
+export default function Home() {
+  const { route, navigate } = useRouter();
+  const { user, loading } = useAuth();
+
+  // Auth guard for protected routes
+  useEffect(() => {
+    if (loading) return;
+    const protectedRoutes = [
+      "dashboard",
+      "post-job",
+      "my-jobs",
+      "my-submissions",
+      "wallet",
+      "withdraw",
+      "profile",
+      "notifications",
+    ];
+    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-settings"];
+
+    if (!user && (protectedRoutes.includes(route.name) || adminRoutes.includes(route.name))) {
+      navigate({ name: "login" });
+    }
+    if (user && adminRoutes.includes(route.name) && user.role !== "ADMIN") {
+      navigate({ name: "dashboard" });
+    }
+    // Redirect logged-in users away from login/register
+    if (user && (route.name === "login" || route.name === "register")) {
+      navigate({ name: "dashboard" });
+    }
+  }, [route.name, user, loading, navigate]);
+
+  const renderView = () => {
+    switch (route.name) {
+      case "home":
+        return <HomePage />;
+      case "how-it-works":
+        return <HowItWorksPage />;
+      case "login":
+        return <LoginPage />;
+      case "register":
+        return <RegisterPage />;
+      case "jobs":
+        return <JobsListPage />;
+      case "available-jobs":
+        return <JobsListPage />;
+      case "job":
+        return <JobDetailPage jobId={route.id} />;
+      case "post-job":
+        return <PostJobPage />;
+      case "dashboard":
+        return <DashboardPage />;
+      case "my-jobs":
+        return <MyJobsPage />;
+      case "my-submissions":
+        return <MySubmissionsPage />;
+      case "wallet":
+        return <WalletPage />;
+      case "withdraw":
+        return <WithdrawPage />;
+      case "profile":
+        return <ProfilePage />;
+      case "notifications":
+        return <NotificationsPage />;
+      case "admin":
+      case "admin-users":
+      case "admin-jobs":
+      case "admin-submissions":
+      case "admin-withdrawals":
+      case "admin-categories":
+      case "admin-settings":
+        return <AdminPage route={route} />;
+      default:
+        return <HomePage />;
+    }
+  };
+
+  const isAuthPage = route.name === "login" || route.name === "register";
+  const isAdminPage = route.name.startsWith("admin");
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className={`flex-1 ${isAuthPage ? "" : "pb-20 md:pb-0"}`}>
+        {renderView()}
+      </main>
+      {!isAuthPage && !isAdminPage && <Footer />}
+      <BottomNav />
+    </div>
+  );
+}

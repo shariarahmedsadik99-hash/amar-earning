@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  role          String   @default("USER") // USER | ADMIN
+  status        String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  referralCode  String?  @unique
+  referredById  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  wallet        Wallet?
+  jobs          Job[]      @relation("JobOwner")
+  submissions   JobSubmission[]
+  transactions  Transaction[]
+  withdrawals   Withdrawal[]
+  notifications Notification[]
+  adminLogs     AdminLog[]  @relation("AdminActor")
+}
+
+model Wallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  balance       Float    @default(0)
+  totalEarned   Float    @default(0)
+  totalSpent    Float    @default(0)
+  pendingBalance Float   @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  icon      String   @default("Briefcase")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jobs      Job[]
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  instructions   String
+  requiredProof  String
+  reward         Float
+  workerLimit    Int
+  completedCount Int      @default(0)
+  status         String   @default("PENDING") // PENDING | ACTIVE | PAUSED | COMPLETED | REJECTED
+  deadline       DateTime
+  ownerId        String
+  categoryId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  owner          User       @relation("JobOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  category       Category   @relation(fields: [categoryId], references: [id])
+  submissions    JobSubmission[]
+}
+
+model JobSubmission {
+  id           String   @id @default(cuid())
+  jobId        String
+  userId       String
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  textProof    String?
+  imageProof   String?
+  urlProof     String?
+  rejectReason String?
+  createdAt    DateTime @default(now())
+  reviewedAt   DateTime?
+
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // JOB_EARN | JOB_SPEND | WITHDRAWAL | REFUND | DEPOSIT | REFERRAL_BONUS
+  amount      Float    // positive = credit, negative = debit
+  description String
+  balanceAfter Float
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Withdrawal {
+  id            String   @id @default(cuid())
+  userId        String
+  amount        Float
+  method        String   // BKASH | NAGAD | ROCKET
+  accountNumber String
+  status        String   @default("PENDING") // PENDING | APPROVED | REJECTED | PAID
+  rejectReason  String?
+  createdAt     DateTime @default(now())
+  processedAt   DateTime?
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // SUBMISSION_APPROVED | SUBMISSION_REJECTED | WITHDRAWAL_APPROVED | WITHDRAWAL_REJECTED | JOB_COMPLETED | ANNOUNCEMENT
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  target    String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  admin     User     @relation("AdminActor", fields: [adminId], references: [id], onDelete: Cascade)
+}
