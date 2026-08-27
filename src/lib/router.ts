@@ -35,7 +35,9 @@ export type Route =
 function parseHash(): Route {
   if (typeof window === "undefined") return { name: "home" };
   const hash = window.location.hash.replace(/^#\/?/, "");
-  const parts = hash.split("/").filter(Boolean);
+  // Strip query string before splitting on "/"
+  const hashWithoutQuery = hash.split("?")[0];
+  const parts = hashWithoutQuery.split("/").filter(Boolean);
 
   if (parts.length === 0) return { name: "home" };
 

@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Banknote, Loader2, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Banknote, Loader2, Clock, CheckCircle2, XCircle, ShieldCheck, Lightbulb } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type WalletData = { balance: number; pendingBalance: number };
@@ -104,6 +104,39 @@ export function WithdrawPage() {
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">{t.withdraw.minWithdrawal}</p>
           <p className="text-2xl font-bold mt-1">{t.common.currency}{formatMoney(minWithdrawal, lang)}</p>
+        </Card>
+      </div>
+
+      {/* Withdrawal info cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        <Card className="p-4 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">{t.withdrawInfo.processingTime}</p>
+            <p className="text-sm font-bold mt-0.5">{t.withdrawInfo.estimatedDays}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t.withdrawInfo.estimatedDesc}</p>
+          </div>
+        </Card>
+        <Card className="p-4 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-4 w-4 text-green-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">{t.withdrawInfo.fee}</p>
+            <p className="text-sm font-bold mt-0.5 text-green-600">{t.withdrawInfo.free}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t.withdrawInfo.feeDesc}</p>
+          </div>
+        </Card>
+        <Card className="p-4 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Lightbulb className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">{t.withdrawInfo.tips}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{t.withdrawInfo.tipsDesc}</p>
+          </div>
         </Card>
       </div>
 

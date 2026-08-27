@@ -348,6 +348,40 @@ export const translations = {
       within3days: "৩ দিনের মধ্যে",
       expired: "শেষ হয়ে গেছে",
     },
+
+    share: {
+      title: "কাজ শেয়ার করুন",
+      copyLink: "লিংক কপি করুন",
+      copied: "লিংক কপি হয়েছে",
+      shareText: "এই কাজটি দেখুন Amar Earning-এ",
+    },
+
+    ownerReputation: {
+      title: "কাজ প্রদানকারীর তথ্য",
+      jobsPosted: "কাজ পোস্ট করেছেন",
+      totalSpent: "মোট খরচ",
+      memberSince: "সদস্য থেকে",
+      approvalRate: "অনুমোদন হার",
+      verified: "যাচাইকৃত",
+    },
+
+    withdrawInfo: {
+      processingTime: "প্রসেসিং সময়",
+      estimatedDays: "২৪-৪৮ ঘন্টা",
+      estimatedDesc: "সাধারণত ১-৩ কর্মদিবসে প্রসেস হয়",
+      fee: "ফি",
+      free: "ফ্রি",
+      feeDesc: "কোনো লুকানো চার্জ নেই",
+      tips: "টিপস",
+      tipsDesc: "সঠিক অ্যাকাউন্ট নম্বর দিন। ভুল নম্বরে টাকা ফেরত দেওয়া যায় না।",
+    },
+
+    referralLink: {
+      yourLink: "আপনার রেফারেল লিংক",
+      copyLink: "লিংক কপি করুন",
+      copied: "লিংক কপি হয়েছে",
+      shareWithFriends: "বন্ধুদের সাথে শেয়ার করুন",
+    },
   },
 
   en: {
@@ -681,6 +715,40 @@ export const translations = {
       within7days: "Within 7 days",
       within3days: "Within 3 days",
       expired: "Expired",
+    },
+
+    share: {
+      title: "Share Job",
+      copyLink: "Copy Link",
+      copied: "Link copied",
+      shareText: "Check out this job on Amar Earning",
+    },
+
+    ownerReputation: {
+      title: "Job Owner Info",
+      jobsPosted: "Jobs Posted",
+      totalSpent: "Total Spent",
+      memberSince: "Member Since",
+      approvalRate: "Approval Rate",
+      verified: "Verified",
+    },
+
+    withdrawInfo: {
+      processingTime: "Processing Time",
+      estimatedDays: "24-48 hours",
+      estimatedDesc: "Usually processed in 1-3 business days",
+      fee: "Fee",
+      free: "Free",
+      feeDesc: "No hidden charges",
+      tips: "Tips",
+      tipsDesc: "Enter correct account number. Money sent to wrong number cannot be refunded.",
+    },
+
+    referralLink: {
+      yourLink: "Your Referral Link",
+      copyLink: "Copy Link",
+      copied: "Link copied",
+      shareWithFriends: "Share with friends",
     },
   },
 } as const;

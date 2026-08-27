@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { JobStatsCard } from "@/components/shared/job-stats-card";
+import { OwnerReputation } from "@/components/shared/owner-reputation";
+import { ShareButton } from "@/components/shared/share-button";
 import { LoadingState } from "@/components/shared/states";
 import { toast } from "sonner";
 import {
@@ -42,6 +44,7 @@ type JobDetail = {
   status: string;
   deadline: string;
   createdAt: string;
+  ownerId: string;
   category: { id: string; name: string; slug: string; icon: string };
   owner: { name: string; username: string };
   _count: { submissions: number };
@@ -153,13 +156,16 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:py-10">
-      <button
-        onClick={() => navigate({ name: "available-jobs" })}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t.common.back}
-      </button>
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => navigate({ name: "available-jobs" })}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t.common.back}
+        </button>
+        <ShareButton jobId={job.id} />
+      </div>
 
       {/* Header */}
       <Card className="p-5 md:p-6 mb-4">
@@ -249,6 +255,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       {/* Job Statistics */}
       <div className="mb-4">
         <JobStatsCard jobId={job.id} />
+      </div>
+
+      {/* Owner Reputation */}
+      <div className="mb-4">
+        <OwnerReputation ownerId={job.ownerId} />
       </div>
 
       {/* Action */}

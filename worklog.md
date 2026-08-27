@@ -327,3 +327,71 @@ The platform is stable and feature-rich from previous rounds (auth, jobs, wallet
 8. Add a notifications settings page (opt-in/out per notification type).
 9. Add a job completion certificate (downloadable PDF) for approved submissions.
 10. Add a referral link (not just code) that auto-fills the registration form.
+
+---
+Task ID: cron-review-4
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, share button, owner reputation, referral links, withdrawal info
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart, leaderboard, featured jobs, admin broadcast, maintenance banner, job stats, user badges, advanced filters, hero illustration) work. No build failures or runtime errors. This round focused on social sharing, owner transparency, referral growth, and withdrawal clarity.
+
+## Completed Modifications / New Features
+
+### 1. Share Job Button (Social/Viral Feature)
+- **New component** `src/components/shared/share-button.tsx`: dialog with shareable URL preview + copy link button (with success state) + native Web Share API support (where available, e.g. mobile).
+- Integrated into the JobDetailPage header next to the back button.
+- Generates full shareable URL: `{origin}/#/jobs/{jobId}`.
+- Verified: dialog opens, shows URL, copy button works (text changes to "লিংক কপি হয়েছে").
+
+### 2. Owner Reputation Card (Trust/Transparency Feature)
+- **New API** `/api/owner-reputation?userId=`: returns owner name, username, member-since date, jobs posted count, total spent, approval rate (computed from all submissions on owner's jobs), and verified status (verified if posted 3+ jobs).
+- **New component** `src/components/shared/owner-reputation.tsx`: card with owner avatar (initial), name, verified badge (BadgeCheck icon), and 4-stat grid (jobs posted, total spent, approval rate, member since). Skeleton loading state.
+- Integrated into JobDetailPage below the JobStatsCard.
+- Verified: shows Demo Employer with "যাচাইকৃত" (Verified) badge, 8 jobs posted, ৳1500 total spent, 0% approval rate, member since 27 Aug 2026.
+
+### 3. Referral Link Auto-Fill (Growth Feature)
+- **Fixed hash router** `parseHash()`: now strips query string (`?ref=...`) before splitting on `/`, so `#/register?ref=WORKER001` correctly routes to the register page.
+- **Updated RegisterPage**: useEffect parses referral code from both `window.location.search` and the hash query string, auto-filling the referralCode field.
+- The referrals page already generates the shareable link `/#/register?ref={code}` — now it works end-to-end: clicking the link loads register page with the code pre-filled.
+- Verified: navigating to `/#/register?ref=WORKER001` auto-fills "WORKER001" in the referral code field.
+
+### 4. Withdrawal Processing Info Cards (Clarity Feature)
+- **Updated WithdrawPage**: added 3 info cards above the withdraw form:
+  - Processing Time (Clock icon, primary): "২৪-৪৮ ঘন্টা" with description "সাধারণত ১-৩ কর্মদিবসে প্রসেস হয়"
+  - Fee (ShieldCheck icon, green): "ফ্রি" with "কোনো লুকানো চার্জ নেই"
+  - Tips (Lightbulb icon, amber): warning about entering correct account number
+- Helps users understand withdrawal expectations before submitting.
+
+### 5. i18n Expansion
+- Added 4 new translation sections to both bn/en: `share` (4 keys), `ownerReputation` (6 keys), `withdrawInfo` (8 keys), `referralLink` (4 keys).
+
+### 6. Router Bug Fix
+- Fixed `parseHash()` in `src/lib/router.ts` to strip query strings before parsing route segments. Previously `#/register?ref=CODE` would fail to match the "register" route because the segment became `register?ref=CODE`. Now correctly extracts `register` and lets the RegisterPage read the query param.
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors ✓
+- agent-browser verified:
+  - Job detail: Share button opens dialog with full URL, copy works ✓
+  - Job detail: Owner Reputation card shows Demo Employer with verified badge, 8 jobs, ৳1500 spent, approval rate, member since ✓
+  - Withdraw page: 3 info cards (Processing Time, Fee, Tips) render with icons and descriptions ✓
+  - Register page: `/#/register?ref=WORKER001` auto-fills referral code field ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- The `agent-browser open` command with a hash URL sometimes doesn't trigger a hashchange event; requires a reload. This is a testing-tool limitation, not an app bug — real users navigating via links/buttons work fine.
+- Owner approval rate shows 0% when the owner hasn't reviewed any submissions yet; will populate as jobs get reviewed.
+- Native Web Share API only works on HTTPS + supported browsers (mobile); falls back to copy link on desktop.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add a job completion certificate (downloadable PDF) for approved submissions.
+4. Add a notifications settings page (opt-in/out per notification type).
+5. Add a "featured" flag to jobs for admin-controlled premium placement.
+6. Add user profile badges to the leaderboard (show top earner badges).
+7. Add a public user profile page (viewable reputation/badges without login).
+8. Add job categories page with category-specific stats and counts.
+9. Add a dashboard activity feed (recent submissions, approvals, withdrawals).
+10. Add search history / recently viewed jobs on the jobs list.

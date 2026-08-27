@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n-context";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, type Route } from "@/lib/router";
@@ -26,6 +26,17 @@ export function RegisterPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Auto-fill referral code from URL query param or hash
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^.*\?/, ""));
+    const ref = params.get("ref") || hashParams.get("ref");
+    if (ref) {
+      setForm((p) => ({ ...p, referralCode: ref }));
+    }
+  }, []);
 
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
