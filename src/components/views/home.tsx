@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobCard, type JobCardData } from "@/components/shared/job-card";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { LoadingState } from "@/components/shared/states";
-import { Search, TrendingUp, ShieldCheck, Zap, ArrowRight, Wallet, Users } from "lucide-react";
+import { Search, TrendingUp, ShieldCheck, Zap, ArrowRight, Wallet, Users, Trophy, Star } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -19,6 +19,7 @@ export function HomePage() {
   const { navigate } = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [jobs, setJobs] = useState<JobCardData[]>([]);
+  const [featuredJobs, setFeaturedJobs] = useState<JobCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalJobs: 0, totalUsers: 0, totalPaid: 0 });
 
@@ -26,10 +27,12 @@ export function HomePage() {
     Promise.all([
       fetch("/api/categories").then((r) => r.json()),
       fetch("/api/jobs/list?limit=8").then((r) => r.json()),
+      fetch("/api/jobs/featured").then((r) => r.json()).catch(() => ({ jobs: [] })),
       fetch("/api/stats").then((r) => r.json()).catch(() => ({ totalJobs: 0, totalUsers: 0, totalPaid: 0 })),
-    ]).then(([catData, jobsData, statsData]) => {
+    ]).then(([catData, jobsData, featuredData, statsData]) => {
       setCategories(catData.categories || []);
       setJobs(jobsData.jobs || []);
+      setFeaturedJobs(featuredData.jobs || []);
       setStats(statsData);
       setLoading(false);
     });
@@ -109,6 +112,32 @@ export function HomePage() {
         )}
       </section>
 
+      {/* Featured Jobs */}
+      {!loading && featuredJobs.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-6 md:py-10">
+          <SectionHeader
+            title={t.featured.title}
+            subtitle={t.featured.subtitle}
+            action={
+              <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate({ name: "available-jobs" })}>
+                {t.jobs.viewAll}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            }
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 stagger">
+            {featuredJobs.slice(0, 4).map((job) => (
+              <div key={job.id} className="relative">
+                <div className="absolute -top-2 -right-2 z-10 h-7 w-7 rounded-full bg-primary flex items-center justify-center shadow-md">
+                  <Star className="h-3.5 w-3.5 text-primary-foreground fill-primary-foreground" />
+                </div>
+                <JobCard job={job} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Available Jobs */}
       <section className="mx-auto max-w-7xl px-4 py-6 md:py-10">
         <SectionHeader
@@ -132,6 +161,27 @@ export function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Leaderboard CTA */}
+      <section className="mx-auto max-w-7xl px-4 py-6 md:py-10">
+        <Card className="overflow-hidden border-primary/20">
+          <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="h-16 w-16 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 animate-float">
+                <Trophy className="h-8 w-8 text-primary" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-xl md:text-2xl font-bold">{t.leaderboard.title}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{t.leaderboard.subtitle}</p>
+              </div>
+              <Button size="lg" className="gap-2 shrink-0" onClick={() => navigate({ name: "leaderboard" })}>
+                <Trophy className="h-4 w-4" />
+                {t.leaderboard.viewAll}
+              </Button>
+            </div>
+          </div>
+        </Card>
       </section>
 
       {/* How it works preview */}

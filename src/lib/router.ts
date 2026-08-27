@@ -22,13 +22,15 @@ export type Route =
   | { name: "notifications" }
   | { name: "how-it-works" }
   | { name: "faq" }
+  | { name: "leaderboard" }
   | { name: "admin" }
   | { name: "admin-users" }
   | { name: "admin-jobs" }
   | { name: "admin-submissions" }
   | { name: "admin-withdrawals" }
   | { name: "admin-categories" }
-  | { name: "admin-settings" };
+  | { name: "admin-settings" }
+  | { name: "admin-announce" };
 
 function parseHash(): Route {
   if (typeof window === "undefined") return { name: "home" };
@@ -72,6 +74,8 @@ function parseHash(): Route {
       return { name: "how-it-works" };
     case "faq":
       return { name: "faq" };
+    case "leaderboard":
+      return { name: "leaderboard" };
     case "admin":
       if (parts[1] === "users") return { name: "admin-users" };
       if (parts[1] === "jobs") return { name: "admin-jobs" };
@@ -79,6 +83,7 @@ function parseHash(): Route {
       if (parts[1] === "withdrawals") return { name: "admin-withdrawals" };
       if (parts[1] === "categories") return { name: "admin-categories" };
       if (parts[1] === "settings") return { name: "admin-settings" };
+      if (parts[1] === "announce") return { name: "admin-announce" };
       return { name: "admin" };
     default:
       return { name: "home" };
@@ -115,6 +120,8 @@ export function routeToHash(route: Route): string {
       return "#/admin/categories";
     case "admin-settings":
       return "#/admin/settings";
+    case "admin-announce":
+      return "#/admin/announce";
     default:
       return `#/${route.name}`;
   }

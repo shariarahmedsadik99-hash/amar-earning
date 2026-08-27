@@ -276,6 +276,38 @@ export const translations = {
       noEarnings: "এই সপ্তাহে কোনো আয় নেই",
       jobsCompleted: "কাজ সম্পন্ন",
     },
+
+    leaderboard: {
+      title: "টপ আর্নার",
+      subtitle: "প্ল্যাটফর্মের সেরা উপার্জনকারী ইউজারদের তালিকা",
+      rank: "র‍্যাঙ্ক",
+      user: "ইউজার",
+      earned: "মোট আয়",
+      jobs: "কাজ",
+      empty: "এখনও কোনো আর্নার নেই",
+      viewAll: "সব দেখুন",
+    },
+
+    featured: {
+      title: "ফিচার্ড কাজ",
+      subtitle: "উচ্চ পুরস্কারের সেরা কাজগুলো",
+    },
+
+    adminAnnounce: {
+      title: "অ্যানাউন্সমেন্ট পাঠান",
+      subtitle: "সব ইউজারকে নোটিফিকেশন পাঠান",
+      label: "অ্যানাউন্সমেন্ট",
+      titleLabel: "শিরোনাম",
+      messageLabel: "বার্তা",
+      send: "পাঠান",
+      sent: "সফলভাবে পাঠানো হয়েছে",
+      recipients: "ইউজার পেয়েছে",
+    },
+
+    maintenance: {
+      title: "রক্ষণাবেক্ষণ মোডে",
+      message: "সিস্টেম আপগ্রেড চলছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।",
+    },
   },
 
   en: {
@@ -537,6 +569,38 @@ export const translations = {
       thisWeek: "This Week",
       noEarnings: "No earnings this week",
       jobsCompleted: "Jobs Completed",
+    },
+
+    leaderboard: {
+      title: "Top Earners",
+      subtitle: "Best earning users on the platform",
+      rank: "Rank",
+      user: "User",
+      earned: "Total Earned",
+      jobs: "Jobs",
+      empty: "No earners yet",
+      viewAll: "View All",
+    },
+
+    featured: {
+      title: "Featured Jobs",
+      subtitle: "Top jobs with highest rewards",
+    },
+
+    adminAnnounce: {
+      title: "Send Announcement",
+      subtitle: "Send a notification to all users",
+      label: "Announcement",
+      titleLabel: "Title",
+      messageLabel: "Message",
+      send: "Send",
+      sent: "Sent successfully",
+      recipients: "users received",
+    },
+
+    maintenance: {
+      title: "Under Maintenance",
+      message: "System upgrade in progress. Please try again later.",
     },
   },
 } as const;

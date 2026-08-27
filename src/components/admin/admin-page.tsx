@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -46,6 +47,7 @@ import {
   Banknote,
   FolderTree,
   Settings as SettingsIcon,
+  Megaphone,
   Shield,
   ShieldAlert,
   Loader2,
@@ -206,6 +208,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-submissions", labelBn: "সাবমিশন", labelEn: "Submissions", icon: ClipboardList },
   { route: "admin-withdrawals", labelBn: "উইথড্র", labelEn: "Withdrawals", icon: Banknote },
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
+  { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
   { route: "admin-settings", labelBn: "সেটিংস", labelEn: "Settings", icon: SettingsIcon },
 ];
 
@@ -1986,6 +1989,107 @@ function AccessDenied() {
 }
 
 /* =========================================================================
+ * AnnounceView - broadcast notification to all users
+ * =======================================================================*/
+function AnnounceView() {
+  const lang = useLang();
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !message) {
+      toast.error(lang === "bn" ? "সব ফিল্ড পূরণ করুন" : "Fill all fields");
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch("/api/admin/announce", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, message }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(
+          lang === "bn"
+            ? `${data.recipients} ইউজার পেয়েছে`
+            : `Sent to ${data.recipients} users`
+        );
+        setTitle("");
+        setMessage("");
+      } else {
+        toast.error(data.error || "Failed");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl">
+      <div className="mb-5">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Megaphone className="h-5 w-5 text-primary" />
+          {lang === "bn" ? "অ্যানাউন্সমেন্ট পাঠান" : "Send Announcement"}
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          {lang === "bn" ? "সব সক্রিয় ইউজারকে নোটিফিকেশন পাঠান" : "Send a notification to all active users"}
+        </p>
+      </div>
+
+      <Card className="p-5">
+        <form onSubmit={handleSend} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>{lang === "bn" ? "শিরোনাম" : "Title"}</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={lang === "bn" ? "নোটিফিকেশনের শিরোনাম" : "Notification title"}
+              required
+              maxLength={100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{lang === "bn" ? "বার্তা" : "Message"}</Label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={lang === "bn" ? "বিস্তারিত বার্তা..." : "Detailed message..."}
+              required
+              rows={5}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {message.length}/500
+            </p>
+          </div>
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <ShieldAlert className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
+              {lang === "bn"
+                ? "এই বার্তাটি প্ল্যাটফর্মের সব সক্রিয় ইউজারকে পাঠানো হবে। সাবধানতার সাথে ব্যবহার করুন।"
+                : "This message will be sent to all active users on the platform. Use with caution."}
+            </p>
+          </div>
+          <Button type="submit" className="w-full h-11" disabled={sending}>
+            {sending ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Megaphone className="h-4 w-4 mr-2" />
+            )}
+            {lang === "bn" ? "পাঠান" : "Send Announcement"}
+          </Button>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+/* =========================================================================
  * Main AdminPage
  * =======================================================================*/
 
@@ -2018,6 +2122,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <WithdrawalsView />;
       case "admin-categories":
         return <CategoriesView />;
+      case "admin-announce":
+        return <AnnounceView />;
       case "admin-settings":
         return <SettingsView />;
       default:

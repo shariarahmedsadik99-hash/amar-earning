@@ -163,3 +163,107 @@ The Amar Earning platform was fully functional from the previous build. All core
 8. Add search by reward range and deadline filter on jobs list.
 9. Polish the hero section with a generated illustration (use image-generation skill).
 10. Add a maintenance mode banner that respects the admin setting.
+
+---
+Task ID: leaderboard-view
+Agent: full-stack-developer
+Task: Build Leaderboard view component
+
+Work Log:
+- Read worklog.md and prior context (router, i18n, auth-context, format helpers, shared states, FAQ/Referrals views for styling conventions).
+- Inspected `/api/leaderboard` route handler to confirm response shape: `{ leaderboard: [{ rank, name, username, totalEarned, jobsCompleted, joinedAt }] }` (top 20, sorted by totalEarned desc).
+- Confirmed i18n keys (`t.leaderboard.title/subtitle/rank/user/earned/jobs/empty/viewAll`) exist in both bn + en. Verified `t.common.currency` ("৳") and `t.common.loading` exist.
+- Created `/home/z/my-project/src/components/views/leaderboard.tsx` exporting `LeaderboardPage` (named export, no default).
+- Standalone public page (NOT wrapped in DashboardLayout) with container `mx-auto max-w-4xl px-4 py-10 md:py-16`.
+- Header centered with `Trophy` lucide icon in primary-tinted rounded square, `t.leaderboard.title` + `t.leaderboard.subtitle`, wrapped in `animate-fade-in-up`.
+- Fetches `GET /api/leaderboard` on mount using the active-flag pattern (no set-state-in-effect lint error); sets `entries` array or `[]` on failure.
+- Loading state uses shared `LoadingState` with `t.common.loading`.
+- Empty state uses shared `EmptyState` with `Trophy` icon and `t.leaderboard.empty` message.
+- Top 3 Podium: 3-column grid (1-col stacked on mobile). Used a `PODIUM_STYLES` config map keyed by rank (1=gold/amber, 2=silver/slate, 3=bronze/orange) controlling ring color, gradient bg, label color, avatar size. #1 card is elevated (`md:-translate-y-4 md:scale-105 md:shadow-xl`) and shows a `Crown` icon; #2 and #3 use `Medal` icons. Each podium card shows: large avatar circle with initial (ring-4), rank badge top-right, name + @username, totalEarned (formatMoney with currency prefix), jobsCompleted (toBn with Briefcase icon). Display order on desktop is 2-1-3 (proper podium layout) via `order` Tailwind classes. "You"/"আপনি" badge if current user.
+- Remaining ranks 4-20: Responsive split — shadcn `Table` on `md:` (columns: rank, user, earned, jobs, joined date) and stacked cards on mobile. Each row shows avatar initial circle, name + @username, formatMoney earned (green), toBn jobs, formatDate joined. Current user's row highlighted with `bg-primary/5 border-l-2 border-primary` (table) or `ring-2 ring-primary bg-primary/5` (card) plus "You"/"আপনি" Badge.
+- Applied `stagger` class to podium grid and to remaining-ranks mobile list for entrance animation. `card-lift` hover effect on all cards.
+- CTA section at bottom (only for logged-out users): Card with `Sparkles` icon, bilingual headline + subtext, primary Button "কাজ করে আয় করুন" (bn) / "Start Earning" (en) → `navigate({ name: "register" })`.
+- Mobile-first throughout: podium collapses to 1-col on mobile (order keeps #1 first), table swaps to cards below md, all touch targets >= 32px.
+- Verified `bunx eslint src/components/views/leaderboard.tsx` — clean, 0 errors.
+
+Stage Summary:
+- Delivered `/home/z/my-project/src/components/views/leaderboard.tsx` (~300 lines, single file, no other files modified).
+- Named export `LeaderboardPage` ready to be imported into `src/app/page.tsx` for `#/leaderboard` route.
+- Fully bilingual (bn + en) via existing `useI18n`, current-user highlighting via `useAuth`, register CTA navigation via `useRouter`.
+- Uses soft-green primary theme colors throughout; medal colors only on the podium's top-3 cards (gold/silver/bronze).
+- Responsive: podium grid 1→3 cols, ranks 4-20 use shadcn Table on desktop and Card list on mobile.
+- Lint: 0 errors in the new file. Dev server untouched (no build run, per instructions).
+
+---
+Task ID: cron-review-2
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, new gamification features, admin broadcast, maintenance mode
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart) work. No build failures or runtime errors. This round focused on adding gamification (leaderboard), premium placement (featured jobs), admin communication tools (broadcast announcements), and platform resilience (maintenance mode banner).
+
+## Completed Modifications / New Features
+
+### 1. Top Earners Leaderboard (Gamification Feature)
+- **New API** `/api/leaderboard`: returns top 20 users by totalEarned with rank, name, username, jobsCompleted, joinedAt.
+- **New view** `src/components/views/leaderboard.tsx` (built via subagent Task ID: leaderboard-view):
+  - Public standalone page (accessible to logged-in and logged-out users).
+  - Top-3 podium with gold/silver/bronze medal styling, Crown icon for #1, elevated card.
+  - Ranks 4-20 in responsive Table (desktop) / cards (mobile).
+  - Current user's row highlighted with primary ring + "আপনি"/"You" badge.
+  - Logged-out CTA card encouraging registration.
+  - Loading state, empty state, stagger animations.
+- **New route** `#/leaderboard` added to router + page.tsx.
+- **Leaderboard CTA section** on homepage with gradient card + floating Trophy icon.
+
+### 2. Featured Jobs Section on Homepage
+- **New API** `/api/jobs/featured`: returns top 4 active jobs ordered by reward desc (highest-paying jobs get premium placement).
+- **Homepage section**: "ফিচার্ড কাজ" / "Featured Jobs" with star badge on each card, stagger animation. Shows above the regular latest jobs section.
+- Helps users discover the best-paying opportunities quickly.
+
+### 3. Admin Announcement Broadcast
+- **New API** `/api/admin/announce` (POST, admin-only): creates a notification for ALL active users in a single `createMany` batch. Logs to admin_logs. Returns recipient count.
+- **New admin view** `AnnounceView` in admin-page.tsx: title + message form with character counters (100/500), warning notice about blast scope, Megaphone icons.
+- **New route** `#/admin/announce` + nav item "অ্যানাউন্সমেন্ট" with Megaphone icon.
+- Verified end-to-end: admin sent announcement → 3 users received → worker saw it in notifications page and bell badge count incremented.
+
+### 4. Maintenance Mode Banner
+- **New component** `src/components/shared/maintenance-banner.tsx`: fetches `/api/settings`, shows dismissible amber banner when `maintenanceMode` is true. Respects admin setting in real-time.
+- Integrated at top of main layout (above header) in page.tsx.
+- Uses existing admin Settings toggle (maintenanceMode switch) — admins can now enable maintenance mode and all users see the banner.
+
+### 5. i18n Expansion
+- Added 4 new translation sections to both bn/en: `leaderboard` (8 keys), `featured` (2 keys), `adminAnnounce` (7 keys), `maintenance` (2 keys).
+
+### 6. Router Expansion
+- Added `leaderboard` and `admin-announce` routes to the hash router (parseHash + routeToHash).
+- Added `admin-announce` to protected admin routes list in page.tsx.
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors ✓
+- agent-browser verified:
+  - Homepage: Featured Jobs section shows 4 highest-reward jobs (Data Entry ৳50, App Testing ৳25, Review ৳15, Website ৳12) with star badges ✓
+  - Homepage: Leaderboard CTA section with floating Trophy icon ✓
+  - Leaderboard page (`#/leaderboard`): shows Demo Worker at rank #1 with podium styling ✓
+  - Admin announce page (`#/admin/announce`): form renders with title/message fields + warning ✓
+  - Admin broadcast: sent "নতুন ফিচার আপডেট!" → 3 users received → worker saw it in notifications ✓
+  - Dashboard: balance ৳150 (after withdrawal), pending jobs 1, earnings chart showing weekly bars ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- The `agent-browser` click command occasionally lands on inner SVG elements (headless-browser limitation); workaround is `find role button click --name` or native `element.click()`. No user impact.
+- Leaderboard currently only has 1 earner (Demo Worker) since other demo accounts have 0 earnings. Real usage will populate it.
+- Featured jobs relies on reward amount; could add an explicit "featured" flag in the future for admin-controlled promotion.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add job sharing with OG meta tags (generate shareable preview links).
+3. Add email notifications on approval/rejection (currently in-app only).
+4. Add job completion rate + average approval time stats on job detail page.
+5. Add search by reward range and deadline filter on jobs list.
+6. Polish hero section with a generated illustration (use image-generation skill).
+7. Add a "featured" flag to jobs for admin-controlled premium placement.
+8. Add user profile badges (e.g., "Top Earner", "Verified", "Pro") based on activity.
+9. Add a public job page (shareable link) for non-logged-in users to view job details.
+10. Add withdrawal processing time estimates on the withdraw page.

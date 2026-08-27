@@ -23,7 +23,9 @@ import { NotificationsPage } from "@/components/views/notifications";
 import { FaqPage } from "@/components/views/faq";
 import { ReferralsPage } from "@/components/views/referrals";
 import { MyBookmarksPage } from "@/components/views/my-bookmarks";
+import { LeaderboardPage } from "@/components/views/leaderboard";
 import { AdminPage } from "@/components/admin/admin-page";
+import { MaintenanceBanner } from "@/components/shared/maintenance-banner";
 
 export default function Home() {
   const { route, navigate } = useRouter();
@@ -44,7 +46,7 @@ export default function Home() {
       "referrals",
       "notifications",
     ];
-    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-settings"];
+    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-settings", "admin-announce"];
 
     if (!user && (protectedRoutes.includes(route.name) || adminRoutes.includes(route.name))) {
       navigate({ name: "login" });
@@ -102,6 +104,8 @@ export default function Home() {
         return <NotificationsPage />;
       case "faq":
         return <FaqPage />;
+      case "leaderboard":
+        return <LeaderboardPage />;
       case "admin":
       case "admin-users":
       case "admin-jobs":
@@ -109,6 +113,7 @@ export default function Home() {
       case "admin-withdrawals":
       case "admin-categories":
       case "admin-settings":
+      case "admin-announce":
         return <AdminPage route={route} />;
       default:
         return <HomePage />;
@@ -120,6 +125,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <MaintenanceBanner />
       <Header />
       <main className={`flex-1 ${isAuthPage ? "" : "pb-20 md:pb-0"}`}>
         {renderView()}
