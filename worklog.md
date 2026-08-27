@@ -777,3 +777,101 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add a job recommendation engine (suggest jobs based on category history).
 9. Add a search autocomplete with job titles.
 10. Add a platform statistics page (public dashboard with totals, charts).
+
+---
+Task ID: platform-stats-view
+Agent: full-stack-developer
+Task: Build Platform Stats view component
+
+Work Log:
+- Read worklog.md and prior context (router routes incl. `platform-stats`, i18n keys `t.platformStats.*` in bn+en, `t.common.currency` / `t.common.loading`, format helpers `formatMoney`/`toBn`, shared `LoadingState`/`EmptyState`, `CategoryIcon`, animation classes `animate-fade-in-up`/`stagger`/`card-lift`).
+- Inspected `/api/platform-stats` route handler to confirm exact response shape: `{ totals: { users, jobs, activeJobs, submissions, approvedSubmissions, transactions, paidOut, withdrawals }, topCategories: [{ name, slug, icon, jobCount }], growth: { newUsersThisWeek, newUsersLastWeek, jobsThisWeek, jobsLastWeek, userGrowthRate, jobGrowthRate } }` — all public, no auth.
+- Inspected `leaderboard.tsx` for styling conventions (Card + Badge + Button, logged-out CTA pattern, active-flag fetch).
+- Created `/home/z/my-project/src/components/views/platform-stats.tsx` exporting named `PlatformStatsPage` (no default).
+- Standalone public page (NOT wrapped in DashboardLayout) with container `mx-auto max-w-5xl px-4 py-10 md:py-16`.
+- Header: centered, `BarChart3` lucide icon inside a primary-tinted `rounded-2xl` square chip, `t.platformStats.title` + `t.platformStats.subtitle`, wrapped in `animate-fade-in-up`.
+- Fetches `GET /api/platform-stats` on mount using the active-flag pattern (closures + `active = false` cleanup) — no set-state-in-effect lint errors. Sets `data` or `null` on failure; `loading` flips to false in finally.
+- Loading: shared `LoadingState` with `t.common.loading`.
+- Error: shared `EmptyState` with `BarChart3` icon and bilingual "couldn't load stats" message.
+- Totals grid: 8 cards in `grid-cols-2 md:grid-cols-4`, `stagger` animation, `card-lift` hover. Each card: icon chip with distinct Tailwind tint (emerald/green/sky/purple/amber/rose/cyan/indigo) + label + value. Values: `toBn` for counts; `formatMoney` + `t.common.currency` (৳) prefix for `paidOut`. Config-driven via `STAT_CARDS` array keyed off `PlatformStats["totals"]`.
+- Growth section: 2 `GrowthCard` components (new users + new jobs). Each shows this-week count (big), `Badge` with `TrendingUp` (green, `+N%`) for positive, `TrendingDown` (rose, `N%`) for negative, neutral Badge for zero. Two sub-cards show this-week vs last-week numbers (bilingual labels). Uses `t.platformStats.vsLastWeek` under both.
+- Top Categories section: section header with `BarChart3` icon + `t.platformStats.topCategories`. Card containing a list; each entry has `CategoryIcon` chip (primary tint) + name + job count (with bilingual "কাজ"/"jobs" suffix) + horizontal progress bar (width = jobCount / max * 100%, gradient `from-primary to-primary/70`). Staggered `animationDelay` per item.
+- CTA at bottom (only when `!user` from `useAuth()`): Card with `from-primary/10 via-primary/5 to-transparent` gradient, bilingual headline + subtext, `Button` size="lg" with `Search` icon labeled "কাজ খুঁজুন" (bn) / "Find Work" (en) → `navigate({ name: "available-jobs" })`.
+- All numbers localized via `toBn`; currency via `formatMoney`. Mobile-first throughout: 2-col → 4-col totals grid, 1-col → 2-col growth grid, single-column categories list, full-width CTA card with stacked layout on mobile.
+- Verified `bunx eslint src/components/views/platform-stats.tsx` — exit 0, clean, no errors. Did NOT touch any other files (page.tsx wiring is handled separately per task instructions).
+
+Stage Summary:
+- Delivered `/home/z/my-project/src/components/views/platform-stats.tsx` (~340 lines, single file, no other files modified).
+- Named export `PlatformStatsPage` — a standalone public page accessible to everyone (no auth, no DashboardLayout).
+- Fully bilingual (bn + en) via existing `useI18n`, current-user-aware via `useAuth`, navigation via `useRouter`.
+- Sections: centered icon header → 8-card totals grid → 2-card growth section with rate badges → top-categories bar chart → logged-out CTA.
+- Soft-green primary theme throughout; varied accent colors only on icon chips for visual rhythm.
+- Lint: 0 errors in the new file. Dev server compiles cleanly.
+
+---
+Task ID: cron-review-10
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, platform stats page, job recommendations, search autocomplete
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features work. No build failures or runtime errors. This round focused on public transparency (platform stats), personalized discovery (recommendations), and search efficiency (autocomplete).
+
+## Completed Modifications / New Features
+
+### 1. Public Platform Statistics Page (Transparency Feature)
+- **New API** `/api/platform-stats`: returns totals (users, jobs, activeJobs, submissions, approvedSubmissions, transactions, paidOut, withdrawals), top categories by job count, and week-over-week growth rates (new users, new jobs with percentage changes). No auth required.
+- **New view** `src/components/views/platform-stats.tsx` (built via subagent): standalone public page with:
+  - 8-stat grid (responsive 2/4 cols) with varied icon colors and `card-lift` hover
+  - Growth section with 2 cards showing this-week vs last-week + growth rate badges (green/red)
+  - Top Categories section with CategoryIcon + progress bars relative to #1 category
+  - Logged-out CTA card
+- **New route** `#/platform-stats` added to router + page.tsx.
+- Verified: shows 3 users, 8 jobs, growth section, top categories with progress bars.
+
+### 2. Job Recommendation Engine (Personalization Feature)
+- **New API** `/api/recommendations`: analyzes the user's submission history to find preferred categories, then recommends jobs from those categories first. Falls back to top-reward jobs if no history or insufficient results. Excludes already-submitted jobs and own jobs.
+- **Fixed bug**: the original query had conflicting `include` + `select` on the same relation; refactored to use `include` with a nested `select` for both `id` and `categoryId`.
+- **New component** `src/components/shared/recommendations.tsx`: card with Sparkles icon, reason badge ("based on history" / "top jobs"), and a responsive grid of JobCard components.
+- Integrated into DashboardPage below the stat cards.
+- Verified: returns 4 Social Media jobs for the worker (based on their Facebook submission); dashboard shows "আপনার জন্য সুপারিশ" with YouTube, Instagram, Telegram, Data Entry jobs.
+
+### 3. Search Autocomplete (Search Efficiency Feature)
+- **New API** `/api/jobs/autocomplete?q=`: returns up to 8 job suggestions matching the query (title contains), with id, title, reward, and category name.
+- **New component** `src/components/shared/autocomplete-search.tsx`: input with a dropdown suggestions panel featuring:
+  - Debounced API calls (200ms)
+  - Keyboard navigation (ArrowUp/Down, Enter to select, Escape to close)
+  - Click-outside-to-close behavior
+  - Loading spinner, no-results message
+  - Each suggestion shows title, category, and reward
+  - Clicking a suggestion navigates to the job detail page
+- Replaced the plain search input in JobsListPage with the AutocompleteSearch component.
+- Verified: typing "face" shows a "Facebook Page Follow" suggestion dropdown; clicking navigates to the job.
+
+### 4. i18n Expansion
+- Added 3 new translation sections to both bn/en: `platformStats` (14 keys), `recommendations` (5 keys), `autocomplete` (3 keys).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors ✓
+- agent-browser verified:
+  - Platform stats page (`#/platform-stats`): 8 stat cards with real data (3 users, 8 jobs), growth section, top categories ✓
+  - Dashboard recommendations: shows 4 jobs based on worker's category history with "based on history" badge ✓
+  - Jobs list autocomplete: typing "face" shows Facebook Page Follow suggestion dropdown ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- Recommendations require submission history to be personalized; new users get top-reward jobs as fallback.
+- Autocomplete requires at least 2 characters before querying; prevents excessive API calls.
+- Platform stats are public (no auth); all aggregate data is visible — by design for transparency.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add user follow system (follow top earners/employers).
+4. Add a "verified" badge system for employers (admin-controlled, distinct from auto-verified).
+5. Add a dark mode illustration variant for the hero.
+6. Add a withdrawal calendar showing expected payment dates.
+7. Add job categories with custom icons upload (admin).
+8. Add a job alerts system (email/notify when new jobs in preferred categories are posted).
+9. Add a dark theme toggle persistence check across all pages.
+10. Add a platform stats export (CSV/JSON download).

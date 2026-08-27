@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { JobCard, type JobCardData } from "@/components/shared/job-card";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { LoadingState, EmptyState } from "@/components/shared/states";
+import { AutocompleteSearch } from "@/components/shared/autocomplete-search";
 import { useRecentJobs } from "@/lib/use-recent-jobs";
 import { useSavedSearches } from "@/lib/use-saved-searches";
 import { formatMoney } from "@/lib/format";
@@ -93,15 +94,11 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
       {/* Filters */}
       <Card className="p-3 md:p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t.jobs.searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <AutocompleteSearch
+            value={search}
+            onChange={setSearch}
+            placeholder={t.jobs.searchPlaceholder}
+          />
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="sm:w-48">
               <SlidersHorizontal className="h-4 w-4 mr-2 text-muted-foreground" />

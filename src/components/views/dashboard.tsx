@@ -25,6 +25,7 @@ import { EarningsChart } from "@/components/shared/earnings-chart";
 import { ActivityFeed } from "@/components/shared/activity-feed";
 import { WeekComparison } from "@/components/shared/week-comparison";
 import { AchievementsProgress } from "@/components/shared/achievements-progress";
+import { Recommendations } from "@/components/shared/recommendations";
 
 type DashboardStats = {
   balance: number;
@@ -179,6 +180,11 @@ export function DashboardPage() {
       </div>
 
       <StatsCards stats={stats} />
+
+      {/* Job Recommendations */}
+      <div className="mt-6">
+        <Recommendations />
+      </div>
 
       {/* Earnings chart */}
       <div className="mt-4">

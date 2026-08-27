@@ -565,6 +565,38 @@ export const translations = {
         5: "খুব কঠিন",
       },
     },
+
+    platformStats: {
+      title: "প্ল্যাটফর্ম পরিসংখ্যান",
+      subtitle: "Amar Earning প্ল্যাটফর্মের সর্বজনীন পরিসংখ্যান",
+      totalUsers: "মোট ইউজার",
+      totalJobs: "মোট কাজ",
+      activeJobs: "সক্রিয় কাজ",
+      totalSubmissions: "মোট সাবমিশন",
+      approvedSubmissions: "অনুমোদিত সাবমিশন",
+      totalTransactions: "মোট লেনদেন",
+      totalPaidOut: "মোট পরিশোধিত",
+      totalWithdrawals: "মোট উইথড্র",
+      topCategories: "শীর্ষ ক্যাটাগরি",
+      growth: "প্রবৃদ্ধি",
+      newUsersThisWeek: "এই সপ্তাহের নতুন ইউজার",
+      jobsThisWeek: "এই সপ্তাহের কাজ",
+      vsLastWeek: "গত সপ্তাহের তুলনায়",
+    },
+
+    recommendations: {
+      title: "আপনার জন্য সুপারিশ",
+      subtitle: "আপনার কার্যকলাপের ভিত্তিতে",
+      basedOnHistory: "আপনার পছন্দের ক্যাটাগরির উপর ভিত্তি করে",
+      topJobs: "শীর্ষ কাজ",
+      empty: "এখনও কোনো সুপারিশ নেই",
+    },
+
+    autocomplete: {
+      placeholder: "কাজের নাম লিখুন...",
+      noResults: "কোনো ফলাফল নেই",
+      searching: "খোঁজা হচ্ছে...",
+    },
   },
 
   en: {
@@ -1115,6 +1147,38 @@ export const translations = {
         4: "Hard",
         5: "Very Hard",
       },
+    },
+
+    platformStats: {
+      title: "Platform Statistics",
+      subtitle: "Public statistics for the Amar Earning platform",
+      totalUsers: "Total Users",
+      totalJobs: "Total Jobs",
+      activeJobs: "Active Jobs",
+      totalSubmissions: "Total Submissions",
+      approvedSubmissions: "Approved Submissions",
+      totalTransactions: "Total Transactions",
+      totalPaidOut: "Total Paid Out",
+      totalWithdrawals: "Total Withdrawals",
+      topCategories: "Top Categories",
+      growth: "Growth",
+      newUsersThisWeek: "New Users This Week",
+      jobsThisWeek: "Jobs This Week",
+      vsLastWeek: "vs last week",
+    },
+
+    recommendations: {
+      title: "Recommended For You",
+      subtitle: "Based on your activity",
+      basedOnHistory: "Based on your favorite categories",
+      topJobs: "Top Jobs",
+      empty: "No recommendations yet",
+    },
+
+    autocomplete: {
+      placeholder: "Type a job title...",
+      noResults: "No results",
+      searching: "Searching...",
     },
   },
 } as const;
