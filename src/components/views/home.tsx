@@ -41,9 +41,23 @@ export function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="hero-gradient border-b overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 py-10 md:py-16">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+      <section className="relative overflow-hidden border-b">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 hero-gradient" />
+        {/* Decorative blurred orbs */}
+        <div className="absolute top-10 -left-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl animate-pulse-glow" />
+        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-emerald-300/10 blur-3xl animate-pulse-glow" style={{ animationDelay: "1s" }} />
+        {/* Grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-7xl px-4 py-12 md:py-20">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Text content */}
             <div className="flex flex-col items-center md:items-start text-center md:text-left animate-fade-in-up">
               <Badge variant="secondary" className="mb-4 gap-1.5 bg-primary/10 text-primary border-primary/20">
@@ -59,7 +73,7 @@ export function HomePage() {
               <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="gap-2 h-12 px-6 text-base"
+                  className="gap-2 h-12 px-6 text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-shadow"
                   onClick={() => navigate({ name: "available-jobs" })}
                 >
                   <Search className="h-5 w-5" />
@@ -68,7 +82,7 @@ export function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="gap-2 h-12 px-6 text-base"
+                  className="gap-2 h-12 px-6 text-base hover:bg-primary/5 hover:border-primary/40 transition-colors"
                   onClick={() => navigate({ name: "post-job" })}
                 >
                   {t.hero.postJob}
@@ -83,15 +97,49 @@ export function HomePage() {
               </div>
             </div>
 
-            {/* Hero illustration */}
+            {/* Hero illustration with decorative elements */}
             <div className="hidden md:flex justify-center items-center animate-fade-in-up">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" />
-                <img
-                  src="/hero-illustration.png"
-                  alt="Amar Earning illustration"
-                  className="relative w-80 h-80 lg:w-96 lg:h-96 object-contain animate-float drop-shadow-2xl"
+              <div className="relative w-80 h-80 lg:w-[28rem] lg:h-[28rem]">
+                {/* Glow backdrop */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-emerald-300/10 to-transparent rounded-full blur-2xl" />
+                {/* Rotating ring decoration */}
+                <div
+                  className="absolute inset-4 rounded-full border-2 border-dashed border-primary/20 animate-[spin_20s_linear_infinite]"
                 />
+                {/* Main image */}
+                <img
+                  src="/hero-illustration-v2.png"
+                  alt="Amar Earning illustration"
+                  className="relative w-full h-full object-contain animate-float drop-shadow-2xl"
+                />
+                {/* Floating stat card - top right */}
+                <div className="absolute -top-2 -right-2 lg:-right-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float" style={{ animationDelay: "0.5s" }}>
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-green-500/15 flex items-center justify-center">
+                      <Wallet className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{lang === "bn" ? "আয়" : "Earned"}</p>
+                      <p className="text-sm font-bold text-green-600">+৳{formatMoney(500, lang)}</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Floating stat card - bottom left */}
+                <div className="absolute -bottom-2 -left-2 lg:-left-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float" style={{ animationDelay: "1s" }}>
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                      <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{lang === "bn" ? "কাজ সম্পন্ন" : "Completed"}</p>
+                      <p className="text-sm font-bold text-primary">{toBn(8)}+</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Floating coin badge - top left */}
+                <div className="absolute top-8 -left-4 bg-amber-500/90 backdrop-blur-md text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center animate-float" style={{ animationDelay: "1.5s" }}>
+                  <span className="text-lg font-bold">৳</span>
+                </div>
               </div>
             </div>
           </div>
