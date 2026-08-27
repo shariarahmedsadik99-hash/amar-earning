@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
 import { EarningsChart } from "@/components/shared/earnings-chart";
+import { ActivityFeed } from "@/components/shared/activity-feed";
 
 type DashboardStats = {
   balance: number;
@@ -207,6 +208,11 @@ export function DashboardPage() {
           {t.common.view}
         </Button>
       </Card>
+
+      {/* Activity Feed */}
+      <div className="mt-6">
+        <ActivityFeed />
+      </div>
 
       {/* Recent jobs preview */}
       <div className="mt-6">

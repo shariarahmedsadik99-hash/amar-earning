@@ -382,6 +382,40 @@ export const translations = {
       copied: "লিংক কপি হয়েছে",
       shareWithFriends: "বন্ধুদের সাথে শেয়ার করুন",
     },
+
+    activity: {
+      title: "সাম্প্রতিক কার্যকলাপ",
+      subtitle: "আপনার সাম্প্রতিক সাবমিশন, লেনদেন ও উইথড্র",
+      empty: "কোনো কার্যকলাপ নেই",
+      emptyHint: "কাজ সম্পন্ন করলে এখানে দেখা যাবে",
+      viewAll: "সব দেখুন",
+    },
+
+    recentJobs: {
+      title: "সাম্প্রতিক দেখা কাজ",
+      empty: "এখনও কোনো কাজ দেখেননি",
+      clear: "মুছুন",
+    },
+
+    categoriesPage: {
+      title: "সব ক্যাটাগরি",
+      subtitle: "ক্যাটাগরি অনুযায়ী কাজ খুঁজুন",
+      jobs: "কাজ",
+      avgReward: "গড় পুরস্কার",
+      maxReward: "সর্বোচ্চ পুরস্কার",
+      browse: "ব্রাউজ করুন",
+    },
+
+    publicProfile: {
+      title: "ইউজার প্রোফাইল",
+      memberSince: "সদস্য থেকে",
+      totalEarned: "মোট আয়",
+      totalSpent: "মোট খরচ",
+      jobsPosted: "কাজ পোস্ট",
+      jobsCompleted: "কাজ সম্পন্ন",
+      badges: "অর্জন ব্যাজ",
+      userNotFound: "ইউজার পাওয়া যায়নি",
+    },
   },
 
   en: {
@@ -749,6 +783,40 @@ export const translations = {
       copyLink: "Copy Link",
       copied: "Link copied",
       shareWithFriends: "Share with friends",
+    },
+
+    activity: {
+      title: "Recent Activity",
+      subtitle: "Your recent submissions, transactions and withdrawals",
+      empty: "No activity yet",
+      emptyHint: "Complete jobs to see activity here",
+      viewAll: "View All",
+    },
+
+    recentJobs: {
+      title: "Recently Viewed Jobs",
+      empty: "No jobs viewed yet",
+      clear: "Clear",
+    },
+
+    categoriesPage: {
+      title: "All Categories",
+      subtitle: "Browse jobs by category",
+      jobs: "jobs",
+      avgReward: "Avg Reward",
+      maxReward: "Max Reward",
+      browse: "Browse",
+    },
+
+    publicProfile: {
+      title: "User Profile",
+      memberSince: "Member Since",
+      totalEarned: "Total Earned",
+      totalSpent: "Total Spent",
+      jobsPosted: "Jobs Posted",
+      jobsCompleted: "Jobs Completed",
+      badges: "Achievement Badges",
+      userNotFound: "User not found",
     },
   },
 } as const;

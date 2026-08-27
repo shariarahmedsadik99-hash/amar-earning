@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { useRouter, type Route } from "@/lib/router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, formatDate } from "@/lib/format";
@@ -19,6 +20,7 @@ type OwnerInfo = {
 
 export function OwnerReputation({ ownerId }: { ownerId: string }) {
   const { t, lang } = useI18n();
+  const { navigate } = useRouter();
   const [info, setInfo] = useState<OwnerInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +87,12 @@ export function OwnerReputation({ ownerId }: { ownerId: string }) {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h3 className="font-semibold text-sm">{info.name}</h3>
+              <button
+                onClick={() => navigate({ name: "public-profile", username: info.username } as Route)}
+                className="font-semibold text-sm hover:text-primary hover:underline transition-colors"
+              >
+                {info.name}
+              </button>
               {info.isVerified && (
                 <BadgeCheck className="h-4 w-4 text-primary" />
               )}

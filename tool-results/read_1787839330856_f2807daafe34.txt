@@ -1,0 +1,398 @@
+     1→---
+     2→Task ID: 12
+     3→Agent: full-stack-developer
+     4→Task: Build admin panel UI for Amar Earning
+     5→
+     6→Work Log:
+     7→- Read existing project context (router, i18n, auth-context, format helpers, CategoryIcon, sample views dashboard.tsx/my-jobs.tsx/withdraw.tsx) to match established conventions.
+     8→- Inspected all admin API route handlers to confirm request/response shapes (stats, users, jobs, submissions, withdrawals, categories, settings).
+     9→- Created `/home/z/my-project/src/components/admin/admin-page.tsx` — a single self-contained client component with sub-views.
+    10→- Implemented admin shell with desktop sticky sidebar + mobile horizontal scrollable tab bar; switches view via `route.name`.
+    11→- Dashboard view: 8 colored stat cards in 2/4-col grid using `formatMoney` and `toBn`.
+    12→- Users view: debounced search input + status Select filter; desktop Table and mobile cards; Suspend/Activate actions with toast + refetch; admins protected from action.
+    13→- Jobs view: 6-tab status filter; card grid with reward/slots/done/subs stats; Approve/Reject/Pause/Activate buttons conditionally rendered per status; Delete behind a confirm Dialog.
+    14→- Submissions view: 4-tab filter; cards showing worker, proof (text/url/image), reject reason; Approve/Reject buttons on pending; reject uses prompt for reason.
+    15→- Withdrawals view: cards with user, amount, method, masked account, status; Approve/Mark Paid/Reject actions on pending.
+    16→- Categories view: add-form (name + icon picker using CategoryIcon preview) + cards list with Edit (Dialog) and Delete; respects `jobsCount` guard returned by API.
+    17→- Settings view: General (websiteName, minWithdrawal, primaryColor color input + hex), Payment Methods (checkboxes BKASH/NAGAD/ROCKET), Options (jobApprovalRequired + maintenanceMode Switches), Save button → PATCH /api/admin/settings.
+    18→- Added `AccessDenied` fallback component for non-admins and `LoadingState`/`EmptyState` usage everywhere.
+    19→- Used `useEffect` + `useCallback` for fetching on mount and on filter change; refetch after every mutation.
+    20→- Bilingual labels via inline `L(lang, bn, en)` helper so the panel is fully usable in both `bn` and `en` modes.
+    21→- Verified with `bunx eslint src/components/admin/admin-page.tsx` — no errors in the new file. (7 pre-existing errors in other files remain, untouched.)
+    22→- Verified dev server compiles successfully (HTTP 200 on `/`).
+    23→
+    24→Stage Summary:
+    25→- Delivered `/home/z/my-project/src/components/admin/admin-page.tsx` (single file, ~1100 lines, no other files touched).
+    26→- The file exports `AdminPage` (named + default) accepting `{ route }: { route: Route }` and renders the full admin panel: Dashboard, Users, Jobs, Submissions, Withdrawals, Categories, Settings.
+    27→- All mutations (suspend/activate, approve/reject/pause/activate/delete job, approve/reject submission, approve/paid/reject withdrawal, add/edit/delete category, save settings) call the correct PATCH/POST endpoints with proper bodies and refetch on success.
+    28→- Uses shadcn/ui (Card, Button, Input, Label, Badge, Tabs, Table, Dialog, Select, Switch, Checkbox) and the shared `CategoryIcon` for category icons.
+    29→- Responsive: sidebar on md+ screens, horizontal scrollable tab bar on mobile; tables collapse to cards on mobile.
+    30→- Loading states via spinner, empty states with icon, toast feedback via `sonner`.
+    31→- The component is already wired up in `src/app/page.tsx` and renders under `#/admin*` routes.
+    32→
+    33→---
+    34→Task ID: 1-11,13,14
+    35→Agent: main (Z.ai Code)
+    36→Task: Build complete Amar Earning micro-job platform
+    37→
+    38→Work Log:
+    39→- Defined Prisma schema (users, wallets, categories, jobs, job_submissions, transactions, withdrawals, notifications, settings, admin_logs) with proper relations and unique constraints; ran db:push.
+    40→- Built auth system: bcrypt password hashing, custom JWT (HMAC-SHA256 via Web Crypto) in httpOnly cookies, session create/clear/verify, getCurrentUser/requireUser/requireAdmin helpers. APIs: /api/auth/register, /login, /logout, /me.
+    41→- Created i18n system (Bangla default + English) with full translation dictionary in src/lib/i18n.ts and React context provider with localStorage persistence.
+    42→- Set up soft-green theme (light + dark) in globals.css using oklch color space; added Hind Bangla font via next/font; hero-gradient utility; custom scrollbar; safe-area padding for mobile bottom nav.
+    43→- Built client-side hash router (src/lib/router.ts) supporting all views: home, login, register, jobs, job detail, dashboard, post-job, my-jobs, my-submissions, wallet, withdraw, profile, notifications, how-it-works, and admin sub-routes.
+    44→- Created wallet helper (creditWallet, debitWallet, holdAmount, refundHeldAmount, notify) enforcing transaction logging on every balance change.
+    45→- Seeded database: admin (admin@amarearning.com/admin123), demo worker, demo employer, 6 categories, 8 sample jobs, sample submission, transactions, welcome notification. Auto-seeds on first API call.
+    46→- APIs: /api/jobs (GET single + POST create with balance check), /api/jobs/list (filter/search/paginate), /api/submissions (GET + POST proof + PATCH approve/reject with wallet credit), /api/wallet, /api/withdrawals (GET + POST + PATCH admin), /api/notifications, /api/categories, /api/stats, /api/profile, /api/settings, /api/admin/{stats,users,jobs,categories,settings}.
+    47→- Enforced platform rules: no self-job completion, no duplicate submissions, worker limit enforcement, deadline check, reward credited only after approval, balance check before job posting, transaction record on every wallet change, admin route protection.
+    48→- Built shared components: Logo, Header (desktop nav + mobile sheet menu), Footer (sticky bottom via mt-auto), BottomNav (mobile only), LanguageSwitcher, ThemeToggle, NotificationsBell (dropdown + auto-refresh), CategoryIcon, JobCard, EmptyState/LoadingState.
+    49→- Built all user-facing views: HomePage (hero + stats + categories + jobs + how-it-works + trust badges), HowItWorksPage, LoginPage, RegisterPage (with signup bonus), JobsListPage (search + filter + category chips), JobDetailPage (full details + proof form), PostJobPage (budget calculator + balance check), DashboardPage (4 stat cards + quick actions + recent jobs), MyJobsPage (tabs + submission review), MySubmissionsPage (status tabs), WalletPage (4 cards + transaction history), WithdrawPage (form + pending + history), ProfilePage (referral code + edit), NotificationsPage.
+    50→- Delegated admin panel (Task 12) to full-stack-developer subagent — completed successfully.
+    51→- Fixed seed.ts syntax error (missing comma in create call). Fixed 6 React 19 set-state-in-effect lint errors by restructuring effects (async run pattern with active flag) or targeted eslint-disable for legitimate mount patterns.
+    52→- Verified via agent-browser: homepage renders with Bangla text + jobs + categories; login flow works (worker + admin); dashboard shows balance ৳250 / earned ৳500 + recent jobs; wallet shows transactions; job detail + proof submission works (shows Pending after submit); admin panel shows stats + users table. No console errors. Lint passes clean.
+    53→
+    54→Stage Summary:
+    55→- Complete, working micro-job platform "Amar Earning" with Bangla-first UI, soft-green theme, dark mode, mobile-first design (bottom nav + sidebar), full job lifecycle (find → complete → proof → approve → earn), wallet + withdrawal (bKash/Nagad/Rocket), notifications, and comprehensive admin panel.
+    56→- All core golden-path flows verified working in browser via agent-browser.
+    57→- Demo accounts: admin@amarearning.com/admin123, worker@amarearning.com/worker123, employer@amarearning.com/employer123.
+    58→- Lint: 0 errors. Dev server: running on port 3000, HTTP 200.
+    59→- Next steps for cron-driven review: polish styling details, add more features (e.g., job categories filtering on homepage, earnings charts, referral dashboard), and continue QA.
+    60→
+    61→---
+    62→Task ID: 4-views
+    63→Agent: full-stack-developer
+    64→Task: Build FAQ, Referrals, MyBookmarks view components
+    65→
+    66→Work Log:
+    67→- Read worklog.md to understand prior work, then inspected the existing context: i18n keys (t.faq, t.referrals, t.bookmarks), i18n-context, auth-context (user.referralCode), router (routes faq/referrals/my-bookmarks), format helpers, DashboardLayout, shared JobCard + JobCardData shape, EmptyState/LoadingState, accordion shadcn component, and confirmed response shapes from /api/referrals and /api/bookmarks route handlers.
+    68→- Created `/home/z/my-project/src/components/views/faq.tsx` — public FaqPage (NOT wrapped in DashboardLayout). Centered header (HelpCircle icon, title, subtitle) with `animate-fade-in-up`; Accordion (single/collapsible) of 8 FAQ items (q1..q8 / a1..a8) using AccordionItem/Trigger/Content, each wrapped in a Card with rounded borders, hover lift, and a numbered primary-tinted badge on the trigger. Contact-support CTA (Button + Mail icon) at the bottom. Wrapped in `mx-auto max-w-3xl px-4 py-10 md:py-16`. Mobile-first.
+    69→- Created `/home/z/my-project/src/components/views/referrals.tsx` — ReferralsPage inside DashboardLayout active="referrals". Fetches GET /api/referrals on mount (with active-flag pattern). Hero card with gradient primary tint containing the large referral code (dashed primary border box), Copy Code button + share link with Copy Link button — both use navigator.clipboard.writeText and toast.success on success (bilingual messages via lang). Two stat cards (Total Referrals count via toBn, Total Bonus via formatMoney + currency). How-It-Works section with 3 numbered step cards (Share2/UserPlus/Coins icons) using t.referrals.step1..3. Referral list shows each invited user: avatar with initial, name, @username, join date (formatDate), and earned badge (formatMoney). EmptyState with Users icon when no referrals. Uses `animate-fade-in-up` on header + `stagger` on grids/lists. LoadingState while fetching.
+    70→- Created `/home/z/my-project/src/components/views/my-bookmarks.tsx` — MyBookmarksPage inside DashboardLayout active="my-bookmarks". Fetches GET /api/bookmarks on mount (active-flag pattern). Maps bookmark.job -> JobCardData (adds _count: { submissions: 0 } default). Header with Bookmark icon + title/subtitle (`animate-fade-in-up`). Responsive grid (1/2/3/4 cols) of JobCard components with `stagger` class for animation. EmptyState with BookmarkX icon, t.bookmarks.empty + emptyHint. LoadingState during fetch.
+    71→- All three files use "use client", TypeScript, import { useI18n } from "@/lib/i18n-context", and (where needed) useRouter/Route from "@/lib/router". No other files were modified.
+    72→- Verified lint: `bun run lint` reports only 1 pre-existing error in src/components/views/jobs-list.tsx (set-state-in-effect, not mine). All 3 new files lint clean.
+    73→- Verified dev server: forced a recompile via curl, got `GET / 200 in 287ms` with no module-not-found errors — page.tsx (which already imports FaqPage/ReferralsPage/MyBookmarksPage) now resolves all three modules correctly.
+    74→
+    75→Stage Summary:
+    76→- Delivered 3 new view components at:
+    77→  - /home/z/my-project/src/components/views/faq.tsx (FaqPage — public accordion page)
+    78→  - /home/z/my-project/src/components/views/referrals.tsx (ReferralsPage — dashboard with hero referral-code card, 2 stat cards, 3-step How-It-Works, referral list, copy-to-clipboard + toasts)
+    79→  - /home/z/my-project/src/components/views/my-bookmarks.tsx (MyBookmarksPage — dashboard with responsive grid of JobCard components from bookmarks)
+    80→- All three are already wired up in src/app/page.tsx and render under #/faq, #/referrals, #/my-bookmarks respectively.
+    81→- Bilingual (bn + en) via existing i18n; uses shared DashboardLayout, JobCard, EmptyState, LoadingState, format helpers, and shadcn/ui Accordion/Card/Button/Badge; mobile-first responsive; subtle animations via animate-fade-in-up + stagger + card-lift classes from globals.css.
+    82→- No regressions: lint clean for the new files, dev server compiles and serves HTTP 200.
+    83→
+    84→---
+    85→Task ID: cron-review-1
+    86→Agent: main (Z.ai Code) - cron webDevReview
+    87→Task: QA testing, bug fixes, new features, and styling improvements
+    88→
+    89→## Current Project Status (Assessment)
+    90→The Amar Earning platform was fully functional from the previous build. All core flows (auth, jobs, wallet, withdrawals, admin) work. No build failures or runtime errors. The platform is stable and ready for feature expansion.
+    91→
+    92→## QA Findings & Fixes
+    93→- Verified all major flows via agent-browser: homepage, login (worker/employer/admin), dashboard, wallet, withdraw, post-job form, job detail + proof submission, admin panel.
+    94→- Dark mode toggle works correctly (native DOM clicks trigger the change; agent-browser icon-clicks land on child SVG which is a testing-tool limitation, not an app bug).
+    95→- Login flow works in fresh browser sessions (earlier "failure" was a stale cookie state after `agent-browser cookies clear`, not an app bug).
+    96→- Withdraw flow verified: ৳100 withdrawal correctly deducted from balance (৳250→৳150) and moved to pendingBalance, shown in pending section + history.
+    97→- No console errors on any page. Lint: 0 errors.
+    98→
+    99→## Completed Modifications / New Features
+   100→
+   101→### 1. Database Schema Enhancements
+   102→- Added `Bookmark` model (id, userId, jobId, createdAt) with `@@unique([userId, jobId])` to prevent duplicates.
+   103→- Added self-relation on User for referrals: `referredBy` / `referrals` (User 1:N) to enable referral tracking queries.
+   104→- Ran `db:push` + `db:generate` + dev server restart to load new Prisma client.
+   105→
+   106→### 2. Homepage Category Filtering (Feature)
+   107→- Category cards now navigate to `#/available-jobs/category/<categoryId>` instead of the unfiltered jobs list.
+   108→- JobsListPage accepts a `categoryId` prop and uses it as the initial filter; remounts via `key` prop on route change for clean state.
+   109→- Added `card-lift` and `stagger` animations to category cards; icon scales on hover.
+   110→
+   111→### 3. Weekly Earnings Chart on Dashboard (Feature + Visual)
+   112→- New `/api/earnings` endpoint returns last-7-days JOB_EARN transaction aggregation with day labels (Bangla/English day names).
+   113→- New `EarningsChart` component (`src/components/shared/earnings-chart.tsx`): pure SVG/CSS bar chart (no heavy chart lib), 7 bars with today highlighted, hover tooltips, skeleton shimmer loading state, empty state.
+   114→- Integrated into DashboardPage below the stat cards.
+   115→
+   116→### 4. Bookmark / Save Jobs (Feature)
+   117→- New `/api/bookmarks` API: GET (list), POST (toggle add/remove), PUT (check status). Enforces no-bookmark-own-job rule.
+   118→- Bookmark toggle button added to JobDetailPage header (filled primary icon when bookmarked).
+   119→- New `MyBookmarksPage` view (`src/components/views/my-bookmarks.tsx`) showing saved jobs in a responsive grid using JobCard, with empty state + loading state + stagger animation.
+   120→- Added "Saved Jobs" to dashboard sidebar and mobile menu.
+   121→
+   122→### 5. Referral Dashboard (Feature)
+   123→- New `/api/referrals` endpoint: returns referrals list (with each referred user's earned amount), total count, total bonus, referral code.
+   124→- New `ReferralsPage` view (`src/components/views/referrals.tsx`): hero card with copyable referral code + share link, 2 stat cards (Total Referrals, Total Bonus), 3-step "How It Works" section, referral list with avatars, empty state.
+   125→- Referral CTA card added to DashboardPage.
+   126→- Added "Referral Dashboard" to sidebar and mobile menu.
+   127→
+   128→### 6. FAQ / Help Page (Feature)
+   129→- Full i18n for 8 Q&A pairs in both Bangla and English.
+   130→- New `FaqPage` view (`src/components/views/faq.tsx`): standalone public page using shadcn Accordion, numbered badges, contact CTA, fade-in animations.
+   131→- FAQ link added to footer Quick Links + mobile menu.
+   132→
+   133→### 7. Styling & UX Polish
+   134→- Added `scroll-padding-top: 5rem` + `scroll-behavior: smooth` to fix sticky header covering anchor content.
+   135→- New animation utilities in globals.css: `animate-fade-in-up`, `stagger` (8 staggered children), `card-lift` (hover translateY), `animate-float`, `animate-pulse-glow`, `skeleton-shimmer`.
+   136→- Added `@media (prefers-reduced-motion: reduce)` for accessibility.
+   137→- Applied stagger animations to homepage categories grid.
+   138→- Applied card-lift hover effect to category cards.
+   139→
+   140→### 8. i18n Expansion
+   141→- Added 4 new translation sections to both bn/en: `bookmarks`, `referrals`, `faq` (with 8 items), `earnings`.
+   142→
+   143→## Verification Results
+   144→- `bun run lint`: 0 errors ✓
+   145→- Dev server: running, HTTP 200, no compile errors ✓
+   146→- No runtime errors in dev.log ✓
+   147→- agent-browser verified: homepage, category filtering (Social Media shows only 4 social jobs), FAQ accordion expands, dashboard earnings chart renders, referral page shows code + stats + steps + empty state, bookmarks page (empty → added job via API → job appears), admin panel stats load ✓
+   148→- Dark mode toggle verified working via native DOM click ✓
+   149→
+   150→## Unresolved Issues / Risks
+   151→- The `agent-browser` click command sometimes lands on inner SVG/icon elements rather than the parent button (a headless-browser targeting limitation, not an app bug). Workaround: use `find role button click --name` or native `element.click()`. No user impact.
+   152→- Bookmark toggle via agent-browser icon-button click is unreliable to verify visually, but the API + state management work correctly (verified via direct API calls).
+   153→- The earnings chart shows "no earnings this week" for the demo worker since the sample JOB_EARN transaction was created with an older timestamp. Real usage will populate it.
+   154→
+   155→## Priority Recommendations for Next Phase
+   156→1. Add user avatar upload (profile photo) using the image-edit skill or file upload.
+   157→2. Add a public user leaderboard (top earners) to gamify the platform.
+   158→3. Add job sharing (generate shareable links with OG meta tags).
+   159→4. Add email notification on approval/rejection (currently only in-app).
+   160→5. Add a "featured jobs" section on the homepage for premium placement.
+   161→6. Add admin announcement broadcast (send notification to all users).
+   162→7. Add job completion rate / average approval time stats on job detail.
+   163→8. Add search by reward range and deadline filter on jobs list.
+   164→9. Polish the hero section with a generated illustration (use image-generation skill).
+   165→10. Add a maintenance mode banner that respects the admin setting.
+   166→
+   167→---
+   168→Task ID: leaderboard-view
+   169→Agent: full-stack-developer
+   170→Task: Build Leaderboard view component
+   171→
+   172→Work Log:
+   173→- Read worklog.md and prior context (router, i18n, auth-context, format helpers, shared states, FAQ/Referrals views for styling conventions).
+   174→- Inspected `/api/leaderboard` route handler to confirm response shape: `{ leaderboard: [{ rank, name, username, totalEarned, jobsCompleted, joinedAt }] }` (top 20, sorted by totalEarned desc).
+   175→- Confirmed i18n keys (`t.leaderboard.title/subtitle/rank/user/earned/jobs/empty/viewAll`) exist in both bn + en. Verified `t.common.currency` ("৳") and `t.common.loading` exist.
+   176→- Created `/home/z/my-project/src/components/views/leaderboard.tsx` exporting `LeaderboardPage` (named export, no default).
+   177→- Standalone public page (NOT wrapped in DashboardLayout) with container `mx-auto max-w-4xl px-4 py-10 md:py-16`.
+   178→- Header centered with `Trophy` lucide icon in primary-tinted rounded square, `t.leaderboard.title` + `t.leaderboard.subtitle`, wrapped in `animate-fade-in-up`.
+   179→- Fetches `GET /api/leaderboard` on mount using the active-flag pattern (no set-state-in-effect lint error); sets `entries` array or `[]` on failure.
+   180→- Loading state uses shared `LoadingState` with `t.common.loading`.
+   181→- Empty state uses shared `EmptyState` with `Trophy` icon and `t.leaderboard.empty` message.
+   182→- Top 3 Podium: 3-column grid (1-col stacked on mobile). Used a `PODIUM_STYLES` config map keyed by rank (1=gold/amber, 2=silver/slate, 3=bronze/orange) controlling ring color, gradient bg, label color, avatar size. #1 card is elevated (`md:-translate-y-4 md:scale-105 md:shadow-xl`) and shows a `Crown` icon; #2 and #3 use `Medal` icons. Each podium card shows: large avatar circle with initial (ring-4), rank badge top-right, name + @username, totalEarned (formatMoney with currency prefix), jobsCompleted (toBn with Briefcase icon). Display order on desktop is 2-1-3 (proper podium layout) via `order` Tailwind classes. "You"/"আপনি" badge if current user.
+   183→- Remaining ranks 4-20: Responsive split — shadcn `Table` on `md:` (columns: rank, user, earned, jobs, joined date) and stacked cards on mobile. Each row shows avatar initial circle, name + @username, formatMoney earned (green), toBn jobs, formatDate joined. Current user's row highlighted with `bg-primary/5 border-l-2 border-primary` (table) or `ring-2 ring-primary bg-primary/5` (card) plus "You"/"আপনি" Badge.
+   184→- Applied `stagger` class to podium grid and to remaining-ranks mobile list for entrance animation. `card-lift` hover effect on all cards.
+   185→- CTA section at bottom (only for logged-out users): Card with `Sparkles` icon, bilingual headline + subtext, primary Button "কাজ করে আয় করুন" (bn) / "Start Earning" (en) → `navigate({ name: "register" })`.
+   186→- Mobile-first throughout: podium collapses to 1-col on mobile (order keeps #1 first), table swaps to cards below md, all touch targets >= 32px.
+   187→- Verified `bunx eslint src/components/views/leaderboard.tsx` — clean, 0 errors.
+   188→
+   189→Stage Summary:
+   190→- Delivered `/home/z/my-project/src/components/views/leaderboard.tsx` (~300 lines, single file, no other files modified).
+   191→- Named export `LeaderboardPage` ready to be imported into `src/app/page.tsx` for `#/leaderboard` route.
+   192→- Fully bilingual (bn + en) via existing `useI18n`, current-user highlighting via `useAuth`, register CTA navigation via `useRouter`.
+   193→- Uses soft-green primary theme colors throughout; medal colors only on the podium's top-3 cards (gold/silver/bronze).
+   194→- Responsive: podium grid 1→3 cols, ranks 4-20 use shadcn Table on desktop and Card list on mobile.
+   195→- Lint: 0 errors in the new file. Dev server untouched (no build run, per instructions).
+   196→
+   197→---
+   198→Task ID: cron-review-2
+   199→Agent: main (Z.ai Code) - cron webDevReview
+   200→Task: QA testing, new gamification features, admin broadcast, maintenance mode
+   201→
+   202→## Current Project Status (Assessment)
+   203→The platform is stable and feature-rich from previous rounds. All core flows (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart) work. No build failures or runtime errors. This round focused on adding gamification (leaderboard), premium placement (featured jobs), admin communication tools (broadcast announcements), and platform resilience (maintenance mode banner).
+   204→
+   205→## Completed Modifications / New Features
+   206→
+   207→### 1. Top Earners Leaderboard (Gamification Feature)
+   208→- **New API** `/api/leaderboard`: returns top 20 users by totalEarned with rank, name, username, jobsCompleted, joinedAt.
+   209→- **New view** `src/components/views/leaderboard.tsx` (built via subagent Task ID: leaderboard-view):
+   210→  - Public standalone page (accessible to logged-in and logged-out users).
+   211→  - Top-3 podium with gold/silver/bronze medal styling, Crown icon for #1, elevated card.
+   212→  - Ranks 4-20 in responsive Table (desktop) / cards (mobile).
+   213→  - Current user's row highlighted with primary ring + "আপনি"/"You" badge.
+   214→  - Logged-out CTA card encouraging registration.
+   215→  - Loading state, empty state, stagger animations.
+   216→- **New route** `#/leaderboard` added to router + page.tsx.
+   217→- **Leaderboard CTA section** on homepage with gradient card + floating Trophy icon.
+   218→
+   219→### 2. Featured Jobs Section on Homepage
+   220→- **New API** `/api/jobs/featured`: returns top 4 active jobs ordered by reward desc (highest-paying jobs get premium placement).
+   221→- **Homepage section**: "ফিচার্ড কাজ" / "Featured Jobs" with star badge on each card, stagger animation. Shows above the regular latest jobs section.
+   222→- Helps users discover the best-paying opportunities quickly.
+   223→
+   224→### 3. Admin Announcement Broadcast
+   225→- **New API** `/api/admin/announce` (POST, admin-only): creates a notification for ALL active users in a single `createMany` batch. Logs to admin_logs. Returns recipient count.
+   226→- **New admin view** `AnnounceView` in admin-page.tsx: title + message form with character counters (100/500), warning notice about blast scope, Megaphone icons.
+   227→- **New route** `#/admin/announce` + nav item "অ্যানাউন্সমেন্ট" with Megaphone icon.
+   228→- Verified end-to-end: admin sent announcement → 3 users received → worker saw it in notifications page and bell badge count incremented.
+   229→
+   230→### 4. Maintenance Mode Banner
+   231→- **New component** `src/components/shared/maintenance-banner.tsx`: fetches `/api/settings`, shows dismissible amber banner when `maintenanceMode` is true. Respects admin setting in real-time.
+   232→- Integrated at top of main layout (above header) in page.tsx.
+   233→- Uses existing admin Settings toggle (maintenanceMode switch) — admins can now enable maintenance mode and all users see the banner.
+   234→
+   235→### 5. i18n Expansion
+   236→- Added 4 new translation sections to both bn/en: `leaderboard` (8 keys), `featured` (2 keys), `adminAnnounce` (7 keys), `maintenance` (2 keys).
+   237→
+   238→### 6. Router Expansion
+   239→- Added `leaderboard` and `admin-announce` routes to the hash router (parseHash + routeToHash).
+   240→- Added `admin-announce` to protected admin routes list in page.tsx.
+   241→
+   242→## Verification Results
+   243→- `bun run lint`: 0 errors ✓
+   244→- Dev server: running, HTTP 200, no compile errors ✓
+   245→- agent-browser verified:
+   246→  - Homepage: Featured Jobs section shows 4 highest-reward jobs (Data Entry ৳50, App Testing ৳25, Review ৳15, Website ৳12) with star badges ✓
+   247→  - Homepage: Leaderboard CTA section with floating Trophy icon ✓
+   248→  - Leaderboard page (`#/leaderboard`): shows Demo Worker at rank #1 with podium styling ✓
+   249→  - Admin announce page (`#/admin/announce`): form renders with title/message fields + warning ✓
+   250→  - Admin broadcast: sent "নতুন ফিচার আপডেট!" → 3 users received → worker saw it in notifications ✓
+   251→  - Dashboard: balance ৳150 (after withdrawal), pending jobs 1, earnings chart showing weekly bars ✓
+   252→  - No console errors on any page ✓
+   253→
+   254→## Unresolved Issues / Risks
+   255→- The `agent-browser` click command occasionally lands on inner SVG elements (headless-browser limitation); workaround is `find role button click --name` or native `element.click()`. No user impact.
+   256→- Leaderboard currently only has 1 earner (Demo Worker) since other demo accounts have 0 earnings. Real usage will populate it.
+   257→- Featured jobs relies on reward amount; could add an explicit "featured" flag in the future for admin-controlled promotion.
+   258→
+   259→## Priority Recommendations for Next Phase
+   260→1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+   261→2. Add job sharing with OG meta tags (generate shareable preview links).
+   262→3. Add email notifications on approval/rejection (currently in-app only).
+   263→4. Add job completion rate + average approval time stats on job detail page.
+   264→5. Add search by reward range and deadline filter on jobs list.
+   265→6. Polish hero section with a generated illustration (use image-generation skill).
+   266→7. Add a "featured" flag to jobs for admin-controlled premium placement.
+   267→8. Add user profile badges (e.g., "Top Earner", "Verified", "Pro") based on activity.
+   268→9. Add a public job page (shareable link) for non-logged-in users to view job details.
+   269→10. Add withdrawal processing time estimates on the withdraw page.
+   270→
+   271→---
+   272→Task ID: cron-review-3
+   273→Agent: main (Z.ai Code) - cron webDevReview
+   274→Task: QA testing, job stats, user badges, advanced filters, hero illustration
+   275→
+   276→## Current Project Status (Assessment)
+   277→The platform is stable and feature-rich from previous rounds (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart, leaderboard, featured jobs, admin broadcast, maintenance banner). No build failures or runtime errors. This round focused on job transparency (stats), gamification (badges), search precision (filters), and visual polish (hero illustration).
+   278→
+   279→## Completed Modifications / New Features
+   280→
+   281→### 1. Job Detail Statistics (Transparency Feature)
+   282→- **New API** `/api/jobs/stats?id=`: computes total submissions, approved/rejected/pending counts, approval rate (%), completion rate (%), average approval time (hours), total paid out, days remaining, slots remaining.
+   283→- **New component** `src/components/shared/job-stats-card.tsx`: 8-stat grid with colored icons (BarChart3, TrendingUp, CheckCircle2, XCircle, Clock, Wallet, CalendarClock, Users) + skeleton loading + animated progress bar showing slot completion. Integrated below the "Required Proof" card on the job detail page.
+   284→- Helps workers assess job reliability before starting (approval rate, avg approval time) and owners track performance.
+   285→
+   286→### 2. User Profile Badges (Gamification Feature)
+   287→- **New API** `/api/user-badges`: computes 8 activity-based badges (Newbie, First Job, Active Worker, Pro Earner, Top Earner, Job Creator, Employer, Veteran) based on approved submissions count, total earned, and jobs posted.
+   288→- **New component** `src/components/shared/user-badges.tsx`: grid of 8 badge cards with gradient backgrounds (blue/green/yellow/amber/purple/indigo/cyan/rose), lock icons for unearned, stagger animations, earned/total counter. Integrated into the Profile page above the edit form.
+   289→- Encourages user engagement through visible achievement milestones.
+   290→
+   291→### 3. Advanced Job Filters (Search Precision Feature)
+   292→- **Enhanced API** `/api/jobs/list`: added query params `minReward`, `maxReward`, `sortBy` (newest/rewardHigh/rewardLow/deadline), `deadline` (any/3days/7days/expired). Prisma where-clause + orderBy built dynamically.
+   293→- **Updated JobsListPage**: collapsible advanced filter panel with min/max reward number inputs, sort-by dropdown, deadline filter dropdown, active-filter indicator dot, clear-filters button. Toggle button shows/hides the panel with fade-in animation.
+   294→- Verified: setting min reward to ৳10 correctly filters out low-paying jobs (Telegram ৳4, Instagram ৳6, etc.) and shows only jobs ≥ ৳10.
+   295→
+   296→### 4. Hero Illustration (Visual Polish)
+   297→- Generated a custom flat-vector illustration via the image-generation skill (z-ai CLI): "young Bangladeshi person earning money online with smartphone, coins and taka currency symbols, soft green and white color scheme, minimalist modern illustration".
+   298→- Restructured the homepage hero from a centered single-column to a two-column layout: text content + CTA buttons + stats on the left, illustration with floating animation + pulse-glow backdrop on the right (hidden on mobile for performance).
+   299→- Illustration saved to `/public/hero-illustration.png`.
+   300→
+   301→### 5. i18n Expansion
+   302→- Added 3 new translation sections to both bn/en: `jobStats` (14 keys), `badges` (5 keys), `filters` (12 keys).
+   303→
+   304→## Verification Results
+   305→- `bun run lint`: 0 errors ✓
+   306→- Dev server: running, HTTP 200, no compile errors ✓
+   307→- agent-browser verified:
+   308→  - Homepage: hero illustration renders with floating animation + pulse-glow backdrop; two-column layout on desktop ✓
+   309→  - Job detail: stats card shows 8 metrics (1 submission, 0% approval, 30 days remaining, 199 slots) with progress bar ✓
+   310→  - Jobs list: advanced filter panel expands; min reward ৳10 filter correctly excludes low-paying jobs ✓
+   311→  - Profile: badges grid renders 8 badges (Newbie + Pro Earner earned for worker) with lock icons for unearned ✓
+   312→  - No console errors on any page ✓
+   313→
+   314→## Unresolved Issues / Risks
+   315→- The `agent-browser` click command occasionally lands on inner SVG elements (headless-browser limitation); workaround is `find role button click --name`. No user impact.
+   316→- The hero illustration is generated and looks good, but could be regenerated with more specific prompts for different seasonal campaigns.
+   317→- Job stats average approval time shows "—" when no submissions have been reviewed yet (0 data points); will populate as jobs get reviewed.
+   318→
+   319→## Priority Recommendations for Next Phase
+   320→1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+   321→2. Add job sharing with OG meta tags (generate shareable preview links).
+   322→3. Add email notifications on approval/rejection (currently in-app only).
+   323→4. Add a public job page (shareable link) for non-logged-in users to view job details.
+   324→5. Add withdrawal processing time estimates on the withdraw page.
+   325→6. Add a "featured" flag to jobs for admin-controlled premium placement.
+   326→7. Add user profile badges to the leaderboard and job detail (owner reputation).
+   327→8. Add a notifications settings page (opt-in/out per notification type).
+   328→9. Add a job completion certificate (downloadable PDF) for approved submissions.
+   329→10. Add a referral link (not just code) that auto-fills the registration form.
+   330→
+   331→---
+   332→Task ID: cron-review-4
+   333→Agent: main (Z.ai Code) - cron webDevReview
+   334→Task: QA testing, share button, owner reputation, referral links, withdrawal info
+   335→
+   336→## Current Project Status (Assessment)
+   337→The platform is stable and feature-rich from previous rounds. All core flows (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart, leaderboard, featured jobs, admin broadcast, maintenance banner, job stats, user badges, advanced filters, hero illustration) work. No build failures or runtime errors. This round focused on social sharing, owner transparency, referral growth, and withdrawal clarity.
+   338→
+   339→## Completed Modifications / New Features
+   340→
+   341→### 1. Share Job Button (Social/Viral Feature)
+   342→- **New component** `src/components/shared/share-button.tsx`: dialog with shareable URL preview + copy link button (with success state) + native Web Share API support (where available, e.g. mobile).
+   343→- Integrated into the JobDetailPage header next to the back button.
+   344→- Generates full shareable URL: `{origin}/#/jobs/{jobId}`.
+   345→- Verified: dialog opens, shows URL, copy button works (text changes to "লিংক কপি হয়েছে").
+   346→
+   347→### 2. Owner Reputation Card (Trust/Transparency Feature)
+   348→- **New API** `/api/owner-reputation?userId=`: returns owner name, username, member-since date, jobs posted count, total spent, approval rate (computed from all submissions on owner's jobs), and verified status (verified if posted 3+ jobs).
+   349→- **New component** `src/components/shared/owner-reputation.tsx`: card with owner avatar (initial), name, verified badge (BadgeCheck icon), and 4-stat grid (jobs posted, total spent, approval rate, member since). Skeleton loading state.
+   350→- Integrated into JobDetailPage below the JobStatsCard.
+   351→- Verified: shows Demo Employer with "যাচাইকৃত" (Verified) badge, 8 jobs posted, ৳1500 total spent, 0% approval rate, member since 27 Aug 2026.
+   352→
+   353→### 3. Referral Link Auto-Fill (Growth Feature)
+   354→- **Fixed hash router** `parseHash()`: now strips query string (`?ref=...`) before splitting on `/`, so `#/register?ref=WORKER001` correctly routes to the register page.
+   355→- **Updated RegisterPage**: useEffect parses referral code from both `window.location.search` and the hash query string, auto-filling the referralCode field.
+   356→- The referrals page already generates the shareable link `/#/register?ref={code}` — now it works end-to-end: clicking the link loads register page with the code pre-filled.
+   357→- Verified: navigating to `/#/register?ref=WORKER001` auto-fills "WORKER001" in the referral code field.
+   358→
+   359→### 4. Withdrawal Processing Info Cards (Clarity Feature)
+   360→- **Updated WithdrawPage**: added 3 info cards above the withdraw form:
+   361→  - Processing Time (Clock icon, primary): "২৪-৪৮ ঘন্টা" with description "সাধারণত ১-৩ কর্মদিবসে প্রসেস হয়"
+   362→  - Fee (ShieldCheck icon, green): "ফ্রি" with "কোনো লুকানো চার্জ নেই"
+   363→  - Tips (Lightbulb icon, amber): warning about entering correct account number
+   364→- Helps users understand withdrawal expectations before submitting.
+   365→
+   366→### 5. i18n Expansion
+   367→- Added 4 new translation sections to both bn/en: `share` (4 keys), `ownerReputation` (6 keys), `withdrawInfo` (8 keys), `referralLink` (4 keys).
+   368→
+   369→### 6. Router Bug Fix
+   370→- Fixed `parseHash()` in `src/lib/router.ts` to strip query strings before parsing route segments. Previously `#/register?ref=CODE` would fail to match the "register" route because the segment became `register?ref=CODE`. Now correctly extracts `register` and lets the RegisterPage read the query param.
+   371→
+   372→## Verification Results
+   373→- `bun run lint`: 0 errors ✓
+   374→- Dev server: running, HTTP 200, no compile errors ✓
+   375→- agent-browser verified:
+   376→  - Job detail: Share button opens dialog with full URL, copy works ✓
+   377→  - Job detail: Owner Reputation card shows Demo Employer with verified badge, 8 jobs, ৳1500 spent, approval rate, member since ✓
+   378→  - Withdraw page: 3 info cards (Processing Time, Fee, Tips) render with icons and descriptions ✓
+   379→  - Register page: `/#/register?ref=WORKER001` auto-fills referral code field ✓
+   380→  - No console errors on any page ✓
+   381→
+   382→## Unresolved Issues / Risks
+   383→- The `agent-browser open` command with a hash URL sometimes doesn't trigger a hashchange event; requires a reload. This is a testing-tool limitation, not an app bug — real users navigating via links/buttons work fine.
+   384→- Owner approval rate shows 0% when the owner hasn't reviewed any submissions yet; will populate as jobs get reviewed.
+   385→- Native Web Share API only works on HTTPS + supported browsers (mobile); falls back to copy link on desktop.
+   386→
+   387→## Priority Recommendations for Next Phase
+   388→1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+   389→2. Add email notifications on approval/rejection (currently in-app only).
+   390→3. Add a job completion certificate (downloadable PDF) for approved submissions.
+   391→4. Add a notifications settings page (opt-in/out per notification type).
+   392→5. Add a "featured" flag to jobs for admin-controlled premium placement.
+   393→6. Add user profile badges to the leaderboard (show top earner badges).
+   394→7. Add a public user profile page (viewable reputation/badges without login).
+   395→8. Add job categories page with category-specific stats and counts.
+   396→9. Add a dashboard activity feed (recent submissions, approvals, withdrawals).
+   397→10. Add search history / recently viewed jobs on the jobs list.
+   398→

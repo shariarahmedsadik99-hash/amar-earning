@@ -23,6 +23,8 @@ export type Route =
   | { name: "how-it-works" }
   | { name: "faq" }
   | { name: "leaderboard" }
+  | { name: "categories" }
+  | { name: "public-profile"; username: string }
   | { name: "admin" }
   | { name: "admin-users" }
   | { name: "admin-jobs" }
@@ -78,6 +80,11 @@ function parseHash(): Route {
       return { name: "faq" };
     case "leaderboard":
       return { name: "leaderboard" };
+    case "categories":
+      return { name: "categories" };
+    case "u":
+      if (parts[1]) return { name: "public-profile", username: parts[1] };
+      return { name: "home" };
     case "admin":
       if (parts[1] === "users") return { name: "admin-users" };
       if (parts[1] === "jobs") return { name: "admin-jobs" };
@@ -124,6 +131,8 @@ export function routeToHash(route: Route): string {
       return "#/admin/settings";
     case "admin-announce":
       return "#/admin/announce";
+    case "public-profile":
+      return `#/u/${route.username}`;
     default:
       return `#/${route.name}`;
   }

@@ -100,7 +100,16 @@ export function HomePage() {
 
       {/* Categories */}
       <section className="mx-auto max-w-7xl px-4 py-10 md:py-14">
-        <SectionHeader title={t.categories.title} subtitle={t.categories.subtitle} />
+        <SectionHeader
+          title={t.categories.title}
+          subtitle={t.categories.subtitle}
+          action={
+            <Button variant="ghost" size="sm" className="gap-1" onClick={() => navigate({ name: "categories" })}>
+              {t.categoriesPage.browse}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          }
+        />
         {loading ? (
           <LoadingState />
         ) : (

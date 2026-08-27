@@ -395,3 +395,103 @@ The platform is stable and feature-rich from previous rounds. All core flows (au
 8. Add job categories page with category-specific stats and counts.
 9. Add a dashboard activity feed (recent submissions, approvals, withdrawals).
 10. Add search history / recently viewed jobs on the jobs list.
+
+---
+Task ID: categories-public-views
+Agent: full-stack-developer
+Task: Build Categories and Public Profile view components
+
+Work Log:
+- Read prior worklog, router, i18n-context, i18n translations, auth-context, format helpers, CategoryIcon, EmptyState/LoadingState, and user-badges (for ICONS/COLORS reference) to match conventions used across other views (leaderboard/how-it-works).
+- Inspected both backend API route handlers (`/api/categories-stats`, `/api/public-user`) to confirm exact response shapes — categories return `{ id, name, slug, icon, jobCount, avgReward, maxReward }`; public-user returns `{ user: {..., approvedCount, submissionsCount}, badges: [{ key, labelBn, labelEn, icon, earned }] }` (no `color` field on badges).
+- Verified slug → translation key mapping using `prisma/seed.ts` (`social-media`, `website-visit`, `app-testing`, `data-entry`, `content`, `other`) which maps cleanly to existing `t.categories` camelCase keys.
+- Created `/home/z/my-project/src/components/views/categories.tsx` exporting `CategoriesPage`:
+  - Standalone public page in `mx-auto max-w-7xl px-4 py-10 md:py-16`.
+  - Centered header with `LayoutGrid` icon in rounded tile, title + subtitle, `animate-fade-in-up`.
+  - Active-flag `useEffect` fetches `/api/categories-stats` (cache: no-store) with try/catch fallback to `[]`.
+  - Loading state via `LoadingState`; empty state via `EmptyState` with `FolderSearch` icon.
+  - Responsive grid: `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` with `stagger` animation.
+  - Each card: large gradient icon circle (CategoryIcon), category name via slug→camelCase translation lookup with `name` fallback, job-count Badge (top-right), avgReward + maxReward stat rows with TrendingUp/Trophy icons, `card-lift` hover, "Browse" affordance with arrow.
+  - Card is keyboard-accessible (role=button, tabIndex=0, Enter/Space handler) and navigates to `{ name: "available-jobs-category", categoryId: cat.id }`.
+- Created `/home/z/my-project/src/components/views/public-profile.tsx` exporting `PublicProfilePage({ username })`:
+  - Standalone public page in `mx-auto max-w-3xl px-4 py-10 md:py-16`.
+  - `useEffect` keyed on `username` (refetch on change) with active-flag; treats 404/non-OK as not-found.
+  - Loading state via `LoadingState`; not-found via `EmptyState` with `UserX` icon, message, and Back button.
+  - Header card (gradient + primary tint): large avatar circle with initial letter, name, @username, ADMIN role badge (ShieldCheck), member-since date via `formatDate`.
+  - Stats grid (2 cols mobile, 4 cols lg): totalEarned, totalSpent, jobsPosted, jobsCompleted(approvedCount) — each with colored icon tile, `card-lift`.
+  - Badges section reuses the visual style from `src/components/shared/user-badges.tsx`: locally redeclared `ICONS` and `COLORS` maps (since originals are not exported and we must not edit other files). Because public-user API has no `color` field, added a `KEY_COLOR` map keyed by badge.key (newbie→cyan, first_job→green, active_worker→yellow, pro_earner→purple, top_earner→amber, job_creator→blue, employer→indigo, veteran→rose). Earned badges render in color; locked ones get `opacity-40 grayscale` and a Lock icon. Earned/locked status label included.
+  - Footer: "Browse Jobs" (primary) + "Back" (outline) buttons, responsive full-width on mobile.
+  - Animations: `animate-fade-in-up` on header/badges/footer, `stagger` on stats and badges grids.
+- Confirmed exports match what `src/app/page.tsx` will import (`CategoriesPage`, `PublicProfilePage`).
+- Ran `bun run lint` → clean, no errors. Verified dev log shows successful compilation with no runtime errors for new modules.
+
+Stage Summary:
+- Two new view components shipped: `CategoriesPage` (public category browser with per-category job counts and reward stats) and `PublicProfilePage` (public user profile with avatar, member-since, 4-stat grid, and color-coded achievement badges with earned/locked states).
+- Both are standalone (not wrapped in DashboardLayout), reuse all shared infrastructure (router, i18n, format helpers, shared states, shadcn Card/Badge/Button, CategoryIcon), are fully responsive and keyboard-accessible, and follow the project's animation conventions (`animate-fade-in-up`, `stagger`, `card-lift`).
+- ESLint passes cleanly; dev server compiles without errors. Ready for `src/app/page.tsx` to import and render them under the `categories` and `public-profile` routes.
+
+---
+Task ID: cron-review-5
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, activity feed, recently viewed jobs, categories page, public profile
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart, leaderboard, featured jobs, admin broadcast, maintenance banner, job stats, user badges, advanced filters, hero illustration, share button, owner reputation, referral links, withdrawal info) work. No build failures or runtime errors. This round focused on dashboard engagement (activity feed), browsing efficiency (recently viewed), discovery (categories page), and social proof (public profiles).
+
+## Completed Modifications / New Features
+
+### 1. Dashboard Activity Feed (Engagement Feature)
+- **New API** `/api/activity`: aggregates recent activity from submissions (as worker), incoming submissions (as employer), transactions, and withdrawals. Returns sorted timeline of up to 15 items with type, title, description, amount, timestamp, and icon name.
+- **New component** `src/components/shared/activity-feed.tsx`: timeline-style card with colored icons per activity type (green for approved/earnings, red for rejected, yellow for pending, primary for neutral), amounts with +/- indicators, relative timestamps (timeAgo), skeleton loading, and empty state.
+- Integrated into DashboardPage below the referral CTA card.
+- Verified: shows worker's withdrawal request (pending), job completed earnings, signup bonus, and submission activity.
+
+### 2. Recently Viewed Jobs (Browsing Efficiency Feature)
+- **New hook** `src/lib/use-recent-jobs.ts`: localStorage-based hook with `load`, `add`, `clear` functions. Stores up to 8 recently viewed jobs (id, title, reward, categoryName, viewedAt). Deduplicates and prepends new views.
+- **Updated JobDetailPage**: calls `addRecentJob()` when a job loads, tracking the view.
+- **Updated JobsListPage**: added `RecentJobsSection` component at the bottom showing horizontally-scrollable cards of recently viewed jobs with title, category, and reward. Includes a clear button. Only shows when there are recent jobs.
+- Verified: viewing the Telegram job then navigating to jobs list shows it in the "সাম্প্রতিক দেখা কাজ" section.
+
+### 3. Categories Page (Discovery Feature)
+- **New API** `/api/categories-stats`: returns all categories with active job counts, average reward, and max reward.
+- **New view** `src/components/views/categories.tsx` (built via subagent): standalone public page with responsive grid of category cards showing icon, name, job count badge, avg/max rewards. Clicking navigates to filtered jobs. Keyboard accessible.
+- **New route** `#/categories` added to router + page.tsx.
+- **Homepage**: added "Browse" button to the categories section header linking to the full categories page.
+
+### 4. Public User Profile (Social Proof Feature)
+- **New API** `/api/public-user?userId=ORusername=`: returns public user data (name, username, createdAt, role, totalEarned, totalSpent, jobsPosted, submissionsCount, approvedCount) + computed badges. No auth required.
+- **New view** `src/components/views/public-profile.tsx` (built via subagent): standalone public page with avatar, name, @username, member-since, admin badge, 4-stat grid (earned, spent, posted, completed), and badges section (earned in color, locked grayscale). Not-found state for invalid users.
+- **New route** `#/u/:username` added to router + page.tsx.
+- **Updated OwnerReputation**: owner name is now a clickable link that navigates to the public profile.
+- Verified: viewing `#/u/employer` shows Demo Employer with ৳0 earned, ৳1500 spent, badges.
+
+### 5. i18n Expansion
+- Added 4 new translation sections to both bn/en: `activity` (6 keys), `recentJobs` (3 keys), `categoriesPage` (6 keys), `publicProfile` (8 keys).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors ✓
+- agent-browser verified:
+  - Categories page (`#/categories`): shows all 6 categories with job counts and reward stats ✓
+  - Public profile (`#/u/employer`): shows Demo Employer with stats (৳0 earned, ৳1500 spent) and badges ✓
+  - Dashboard activity feed: shows withdrawal (pending), job earnings, signup bonus, submissions ✓
+  - Recently viewed jobs: viewing a job then going to jobs list shows it in the recent section ✓
+  - Owner reputation name is clickable → navigates to public profile ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- The `agent-browser open` with hash URLs sometimes requires a reload to trigger routing; this is a testing-tool limitation, not an app bug.
+- Activity feed aggregates from multiple queries; for users with very high activity, the 15-item limit keeps it performant.
+- Recently viewed jobs are stored in localStorage (per-device); not synced across devices — acceptable for a browsing convenience feature.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add a job completion certificate (downloadable PDF) for approved submissions.
+4. Add a notifications settings page (opt-in/out per notification type).
+5. Add a "featured" flag to jobs for admin-controlled premium placement.
+6. Add search history / saved searches on the jobs list.
+7. Add a dashboard quick-stats comparison (this week vs last week).
+8. Add job categories with custom icons upload (admin).
+9. Add a public jobs feed RSS/JSON endpoint for external integration.
+10. Add user follow system (follow top earners/employers).

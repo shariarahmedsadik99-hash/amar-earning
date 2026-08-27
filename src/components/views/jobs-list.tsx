@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { useRouter, type Route } from "@/lib/router";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { JobCard, type JobCardData } from "@/components/shared/job-card";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { LoadingState, EmptyState } from "@/components/shared/states";
-import { Search, Briefcase, SlidersHorizontal } from "lucide-react";
+import { useRecentJobs } from "@/lib/use-recent-jobs";
+import { formatMoney } from "@/lib/format";
+import { Search, Briefcase, SlidersHorizontal, History } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -210,6 +213,58 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
           ))}
         </div>
       )}
+
+      {/* Recently viewed jobs */}
+      <RecentJobsSection />
+    </div>
+  );
+}
+
+function RecentJobsSection() {
+  const { t, lang } = useI18n();
+  const { navigate } = useRouter();
+  const { recent, load, clear } = useRecentJobs();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, [load]);
+
+  if (!mounted || recent.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-base flex items-center gap-2">
+          <History className="h-4 w-4 text-primary" />
+          {t.recentJobs.title}
+        </h2>
+        <button
+          onClick={clear}
+          className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+        >
+          {t.recentJobs.clear}
+        </button>
+      </div>
+      <Card className="p-3">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {recent.map((job) => (
+            <button
+              key={job.id}
+              onClick={() => navigate({ name: "job", id: job.id } as Route)}
+              className="shrink-0 w-48 p-3 rounded-lg border bg-card hover:border-primary/30 hover:shadow-sm transition-all text-left card-lift"
+            >
+              <p className="text-sm font-medium truncate">{job.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{job.categoryName}</p>
+              <p className="text-sm font-bold text-primary mt-1">
+                {t.common.currency}{formatMoney(job.reward, lang)}
+              </p>
+            </button>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

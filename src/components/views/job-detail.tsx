@@ -15,6 +15,7 @@ import { JobStatsCard } from "@/components/shared/job-stats-card";
 import { OwnerReputation } from "@/components/shared/owner-reputation";
 import { ShareButton } from "@/components/shared/share-button";
 import { LoadingState } from "@/components/shared/states";
+import { useRecentJobs } from "@/lib/use-recent-jobs";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -62,6 +63,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const { add: addRecentJob } = useRecentJobs();
 
   useEffect(() => {
     fetch(`/api/jobs?id=${jobId}`)
@@ -70,6 +72,15 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         setJob(d.job);
         setMySubmission(d.mySubmission);
         setLoading(false);
+        // Track recently viewed
+        if (d.job) {
+          addRecentJob({
+            id: d.job.id,
+            title: d.job.title,
+            reward: d.job.reward,
+            categoryName: d.job.category.name,
+          });
+        }
       });
     // Load bookmark status
     if (user) {
