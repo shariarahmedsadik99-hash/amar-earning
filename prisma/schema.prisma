@@ -82,6 +82,7 @@ model Job {
   workerLimit    Int
   completedCount Int      @default(0)
   status         String   @default("PENDING") // PENDING | ACTIVE | PAUSED | COMPLETED | REJECTED
+  featured       Boolean  @default(false)
   deadline       DateTime
   ownerId        String
   categoryId     String

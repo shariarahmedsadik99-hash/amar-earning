@@ -286,6 +286,11 @@ export const translations = {
       jobs: "কাজ",
       empty: "এখনও কোনো আর্নার নেই",
       viewAll: "সব দেখুন",
+      tabEarners: "টপ আর্নার",
+      tabReferrers: "টপ রেফারার",
+      referrals: "রেফারেল",
+      bonus: "বোনাস",
+      emptyReferrers: "এখনও কোনো রেফারার নেই",
     },
 
     featured: {
@@ -730,6 +735,11 @@ export const translations = {
       jobs: "Jobs",
       empty: "No earners yet",
       viewAll: "View All",
+      tabEarners: "Top Earners",
+      tabReferrers: "Top Referrers",
+      referrals: "Referrals",
+      bonus: "Bonus",
+      emptyReferrers: "No referrers yet",
     },
 
     featured: {

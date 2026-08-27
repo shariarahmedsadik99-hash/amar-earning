@@ -556,3 +556,89 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add admin dashboard charts (submissions over time, earnings trends).
 9. Add job categories with custom icons upload (admin).
 10. Add a referral leaderboard (top referrers) separate from earnings leaderboard.
+
+---
+Task ID: leaderboard-referral-tab
+Agent: full-stack-developer
+Task: Add referral leaderboard tab to Leaderboard view
+
+Work Log:
+- Read previous worklog and the existing `/home/z/my-project/src/components/views/leaderboard.tsx` (~393 lines, earners-only).
+- Verified the new i18n keys exist in `src/lib/i18n.ts` for both `bn` and `en` (`tabEarners`, `tabReferrers`, `referrals`, `bonus`, `emptyReferrers`) and that the `/api/referral-leaderboard` route returns `{ leaderboard: [{ rank, name, username, totalBonus, referralsCount, joinedAt }] }`.
+- Confirmed shadcn `tabs.tsx` is available in `src/components/ui`.
+- Rewrote `leaderboard.tsx` to introduce a two-tab layout ("Top Earners" / "Top Referrers") using shadcn `Tabs`, placed below the existing header.
+- Introduced a shared `DisplayEntry` model + `toEarnerDisplay` / `toReferrerDisplay` normalizers so both leaderboards reuse the same rendering helpers (`Podium`, `PodiumCard`, `RemainingList`, `LeaderboardContent`).
+- Earners tab preserves the original behavior (fetch `/api/leaderboard` on mount, podium with Crown for #1, Briefcase for jobs count, empty state via `t.leaderboard.empty`).
+- Referrers tab lazy-fetches `/api/referral-leaderboard` only when the tab is first opened (guarded by `referrersFetched`); podium uses `Gift` icon for rank #1 highlight and `Users` icon for the referrals stat; list/table headers switch to `bonus` / `referrals` labels; empty state uses `t.leaderboard.emptyReferrers`.
+- Current-user highlight (ring + "You"/"আপনি" badge) works for both tabs via the shared `isMe` callback.
+- Loading states handled per tab: earners shows `LoadingState` during initial fetch; referrers shows `LoadingState` during lazy fetch.
+- Logged-out CTA and standalone page wrapper preserved unchanged.
+- Ran `bun run lint` — passed with no errors. Dev log shows clean compile.
+
+Stage Summary:
+- `src/components/views/leaderboard.tsx` now supports a tabbed leaderboard: "Top Earners" (unchanged content/data source) and "Top Referrers" (new, lazy-loaded from `/api/referral-leaderboard`).
+- Refactored rendering into shared `Podium` + `RemainingList` sub-components driven by a normalized `DisplayEntry` model and a `theme: "earners" | "referrers"` prop, eliminating duplication while keeping each tab visually distinct (Crown/Briefcase vs Gift/Users).
+- Per-tab loading + empty states, current-user highlight, responsive desktop-table / mobile-card layout, and the logged-out CTA all behave correctly. No other files modified.
+
+---
+Task ID: cron-review-7
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, enforce notification settings, featured job flag, referral leaderboard
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features work. No build failures or runtime errors. This round completed the notification settings enforcement (finishing the feature from round 6), added admin-controlled featured job placement, and a referral leaderboard tab.
+
+## Completed Modifications / New Features
+
+### 1. Enforce Notification Settings (Completing Round 6 Feature)
+- **New helper** `isNotificationEnabled(userId, type)` in `src/lib/wallet.ts`: checks the user's `notifySettings` JSON field and returns false if the specific notification type is disabled.
+- **Updated `notify()` helper**: now checks settings before creating notifications (for flows using the helper).
+- **Updated submissions API** (`/api/submissions` PATCH): approve and reject flows now call `isNotificationEnabled` before the transaction and conditionally create the SUBMISSION_APPROVED/SUBMISSION_REJECTED notification inside the transaction.
+- **Updated withdrawals API** (`/api/withdrawals` PATCH): approve/paid and reject flows now check WITHDRAWAL_APPROVED/WITHDRAWAL_REJECTED settings before creating notifications.
+- **Updated admin announce API** (`/api/admin/announce`): filters out users who disabled announcements before creating notifications in batch; recipient count reflects eligible users only.
+- Verified: API persists `submissionApproved: false` correctly; enforcement infrastructure is in place across all 6 notification types.
+
+### 2. Featured Job Flag (Admin-Controlled Premium Placement)
+- **DB schema change**: added `featured Boolean @default(false)` to Job model. Ran `db:push` + regenerated Prisma client + restarted dev server.
+- **Updated featured jobs API** (`/api/jobs/featured`): now queries admin-flagged featured jobs first; if fewer than 4, fills with highest-reward jobs as fallback. Admin-flagged jobs take priority on the homepage featured section.
+- **Updated admin jobs API** (`/api/admin/jobs` PATCH): added `feature` and `unfeature` actions that toggle the `featured` flag.
+- **Updated admin panel** (`admin-page.tsx`): added Feature/Unfeature toggle buttons (Star/StarOff icons) on each job card. Featured jobs show an amber "ফিচার্ড" (Featured) button; non-featured show a ghost "ফিচার" (Feature) button.
+- Verified: admin can feature a job (button toggles to "ফিচার্ড"); the job then appears in the homepage featured section.
+
+### 3. Referral Leaderboard (Gamification Feature)
+- **New API** `/api/referral-leaderboard`: aggregates REFERRAL_BONUS transactions per user, ranks top 20 by total bonus, includes referralsCount and joinedAt.
+- **Updated leaderboard view** (via subagent Task ID: leaderboard-referral-tab): added shadcn Tabs component with two tabs:
+  - "Top Earners" (existing earners leaderboard with Trophy icon)
+  - "Top Referrers" (new — shows top referrers with Gift icon, totalBonus, referralsCount)
+  - Referrers tab lazy-fetches only when first opened; podium + table reuse normalized display model; empty state for no referrers.
+- Verified: tabs render correctly; referrers tab shows empty state "এখনও কোনো রেফারার নেই" (no referral bonuses in demo data).
+
+### 4. i18n Expansion
+- Added 5 new keys to `t.leaderboard` in both bn/en: `tabEarners`, `tabReferrers`, `referrals`, `bonus`, `emptyReferrers`.
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors (restarted after DB schema change) ✓
+- agent-browser verified:
+  - Leaderboard: tabs render (Top Earners selected, Top Referrers clickable); referrers tab shows empty state ✓
+  - Admin jobs: Feature button appears on each job; clicking toggles to "ফিচার্ড" (Featured) ✓
+  - Homepage: featured section shows admin-flagged featured jobs first ✓
+  - No console errors on any page ✓
+- API verified: notification settings persist (`submissionApproved: false`); enforcement helper returns correct boolean ✓
+
+## Unresolved Issues / Risks
+- Referral leaderboard is empty in demo data (no referral bonuses earned); will populate as real referrals happen.
+- The `notify()` helper enforces settings for flows that use it, but some notification creation is inline in transactions (now also guarded by `isNotificationEnabled` checked before the transaction).
+- Featured jobs fallback to highest-reward when fewer than 4 are admin-flagged; this ensures the section is never empty.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add a job completion certificate (downloadable PDF) for approved submissions.
+4. Add user follow system (follow top earners/employers).
+5. Add a public jobs feed RSS/JSON endpoint for external integration.
+6. Add admin dashboard charts (submissions over time, earnings trends).
+7. Add job categories with custom icons upload (admin).
+8. Add a "verified" badge system for employers (admin-controlled, distinct from auto-verified).
+9. Add a job reporting/flagging system (users can report inappropriate jobs).
+10. Add a dark mode illustration variant for the hero.

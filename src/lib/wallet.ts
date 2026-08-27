@@ -132,13 +132,58 @@ export async function refundHeldAmount(
   return newBalance;
 }
 
+// Map notification types to settings keys
+const NOTIFY_TYPE_TO_SETTING: Record<string, string> = {
+  SUBMISSION_APPROVED: "submissionApproved",
+  SUBMISSION_REJECTED: "submissionRejected",
+  WITHDRAWAL_APPROVED: "withdrawalApproved",
+  WITHDRAWAL_REJECTED: "withdrawalRejected",
+  JOB_COMPLETED: "jobCompleted",
+  ANNOUNCEMENT: "announcement",
+};
+
+// Check if a user has enabled a specific notification type
+export async function isNotificationEnabled(userId: string, type: string): Promise<boolean> {
+  const settingKey = NOTIFY_TYPE_TO_SETTING[type];
+  if (!settingKey) return true; // unmapped types always allowed
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { notifySettings: true },
+  });
+  if (!user?.notifySettings) return true; // default: enabled
+  try {
+    const settings = JSON.parse(user.notifySettings);
+    return settings[settingKey] !== false;
+  } catch {
+    return true;
+  }
+}
+
 export async function notify(
   userId: string,
   title: string,
   message: string,
   type: string
 ) {
+  // Check user's notification settings; skip if disabled
+  const settingKey = NOTIFY_TYPE_TO_SETTING[type];
+  if (settingKey) {
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { notifySettings: true },
+    });
+    if (user?.notifySettings) {
+      try {
+        const settings = JSON.parse(user.notifySettings);
+        if (settings[settingKey] === false) {
+          return; // User opted out of this notification type
+        }
+      } catch {}
+    }
+  }
   await db.notification.create({
     data: { userId, title, message, type },
   });
 }
+
+

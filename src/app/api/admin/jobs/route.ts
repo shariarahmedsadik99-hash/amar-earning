@@ -49,6 +49,12 @@ export async function PATCH(req: NextRequest) {
 
     if (action === "delete") {
       await db.job.delete({ where: { id: jobId } });
+    } else if (action === "feature" || action === "unfeature") {
+      // Toggle featured flag
+      await db.job.update({
+        where: { id: jobId },
+        data: { featured: action === "feature" },
+      });
     } else {
       const newStatus =
         action === "approve" ? "ACTIVE" :

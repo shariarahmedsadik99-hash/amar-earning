@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { creditWallet, notify } from "@/lib/wallet";
+import { creditWallet, notify, isNotificationEnabled } from "@/lib/wallet";
 
 // GET - list submissions (filtered by user, or by job owner)
 export async function GET(req: NextRequest) {
@@ -173,6 +173,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "approve") {
+      // Check if worker has this notification type enabled
+      const shouldNotify = await isNotificationEnabled(submission.userId, "SUBMISSION_APPROVED");
       await db.$transaction(async (tx) => {
         await tx.jobSubmission.update({
           where: { id: submissionId },
@@ -197,16 +199,20 @@ export async function PATCH(req: NextRequest) {
             balanceAfter: newBalance,
           },
         });
-        await tx.notification.create({
-          data: {
-            userId: submission.userId,
-            title: "সাবমিশন অনুমোদিত!",
-            message: `আপনার "${submission.job.title}" কাজের সাবমিশন অনুমোদিত হয়েছে। ৳${submission.job.reward} যোগ হয়েছে।`,
-            type: "SUBMISSION_APPROVED",
-          },
-        });
+        if (shouldNotify) {
+          await tx.notification.create({
+            data: {
+              userId: submission.userId,
+              title: "সাবমিশন অনুমোদিত!",
+              message: `আপনার "${submission.job.title}" কাজের সাবমিশন অনুমোদিত হয়েছে। ৳${submission.job.reward} যোগ হয়েছে।`,
+              type: "SUBMISSION_APPROVED",
+            },
+          });
+        }
       });
     } else if (action === "reject") {
+      // Check if worker has this notification type enabled
+      const shouldNotify = await isNotificationEnabled(submission.userId, "SUBMISSION_REJECTED");
       await db.$transaction(async (tx) => {
         await tx.jobSubmission.update({
           where: { id: submissionId },
@@ -221,14 +227,16 @@ export async function PATCH(req: NextRequest) {
           where: { id: submission.jobId },
           data: { completedCount: { decrement: 1 } },
         });
-        await tx.notification.create({
-          data: {
-            userId: submission.userId,
-            title: "সাবমিশন প্রত্যাখ্যাত",
-            message: `আপনার "${submission.job.title}" কাজের সাবমিশন প্রত্যাখ্যাত হয়েছে।${rejectReason ? ` কারণ: ${rejectReason}` : ""}`,
-            type: "SUBMISSION_REJECTED",
-          },
-        });
+        if (shouldNotify) {
+          await tx.notification.create({
+            data: {
+              userId: submission.userId,
+              title: "সাবমিশন প্রত্যাখ্যাত",
+              message: `আপনার "${submission.job.title}" কাজের সাবমিশন প্রত্যাখ্যাত হয়েছে।${rejectReason ? ` কারণ: ${rejectReason}` : ""}`,
+              type: "SUBMISSION_REJECTED",
+            },
+          });
+        }
       });
     }
 

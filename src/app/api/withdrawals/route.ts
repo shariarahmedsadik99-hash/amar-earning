@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { holdAmount, refundHeldAmount, creditWallet, notify } from "@/lib/wallet";
+import { holdAmount, refundHeldAmount, creditWallet, notify, isNotificationEnabled } from "@/lib/wallet";
 import { getSettings } from "@/lib/settings";
 
 export async function GET(req: NextRequest) {
@@ -135,6 +135,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "approve" || action === "paid") {
+      // Check if user has this notification type enabled
+      const shouldNotify = await isNotificationEnabled(withdrawal.userId, "WITHDRAWAL_APPROVED");
       // Mark as paid - money was already held, now finalize (deduct from pending)
       await db.$transaction(async (tx) => {
         await tx.withdrawal.update({
@@ -146,14 +148,16 @@ export async function PATCH(req: NextRequest) {
           where: { userId: withdrawal.userId },
           data: { pendingBalance: { decrement: withdrawal.amount } },
         });
-        await tx.notification.create({
-          data: {
-            userId: withdrawal.userId,
-            title: "উইথড্র অনুমোদিত",
-            message: `আপনার ${withdrawal.amount}৳ উইথড্র রিকোয়েস্ট অনুমোদিত হয়েছে এবং পাঠানো হয়েছে।`,
-            type: "WITHDRAWAL_APPROVED",
-          },
-        });
+        if (shouldNotify) {
+          await tx.notification.create({
+            data: {
+              userId: withdrawal.userId,
+              title: "উইথড্র অনুমোদিত",
+              message: `আপনার ${withdrawal.amount}৳ উইথড্র রিকোয়েস্ট অনুমোদিত হয়েছে এবং পাঠানো হয়েছে।`,
+              type: "WITHDRAWAL_APPROVED",
+            },
+          });
+        }
       });
     } else if (action === "reject") {
       // Refund the held amount
@@ -166,14 +170,18 @@ export async function PATCH(req: NextRequest) {
         where: { id: withdrawalId },
         data: { status: "REJECTED", rejectReason: rejectReason || null, processedAt: new Date() },
       });
-      await db.notification.create({
-        data: {
-          userId: withdrawal.userId,
-          title: "উইথড্র প্রত্যাখ্যাত",
-          message: `আপনার ${withdrawal.amount}৳ উইথড্র রিকোয়েস্ট প্রত্যাখ্যাত হয়েছে।${rejectReason ? ` কারণ: ${rejectReason}` : ""} টাকা ফেরত দেওয়া হয়েছে।`,
-          type: "WITHDRAWAL_REJECTED",
-        },
-      });
+      // Check if user has this notification type enabled
+      const shouldNotifyReject = await isNotificationEnabled(withdrawal.userId, "WITHDRAWAL_REJECTED");
+      if (shouldNotifyReject) {
+        await db.notification.create({
+          data: {
+            userId: withdrawal.userId,
+            title: "উইথড্র প্রত্যাখ্যাত",
+            message: `আপনার ${withdrawal.amount}৳ উইথড্র রিকোয়েস্ট প্রত্যাখ্যাত হয়েছে।${rejectReason ? ` কারণ: ${rejectReason}` : ""} টাকা ফেরত দেওয়া হয়েছে।`,
+            type: "WITHDRAWAL_REJECTED",
+          },
+        });
+      }
     }
 
     return NextResponse.json({ ok: true });

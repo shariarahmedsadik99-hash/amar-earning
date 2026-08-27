@@ -15,15 +15,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title and message required" }, { status: 400 });
     }
 
-    // Get all active users
+    // Get all active users with their notification settings
     const users = await db.user.findMany({
       where: { status: "ACTIVE" },
-      select: { id: true },
+      select: { id: true, notifySettings: true },
     });
 
-    // Create notifications for all users in a batch
+    // Filter out users who disabled announcements
+    const eligibleUsers = users.filter((u) => {
+      if (!u.notifySettings) return true; // default: enabled
+      try {
+        const settings = JSON.parse(u.notifySettings);
+        return settings.announcement !== false;
+      } catch {
+        return true;
+      }
+    });
+
+    // Create notifications for eligible users in a batch
     await db.notification.createMany({
-      data: users.map((u) => ({
+      data: eligibleUsers.map((u) => ({
         userId: u.id,
         title,
         message,
@@ -40,7 +51,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, recipients: users.length });
+    return NextResponse.json({ ok: true, recipients: eligibleUsers.length });
   } catch (e) {
     console.error("Announce error:", e);
     return NextResponse.json({ error: "Failed" }, { status: 500 });

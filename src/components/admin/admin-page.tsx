@@ -65,6 +65,8 @@ import {
   UserX,
   Activity,
   Globe,
+  Star,
+  StarOff,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
 
@@ -954,6 +956,38 @@ function JobsView() {
                           <Play className="h-3 w-3 mr-1" />
                         )}
                         {L(lang, "চালু", "Activate")}
+                      </Button>
+                    )}
+                    {/* Feature toggle */}
+                    {job.featured ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs text-amber-600 border-amber-500/30"
+                        disabled={actionLoading === `${job.id}-unfeature`}
+                        onClick={() => act(job, "unfeature")}
+                      >
+                        {actionLoading === `${job.id}-unfeature` ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <StarOff className="h-3 w-3 mr-1" />
+                        )}
+                        {L(lang, "ফিচার্ড", "Featured")}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs"
+                        disabled={actionLoading === `${job.id}-feature`}
+                        onClick={() => act(job, "feature")}
+                      >
+                        {actionLoading === `${job.id}-feature` ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Star className="h-3 w-3 mr-1" />
+                        )}
+                        {L(lang, "ফিচার", "Feature")}
                       </Button>
                     )}
                     <Button
