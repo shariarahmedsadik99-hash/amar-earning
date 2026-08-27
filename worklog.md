@@ -495,3 +495,64 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add job categories with custom icons upload (admin).
 9. Add a public jobs feed RSS/JSON endpoint for external integration.
 10. Add user follow system (follow top earners/employers).
+
+---
+Task ID: cron-review-6
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, week comparison, notification settings, saved searches
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features work. No build failures or runtime errors. This round focused on dashboard analytics (week-over-week comparison), user control (notification settings), and browsing efficiency (saved searches).
+
+## Completed Modifications / New Features
+
+### 1. Dashboard Week-over-Week Comparison (Analytics Feature)
+- **New API** `/api/earnings-comparison`: computes this-week vs last-week earnings (JOB_EARN transactions) and submission counts, with percentage changes.
+- **New component** `src/components/shared/week-comparison.tsx`: card with 2 stat panels (Earned, Submissions) showing this week's value, last week's value, and a trend indicator (green TrendingUp for increase, red TrendingDown for decrease, gray Minus for no change, "no data" when last week is empty). Skeleton loading state.
+- Integrated into DashboardPage below the earnings chart.
+- Verified: shows "এই সপ্তাহে" / "গত সপ্তাহে" values with "গত সপ্তাহে কোনো ডেটা নেই" for the change indicator (demo data has no last-week activity).
+
+### 2. Notification Settings Page (User Control Feature)
+- **DB schema change**: added `notifySettings` String field to User model (JSON-encoded settings with all 6 notification types defaulting to true). Ran `db:push` + regenerated Prisma client.
+- **New API** `/api/notification-settings`: GET returns current settings (merged with defaults), PATCH updates them.
+- **New view** `src/components/views/notification-settings.tsx`: DashboardLayout page with 6 toggle switches (submissionApproved, submissionRejected, withdrawalApproved, withdrawalRejected, jobCompleted, announcement), each with icon + label + description. Save button persists to DB.
+- **New route** `#/notification-settings` added to router + page.tsx + protected routes.
+- **Updated NotificationsPage**: added a settings button in the header linking to the settings page.
+- Verified: API persists settings correctly (tested submissionApproved:false, jobCompleted:false).
+
+### 3. Saved Searches (Browsing Efficiency Feature)
+- **New hook** `src/lib/use-saved-searches.ts`: localStorage-based hook with `load`, `save`, `remove` functions. Stores up to 10 saved searches with name + all filter state (search, category, minReward, maxReward, sortBy, deadline).
+- **Updated JobsListPage**: 
+  - "Save This Search" button appears in the advanced filters panel when filters are active.
+  - Saved searches display as chips above the jobs grid; clicking applies the saved filters instantly.
+  - Each chip has a delete (X) button.
+- Verified: saved "High Paying Jobs" search with min reward ৳10; it appears as a chip and can be applied.
+
+### 4. i18n Expansion
+- Added 3 new translation sections to both bn/en: `comparison` (10 keys), `notifySettings` (14 keys), `savedSearches` (7 keys).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors (restarted after DB schema change) ✓
+- agent-browser verified:
+  - Dashboard: week comparison card renders with this-week/last-week values and trend indicators ✓
+  - Notification settings page: all 6 toggles render, save persists to DB (verified via API) ✓
+  - Jobs list: advanced filters expand, save search creates a chip, clicking applies filters ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- Week comparison shows "no data last week" for demo accounts since sample data has no 7-14 day old activity; real usage will populate it.
+- Saved searches are stored in localStorage (per-device); not synced across devices — acceptable for a convenience feature.
+- Notification settings are stored but not yet enforced (notifications are still created regardless of settings); enforcing opt-out would require checking settings before creating notifications in the submission/withdrawal review flows.
+
+## Priority Recommendations for Next Phase
+1. Enforce notification settings: check user's notifySettings before creating notifications in submission/withdrawal review flows.
+2. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+3. Add email notifications on approval/rejection (currently in-app only).
+4. Add a job completion certificate (downloadable PDF) for approved submissions.
+5. Add a "featured" flag to jobs for admin-controlled premium placement.
+6. Add user follow system (follow top earners/employers).
+7. Add a public jobs feed RSS/JSON endpoint for external integration.
+8. Add admin dashboard charts (submissions over time, earnings trends).
+9. Add job categories with custom icons upload (admin).
+10. Add a referral leaderboard (top referrers) separate from earnings leaderboard.

@@ -7,7 +7,7 @@ import { DashboardLayout } from "./dashboard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/shared/states";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, Settings } from "lucide-react";
 import { timeAgo } from "@/lib/format";
 
 type Notification = {
@@ -59,12 +59,20 @@ export function NotificationsPage() {
     <DashboardLayout active="notifications">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-bold">{t.notifications.title}</h1>
-        {notifications.some((n) => !n.read) && (
-          <Button variant="outline" size="sm" onClick={markAllRead}>
-            <CheckCheck className="h-4 w-4 mr-1" />
-            {t.notifications.markAllRead}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate({ name: "notification-settings" })}>
+            <Settings className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">{t.notifySettings.title}</span>
+            <Settings className="h-4 w-4 sm:hidden" />
           </Button>
-        )}
+          {notifications.some((n) => !n.read) && (
+            <Button variant="outline" size="sm" onClick={markAllRead}>
+              <CheckCheck className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">{t.notifications.markAllRead}</span>
+              <CheckCheck className="h-4 w-4 sm:hidden" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (

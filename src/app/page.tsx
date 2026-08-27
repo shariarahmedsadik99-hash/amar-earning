@@ -20,6 +20,7 @@ import { WalletPage } from "@/components/views/wallet";
 import { WithdrawPage } from "@/components/views/withdraw";
 import { ProfilePage } from "@/components/views/profile";
 import { NotificationsPage } from "@/components/views/notifications";
+import { NotificationSettingsPage } from "@/components/views/notification-settings";
 import { FaqPage } from "@/components/views/faq";
 import { ReferralsPage } from "@/components/views/referrals";
 import { MyBookmarksPage } from "@/components/views/my-bookmarks";
@@ -47,6 +48,7 @@ export default function Home() {
       "profile",
       "referrals",
       "notifications",
+      "notification-settings",
     ];
     const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-settings", "admin-announce"];
 
@@ -104,6 +106,8 @@ export default function Home() {
         return <ReferralsPage />;
       case "notifications":
         return <NotificationsPage />;
+      case "notification-settings":
+        return <NotificationSettingsPage />;
       case "faq":
         return <FaqPage />;
       case "leaderboard":

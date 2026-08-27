@@ -20,6 +20,7 @@ export type Route =
   | { name: "profile" }
   | { name: "referrals" }
   | { name: "notifications" }
+  | { name: "notification-settings" }
   | { name: "how-it-works" }
   | { name: "faq" }
   | { name: "leaderboard" }
@@ -74,6 +75,8 @@ function parseHash(): Route {
       return { name: "referrals" };
     case "notifications":
       return { name: "notifications" };
+    case "notification-settings":
+      return { name: "notification-settings" };
     case "how-it-works":
       return { name: "how-it-works" };
     case "faq":

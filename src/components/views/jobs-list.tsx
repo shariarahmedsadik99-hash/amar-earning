@@ -10,8 +10,10 @@ import { JobCard, type JobCardData } from "@/components/shared/job-card";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { LoadingState, EmptyState } from "@/components/shared/states";
 import { useRecentJobs } from "@/lib/use-recent-jobs";
+import { useSavedSearches } from "@/lib/use-saved-searches";
 import { formatMoney } from "@/lib/format";
-import { Search, Briefcase, SlidersHorizontal, History } from "lucide-react";
+import { toast } from "sonner";
+import { Search, Briefcase, SlidersHorizontal, History, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -34,6 +36,11 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
   const [sortBy, setSortBy] = useState("newest");
   const [deadline, setDeadline] = useState("any");
   const [showFilters, setShowFilters] = useState(false);
+  const { saved, load: loadSaved, save: saveSearch, remove } = useSavedSearches();
+
+  useEffect(() => {
+    loadSaved();
+  }, [loadSaved]);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -177,16 +184,61 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
               </Select>
             </div>
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="col-span-2 md:col-span-4 text-xs text-destructive hover:underline text-left"
-              >
-                {t.filters.clear}
-              </button>
+              <div className="col-span-2 md:col-span-4 flex items-center justify-between">
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-destructive hover:underline text-left"
+                >
+                  {t.filters.clear}
+                </button>
+                <button
+                  onClick={() => {
+                    const name = prompt(t.savedSearches.namePlaceholder, `${t.filters.title} ${saved.length + 1}`);
+                    if (name) {
+                      const ok = saveSearch({ name, search, category, minReward, maxReward, sortBy, deadline });
+                      if (ok) toast.success(t.savedSearches.saved);
+                    }
+                  }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {t.savedSearches.save}
+                </button>
+              </div>
             )}
           </div>
         )}
       </Card>
+
+      {/* Saved searches */}
+      {saved.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-xs text-muted-foreground shrink-0 font-medium">{t.savedSearches.title}:</span>
+          {saved.map((s) => (
+            <div key={s.id} className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/20 text-xs">
+              <button
+                onClick={() => {
+                  setSearch(s.search);
+                  setCategory(s.category);
+                  setMinReward(s.minReward);
+                  setMaxReward(s.maxReward);
+                  setSortBy(s.sortBy);
+                  setDeadline(s.deadline);
+                }}
+                className="font-medium text-primary hover:underline"
+              >
+                {s.name}
+              </button>
+              <button
+                onClick={() => remove(s.id)}
+                className="text-muted-foreground hover:text-destructive"
+                aria-label="Delete"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Category chips (mobile) */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 -mx-4 px-4 md:hidden">

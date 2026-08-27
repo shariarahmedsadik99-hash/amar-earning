@@ -23,6 +23,7 @@ import {
 import { formatMoney, toBn } from "@/lib/format";
 import { EarningsChart } from "@/components/shared/earnings-chart";
 import { ActivityFeed } from "@/components/shared/activity-feed";
+import { WeekComparison } from "@/components/shared/week-comparison";
 
 type DashboardStats = {
   balance: number;
@@ -181,6 +182,11 @@ export function DashboardPage() {
       {/* Earnings chart */}
       <div className="mt-4">
         <EarningsChart />
+      </div>
+
+      {/* Week comparison */}
+      <div className="mt-4">
+        <WeekComparison />
       </div>
 
       {/* Quick actions */}
