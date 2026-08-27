@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Copy, User, Mail, AtSign, Gift, Shield, LogOut, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/format";
+import { UserBadges } from "@/components/shared/user-badges";
 
 export function ProfilePage() {
   const { t, lang } = useI18n();
@@ -104,6 +105,11 @@ export function ProfilePage() {
             : "Share this code. Get ৳20 bonus for each new user."}
         </p>
       </Card>
+
+      {/* User Badges */}
+      <div className="mb-4">
+        <UserBadges />
+      </div>
 
       {/* Edit profile */}
       <Card className="p-5 mb-4">

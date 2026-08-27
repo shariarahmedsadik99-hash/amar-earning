@@ -41,43 +41,58 @@ export function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="hero-gradient border-b">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:py-20">
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-            <Badge variant="secondary" className="mb-4 gap-1.5 bg-primary/10 text-primary border-primary/20">
-              <Zap className="h-3 w-3" />
-              {lang === "bn" ? "বাংলাদেশের #১ মাইক্রো-জব প্ল্যাটফর্ম" : "#1 Micro-job platform in Bangladesh"}
-            </Badge>
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
-              {t.hero.headline}
-            </h1>
-            <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-              {t.hero.description}
-            </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="gap-2 h-12 px-6 text-base"
-                onClick={() => navigate({ name: "available-jobs" })}
-              >
-                <Search className="h-5 w-5" />
-                {t.hero.findJobs}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="gap-2 h-12 px-6 text-base"
-                onClick={() => navigate({ name: "post-job" })}
-              >
-                {t.hero.postJob}
-              </Button>
+      <section className="hero-gradient border-b overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 py-10 md:py-16">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Text content */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left animate-fade-in-up">
+              <Badge variant="secondary" className="mb-4 gap-1.5 bg-primary/10 text-primary border-primary/20">
+                <Zap className="h-3 w-3" />
+                {lang === "bn" ? "বাংলাদেশের #১ মাইক্রো-জব প্ল্যাটফর্ম" : "#1 Micro-job platform in Bangladesh"}
+              </Badge>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+                {t.hero.headline}
+              </h1>
+              <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
+                {t.hero.description}
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="gap-2 h-12 px-6 text-base"
+                  onClick={() => navigate({ name: "available-jobs" })}
+                >
+                  <Search className="h-5 w-5" />
+                  {t.hero.findJobs}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 h-12 px-6 text-base"
+                  onClick={() => navigate({ name: "post-job" })}
+                >
+                  {t.hero.postJob}
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-8 grid grid-cols-3 gap-4 md:gap-6 w-full max-w-md">
+                <Stat value={toBn(stats.totalJobs || 0)} label={lang === "bn" ? "কাজ" : "Jobs"} />
+                <Stat value={toBn(stats.totalUsers || 0)} label={lang === "bn" ? "ইউজার" : "Users"} />
+                <Stat value={`${t.common.currency}${formatMoney(stats.totalPaid || 0, lang)}`} label={lang === "bn" ? "পরিশোধিত" : "Paid"} />
+              </div>
             </div>
 
-            {/* Stats */}
-            <div className="mt-10 grid grid-cols-3 gap-4 md:gap-8 w-full max-w-lg">
-              <Stat value={toBn(stats.totalJobs || 0)} label={lang === "bn" ? "কাজ" : "Jobs"} />
-              <Stat value={toBn(stats.totalUsers || 0)} label={lang === "bn" ? "ইউজার" : "Users"} />
-              <Stat value={`${t.common.currency}${formatMoney(stats.totalPaid || 0, lang)}`} label={lang === "bn" ? "পরিশোধিত" : "Paid"} />
+            {/* Hero illustration */}
+            <div className="hidden md:flex justify-center items-center animate-fade-in-up">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" />
+                <img
+                  src="/hero-illustration.png"
+                  alt="Amar Earning illustration"
+                  className="relative w-80 h-80 lg:w-96 lg:h-96 object-contain animate-float drop-shadow-2xl"
+                />
+              </div>
             </div>
           </div>
         </div>

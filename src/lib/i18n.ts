@@ -308,6 +308,46 @@ export const translations = {
       title: "রক্ষণাবেক্ষণ মোডে",
       message: "সিস্টেম আপগ্রেড চলছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।",
     },
+
+    jobStats: {
+      title: "কাজের পরিসংখ্যান",
+      totalSubmissions: "মোট সাবমিশন",
+      approved: "অনুমোদিত",
+      rejected: "প্রত্যাখ্যাত",
+      pending: "অপেক্ষমাণ",
+      approvalRate: "অনুমোদন হার",
+      completionRate: "সমাপ্তি হার",
+      avgApprovalTime: "গড় অনুমোদন সময়",
+      totalPaidOut: "মোট পরিশোধিত",
+      daysRemaining: "বাকি দিন",
+      slotsRemaining: "বাকি স্লট",
+      hours: "ঘন্টা",
+      day: "দিন",
+    },
+
+    badges: {
+      title: "অর্জন ব্যাজ",
+      subtitle: "আপনার সক্রিয়তার ভিত্তিতে ব্যাজ",
+      earned: "অর্জিত",
+      locked: "অর্জন করা হয়নি",
+      progress: "অগ্রগতি",
+    },
+
+    filters: {
+      title: "ফিল্টার",
+      minReward: "সর্বনিম্ন পুরস্কার",
+      maxReward: "সর্বোচ্চ পুরস্কার",
+      sortBy: "সাজান",
+      sortNewest: "নতুনতম",
+      sortRewardHigh: "উচ্চ পুরস্কার",
+      sortRewardLow: "কম পুরস্কার",
+      sortDeadline: "ডেডলাইন",
+      clear: "ফিল্টার মুছুন",
+      anyDeadline: "যেকোনো সময়",
+      within7days: "৭ দিনের মধ্যে",
+      within3days: "৩ দিনের মধ্যে",
+      expired: "শেষ হয়ে গেছে",
+    },
   },
 
   en: {
@@ -601,6 +641,46 @@ export const translations = {
     maintenance: {
       title: "Under Maintenance",
       message: "System upgrade in progress. Please try again later.",
+    },
+
+    jobStats: {
+      title: "Job Statistics",
+      totalSubmissions: "Total Submissions",
+      approved: "Approved",
+      rejected: "Rejected",
+      pending: "Pending",
+      approvalRate: "Approval Rate",
+      completionRate: "Completion Rate",
+      avgApprovalTime: "Avg Approval Time",
+      totalPaidOut: "Total Paid Out",
+      daysRemaining: "Days Remaining",
+      slotsRemaining: "Slots Remaining",
+      hours: "hours",
+      day: "day",
+    },
+
+    badges: {
+      title: "Achievement Badges",
+      subtitle: "Badges based on your activity",
+      earned: "Earned",
+      locked: "Locked",
+      progress: "Progress",
+    },
+
+    filters: {
+      title: "Filters",
+      minReward: "Min Reward",
+      maxReward: "Max Reward",
+      sortBy: "Sort By",
+      sortNewest: "Newest",
+      sortRewardHigh: "Highest Reward",
+      sortRewardLow: "Lowest Reward",
+      sortDeadline: "Deadline",
+      clear: "Clear Filters",
+      anyDeadline: "Any time",
+      within7days: "Within 7 days",
+      within3days: "Within 3 days",
+      expired: "Expired",
     },
   },
 } as const;

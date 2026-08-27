@@ -267,3 +267,63 @@ The platform is stable and feature-rich from previous rounds. All core flows (au
 8. Add user profile badges (e.g., "Top Earner", "Verified", "Pro") based on activity.
 9. Add a public job page (shareable link) for non-logged-in users to view job details.
 10. Add withdrawal processing time estimates on the withdraw page.
+
+---
+Task ID: cron-review-3
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, job stats, user badges, advanced filters, hero illustration
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds (auth, jobs, wallet, withdrawals, admin, bookmarks, referrals, FAQ, earnings chart, leaderboard, featured jobs, admin broadcast, maintenance banner). No build failures or runtime errors. This round focused on job transparency (stats), gamification (badges), search precision (filters), and visual polish (hero illustration).
+
+## Completed Modifications / New Features
+
+### 1. Job Detail Statistics (Transparency Feature)
+- **New API** `/api/jobs/stats?id=`: computes total submissions, approved/rejected/pending counts, approval rate (%), completion rate (%), average approval time (hours), total paid out, days remaining, slots remaining.
+- **New component** `src/components/shared/job-stats-card.tsx`: 8-stat grid with colored icons (BarChart3, TrendingUp, CheckCircle2, XCircle, Clock, Wallet, CalendarClock, Users) + skeleton loading + animated progress bar showing slot completion. Integrated below the "Required Proof" card on the job detail page.
+- Helps workers assess job reliability before starting (approval rate, avg approval time) and owners track performance.
+
+### 2. User Profile Badges (Gamification Feature)
+- **New API** `/api/user-badges`: computes 8 activity-based badges (Newbie, First Job, Active Worker, Pro Earner, Top Earner, Job Creator, Employer, Veteran) based on approved submissions count, total earned, and jobs posted.
+- **New component** `src/components/shared/user-badges.tsx`: grid of 8 badge cards with gradient backgrounds (blue/green/yellow/amber/purple/indigo/cyan/rose), lock icons for unearned, stagger animations, earned/total counter. Integrated into the Profile page above the edit form.
+- Encourages user engagement through visible achievement milestones.
+
+### 3. Advanced Job Filters (Search Precision Feature)
+- **Enhanced API** `/api/jobs/list`: added query params `minReward`, `maxReward`, `sortBy` (newest/rewardHigh/rewardLow/deadline), `deadline` (any/3days/7days/expired). Prisma where-clause + orderBy built dynamically.
+- **Updated JobsListPage**: collapsible advanced filter panel with min/max reward number inputs, sort-by dropdown, deadline filter dropdown, active-filter indicator dot, clear-filters button. Toggle button shows/hides the panel with fade-in animation.
+- Verified: setting min reward to ৳10 correctly filters out low-paying jobs (Telegram ৳4, Instagram ৳6, etc.) and shows only jobs ≥ ৳10.
+
+### 4. Hero Illustration (Visual Polish)
+- Generated a custom flat-vector illustration via the image-generation skill (z-ai CLI): "young Bangladeshi person earning money online with smartphone, coins and taka currency symbols, soft green and white color scheme, minimalist modern illustration".
+- Restructured the homepage hero from a centered single-column to a two-column layout: text content + CTA buttons + stats on the left, illustration with floating animation + pulse-glow backdrop on the right (hidden on mobile for performance).
+- Illustration saved to `/public/hero-illustration.png`.
+
+### 5. i18n Expansion
+- Added 3 new translation sections to both bn/en: `jobStats` (14 keys), `badges` (5 keys), `filters` (12 keys).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors ✓
+- agent-browser verified:
+  - Homepage: hero illustration renders with floating animation + pulse-glow backdrop; two-column layout on desktop ✓
+  - Job detail: stats card shows 8 metrics (1 submission, 0% approval, 30 days remaining, 199 slots) with progress bar ✓
+  - Jobs list: advanced filter panel expands; min reward ৳10 filter correctly excludes low-paying jobs ✓
+  - Profile: badges grid renders 8 badges (Newbie + Pro Earner earned for worker) with lock icons for unearned ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- The `agent-browser` click command occasionally lands on inner SVG elements (headless-browser limitation); workaround is `find role button click --name`. No user impact.
+- The hero illustration is generated and looks good, but could be regenerated with more specific prompts for different seasonal campaigns.
+- Job stats average approval time shows "—" when no submissions have been reviewed yet (0 data points); will populate as jobs get reviewed.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add job sharing with OG meta tags (generate shareable preview links).
+3. Add email notifications on approval/rejection (currently in-app only).
+4. Add a public job page (shareable link) for non-logged-in users to view job details.
+5. Add withdrawal processing time estimates on the withdraw page.
+6. Add a "featured" flag to jobs for admin-controlled premium placement.
+7. Add user profile badges to the leaderboard and job detail (owner reputation).
+8. Add a notifications settings page (opt-in/out per notification type).
+9. Add a job completion certificate (downloadable PDF) for approved submissions.
+10. Add a referral link (not just code) that auto-fills the registration form.

@@ -26,6 +26,11 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(initialCategory || "all");
+  const [minReward, setMinReward] = useState("");
+  const [maxReward, setMaxReward] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [deadline, setDeadline] = useState("any");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -40,6 +45,10 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
       const params = new URLSearchParams();
       if (category !== "all") params.set("category", category);
       if (search) params.set("search", search);
+      if (minReward) params.set("minReward", minReward);
+      if (maxReward) params.set("maxReward", maxReward);
+      if (sortBy) params.set("sortBy", sortBy);
+      if (deadline && deadline !== "any") params.set("deadline", deadline);
       params.set("limit", "50");
       const res = await fetch(`/api/jobs/list?${params}`);
       const d = await res.json();
@@ -53,7 +62,16 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
       active = false;
       clearTimeout(debounce);
     };
-  }, [search, category]);
+  }, [search, category, minReward, maxReward, sortBy, deadline]);
+
+  const hasActiveFilters = minReward || maxReward || deadline !== "any";
+
+  const clearFilters = () => {
+    setMinReward("");
+    setMaxReward("");
+    setDeadline("any");
+    setSortBy("newest");
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:py-10">
@@ -63,30 +81,108 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
       </div>
 
       {/* Filters */}
-      <Card className="p-3 md:p-4 mb-6 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t.jobs.searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      <Card className="p-3 md:p-4 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t.jobs.searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="sm:w-48">
+              <SlidersHorizontal className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t.common.all}</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {lang === "bn" ? t.categories[c.slug.replace(/-/g, "") as keyof typeof t.categories] || c.name : c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant={showFilters ? "default" : "outline"}
+            size="sm"
+            className="sm:w-auto gap-2"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {t.filters.title}
+            {hasActiveFilters && (
+              <span className="h-2 w-2 rounded-full bg-primary-foreground" />
+            )}
+          </Button>
         </div>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="sm:w-56">
-            <SlidersHorizontal className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t.common.all}</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {lang === "bn" ? t.categories[c.slug.replace(/-/g, "") as keyof typeof t.categories] || c.name : c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* Advanced filters */}
+        {showFilters && (
+          <div className="mt-3 pt-3 border-t grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{t.filters.minReward} (৳)</label>
+              <Input
+                type="number"
+                min="0"
+                value={minReward}
+                onChange={(e) => setMinReward(e.target.value)}
+                placeholder="0"
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{t.filters.maxReward} (৳)</label>
+              <Input
+                type="number"
+                min="0"
+                value={maxReward}
+                onChange={(e) => setMaxReward(e.target.value)}
+                placeholder="100"
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{t.filters.sortBy}</label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">{t.filters.sortNewest}</SelectItem>
+                  <SelectItem value="rewardHigh">{t.filters.sortRewardHigh}</SelectItem>
+                  <SelectItem value="rewardLow">{t.filters.sortRewardLow}</SelectItem>
+                  <SelectItem value="deadline">{t.filters.sortDeadline}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{t.jobs.deadline}</label>
+              <Select value={deadline} onValueChange={setDeadline}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">{t.filters.anyDeadline}</SelectItem>
+                  <SelectItem value="3days">{t.filters.within3days}</SelectItem>
+                  <SelectItem value="7days">{t.filters.within7days}</SelectItem>
+                  <SelectItem value="expired">{t.filters.expired}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="col-span-2 md:col-span-4 text-xs text-destructive hover:underline text-left"
+              >
+                {t.filters.clear}
+              </button>
+            )}
+          </div>
+        )}
       </Card>
 
       {/* Category chips (mobile) */}

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryIcon } from "@/components/shared/category-icon";
+import { JobStatsCard } from "@/components/shared/job-stats-card";
 import { LoadingState } from "@/components/shared/states";
 import { toast } from "sonner";
 import {
@@ -244,6 +245,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">{job.requiredProof}</p>
       </Card>
+
+      {/* Job Statistics */}
+      <div className="mb-4">
+        <JobStatsCard jobId={job.id} />
+      </div>
 
       {/* Action */}
       {isOwner ? (
