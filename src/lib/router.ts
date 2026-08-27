@@ -25,6 +25,7 @@ export type Route =
   | { name: "faq" }
   | { name: "leaderboard" }
   | { name: "categories" }
+  | { name: "job-feed" }
   | { name: "public-profile"; username: string }
   | { name: "admin" }
   | { name: "admin-users" }
@@ -86,6 +87,8 @@ function parseHash(): Route {
       return { name: "leaderboard" };
     case "categories":
       return { name: "categories" };
+    case "job-feed":
+      return { name: "job-feed" };
     case "u":
       if (parts[1]) return { name: "public-profile", username: parts[1] };
       return { name: "home" };

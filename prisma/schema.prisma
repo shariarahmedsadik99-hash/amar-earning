@@ -32,6 +32,7 @@ model User {
   notifications Notification[]
   bookmarks     Bookmark[]
   reports       JobReport[]
+  ratings       JobRating[]
   adminLogs     AdminLog[]  @relation("AdminActor")
   referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
   referrals     User[]     @relation("Referrals")
@@ -95,6 +96,7 @@ model Job {
   submissions    JobSubmission[]
   bookmarks      Bookmark[]
   reports        JobReport[]
+  ratings        JobRating[]
 }
 
 model JobSubmission {
@@ -108,6 +110,19 @@ model JobSubmission {
   rejectReason String?
   createdAt    DateTime @default(now())
   reviewedAt   DateTime?
+
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+}
+
+model JobRating {
+  id           String   @id @default(cuid())
+  jobId        String
+  userId       String
+  difficulty   Int      // 1 (easy) to 5 (hard)
+  createdAt    DateTime @default(now())
 
   job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)

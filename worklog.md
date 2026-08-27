@@ -704,3 +704,76 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add job categories with custom icons upload (admin).
 9. Add a withdrawal calendar showing expected payment dates.
 10. Add a job difficulty rating system (workers rate job difficulty after completion).
+
+---
+Task ID: cron-review-9
+Agent: main (Z.ai Code) - cron webDevReview
+Task: QA testing, achievements progress, public jobs feed, job difficulty ratings
+
+## Current Project Status (Assessment)
+The platform is stable and feature-rich from previous rounds. All core flows and advanced features work. No build failures or runtime errors. This round focused on gamification (achievements progress), external integration (public jobs feed API), and community feedback (job difficulty ratings).
+
+## Completed Modifications / New Features
+
+### 1. Dashboard Achievements Progress Tracker (Gamification Feature)
+- **New API** `/api/achievements-progress`: returns 6 badges with progress data (current/target values, earned status, unit) + identifies the next unearned badge.
+- **New component** `src/components/shared/achievements-progress.tsx`: card showing:
+  - Next badge highlight with animated progress bar and current/target values
+  - All 6 badges in a list with icons, earned checkmarks, and progress bars (green for earned, primary for in-progress)
+  - "Completed!" celebration state when all badges earned
+  - Skeleton loading state
+- Integrated into DashboardPage below the activity feed.
+- Verified: shows worker's progress — Newbie ✓, First Job ✓, Active Worker 1/5, Pro Earner ✓ (৳500+), Top Earner 505/1000 (next badge), Veteran.
+
+### 2. Public Jobs Feed API (External Integration Feature)
+- **New API** `/api/jobs/feed`: returns all active jobs in JSON format with full details (title, description, reward, currency BDT, worker limit, slots remaining, category, owner, deadline, URL). Supports `limit` (max 100) and `category` (slug) query params.
+- **New view** `src/components/views/job-feed.tsx`: public-facing documentation page showing:
+  - Endpoint URL with copy button
+  - "Open API" button to view the raw JSON
+  - Parameters section (limit, category)
+  - Example requests
+  - Response format preview with sample JSON
+- **New route** `#/job-feed` added to router + page.tsx.
+- Verified: API returns 2 jobs (Telegram Group Join + others) in correct JSON format; feed page renders with all sections.
+
+### 3. Job Difficulty Rating System (Community Feedback Feature)
+- **DB schema change**: added `JobRating` model (id, jobId, userId, difficulty 1-5, createdAt) with `@@unique([jobId, userId])` to prevent duplicate ratings. Added `ratings` relations to User and Job models. Ran `db:push` + regenerated Prisma client + restarted dev server.
+- **New API** `/api/job-ratings`: GET (returns avg rating, total ratings, current user's rating, distribution 1-5) + POST (submit rating, requires approved submission on the job, prevents self-rating).
+- **New component** `src/components/shared/job-rating-widget.tsx`: card showing:
+  - Large average rating number with 5-star visual
+  - Distribution bars (5→1) showing rating breakdown
+  - Interactive 5-star rating selector with hover effects + difficulty labels (Very Easy → Very Hard)
+  - "Your Rating" badge after submission
+- Integrated into JobDetailPage below the owner reputation card.
+- Verified: worker rated Facebook job difficulty 2 → avg rating 2, total 1, distribution correct. Enforces: can't rate jobs without approved submission.
+
+### 4. i18n Expansion
+- Added 3 new translation sections to both bn/en: `achievementsProgress` (7 keys), `jobFeed` (11 keys), `jobRating` (10 keys + 5 difficulty levels).
+
+## Verification Results
+- `bun run lint`: 0 errors ✓
+- Dev server: running, HTTP 200, no compile errors (restarted after DB schema change) ✓
+- agent-browser verified:
+  - Job feed page (`#/job-feed`): renders with endpoint, parameters, examples, response format ✓
+  - Jobs feed API: returns correct JSON with platform name, totalJobs, and job array ✓
+  - Dashboard achievements progress: shows 6 badges with progress (earned ✓, in-progress with current/target) ✓
+  - Job rating widget: renders on job detail with avg rating, distribution, interactive star selector ✓
+  - Rating API: enforces approved-submission rule; records ratings correctly ✓
+  - No console errors on any page ✓
+
+## Unresolved Issues / Risks
+- Achievements progress for earnings badges shows ৳ amounts which may be large; progress bar caps at 100%.
+- Public jobs feed API has no authentication; all active jobs are publicly visible (by design for external integration).
+- Job ratings require an approved submission; ratings populate as workers complete and rate jobs.
+
+## Priority Recommendations for Next Phase
+1. Add user avatar upload (profile photo) using image-edit skill or file upload API.
+2. Add email notifications on approval/rejection (currently in-app only).
+3. Add user follow system (follow top earners/employers).
+4. Add a "verified" badge system for employers (admin-controlled, distinct from auto-verified).
+5. Add a dark mode illustration variant for the hero.
+6. Add a withdrawal calendar showing expected payment dates.
+7. Add job categories with custom icons upload (admin).
+8. Add a job recommendation engine (suggest jobs based on category history).
+9. Add a search autocomplete with job titles.
+10. Add a platform statistics page (public dashboard with totals, charts).

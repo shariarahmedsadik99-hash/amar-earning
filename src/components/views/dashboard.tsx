@@ -24,6 +24,7 @@ import { formatMoney, toBn } from "@/lib/format";
 import { EarningsChart } from "@/components/shared/earnings-chart";
 import { ActivityFeed } from "@/components/shared/activity-feed";
 import { WeekComparison } from "@/components/shared/week-comparison";
+import { AchievementsProgress } from "@/components/shared/achievements-progress";
 
 type DashboardStats = {
   balance: number;
@@ -218,6 +219,11 @@ export function DashboardPage() {
       {/* Activity Feed */}
       <div className="mt-6">
         <ActivityFeed />
+      </div>
+
+      {/* Achievements Progress */}
+      <div className="mt-6">
+        <AchievementsProgress />
       </div>
 
       {/* Recent jobs preview */}

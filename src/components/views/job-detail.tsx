@@ -15,6 +15,7 @@ import { JobStatsCard } from "@/components/shared/job-stats-card";
 import { OwnerReputation } from "@/components/shared/owner-reputation";
 import { ShareButton } from "@/components/shared/share-button";
 import { ReportButton } from "@/components/shared/report-button";
+import { JobRatingWidget } from "@/components/shared/job-rating-widget";
 import { LoadingState } from "@/components/shared/states";
 import { useRecentJobs } from "@/lib/use-recent-jobs";
 import { toast } from "sonner";
@@ -275,6 +276,11 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       {/* Owner Reputation */}
       <div className="mb-4">
         <OwnerReputation ownerId={job.ownerId} />
+      </div>
+
+      {/* Job Difficulty Rating */}
+      <div className="mb-4">
+        <JobRatingWidget jobId={job.id} />
       </div>
 
       {/* Action */}

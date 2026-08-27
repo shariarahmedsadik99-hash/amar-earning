@@ -26,6 +26,7 @@ import { ReferralsPage } from "@/components/views/referrals";
 import { MyBookmarksPage } from "@/components/views/my-bookmarks";
 import { LeaderboardPage } from "@/components/views/leaderboard";
 import { CategoriesPage } from "@/components/views/categories";
+import { JobFeedPage } from "@/components/views/job-feed";
 import { PublicProfilePage } from "@/components/views/public-profile";
 import { AdminPage } from "@/components/admin/admin-page";
 import { MaintenanceBanner } from "@/components/shared/maintenance-banner";
@@ -114,6 +115,8 @@ export default function Home() {
         return <LeaderboardPage />;
       case "categories":
         return <CategoriesPage />;
+      case "job-feed":
+        return <JobFeedPage />;
       case "public-profile":
         return <PublicProfilePage username={route.username} />;
       case "admin":
