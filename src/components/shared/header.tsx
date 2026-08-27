@@ -28,6 +28,9 @@ import {
   Shield,
   PlusCircle,
   ClipboardList,
+  Bookmark,
+  Gift,
+  HelpCircle,
 } from "lucide-react";
 
 export function Header() {
@@ -136,6 +139,7 @@ export function Header() {
                 <MobileNavItem icon={Home} label={t.nav.home} onClick={() => navTo({ name: "home" })} />
                 <MobileNavItem icon={Briefcase} label={t.nav.availableJobs} onClick={() => navTo({ name: "available-jobs" })} />
                 <MobileNavItem icon={Info} label={t.nav.howItWorks} onClick={() => navTo({ name: "how-it-works" })} />
+                <MobileNavItem icon={HelpCircle} label={t.faq.title} onClick={() => navTo({ name: "faq" })} />
 
                 {user ? (
                   <>
@@ -144,6 +148,8 @@ export function Header() {
                     <MobileNavItem icon={PlusCircle} label={t.nav.postJob} onClick={() => navTo({ name: "post-job" })} />
                     <MobileNavItem icon={Briefcase} label={t.nav.myJobs} onClick={() => navTo({ name: "my-jobs" })} />
                     <MobileNavItem icon={ClipboardList} label={t.nav.mySubmissions} onClick={() => navTo({ name: "my-submissions" })} />
+                    <MobileNavItem icon={Bookmark} label={t.bookmarks.title} onClick={() => navTo({ name: "my-bookmarks" })} />
+                    <MobileNavItem icon={Gift} label={t.referrals.title} onClick={() => navTo({ name: "referrals" })} />
                     <MobileNavItem icon={Wallet} label={t.nav.wallet} onClick={() => navTo({ name: "wallet" })} />
                     <MobileNavItem icon={User} label={t.nav.profile} onClick={() => navTo({ name: "profile" })} />
                     {user.role === "ADMIN" && (

@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
   Loader2,
   Send,
+  Bookmark,
 } from "lucide-react";
 import { formatMoney, formatDate, toBn } from "@/lib/format";
 
@@ -55,6 +56,8 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const [showProof, setShowProof] = useState(false);
   const [proof, setProof] = useState({ textProof: "", urlProof: "", imageProof: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/jobs?id=${jobId}`)
@@ -64,7 +67,38 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         setMySubmission(d.mySubmission);
         setLoading(false);
       });
-  }, [jobId]);
+    // Load bookmark status
+    if (user) {
+      fetch("/api/bookmarks", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jobId }) })
+        .then((r) => r.json())
+        .then((d) => setBookmarked(d.bookmarked));
+    }
+  }, [jobId, user]);
+
+  const toggleBookmark = async () => {
+    if (!user) {
+      navigate({ name: "login" });
+      return;
+    }
+    if (job?.owner.username === user.username) return; // can't bookmark own job
+    setBookmarkLoading(true);
+    try {
+      const res = await fetch("/api/bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBookmarked(data.bookmarked);
+        toast.success(data.bookmarked ? t.bookmarks.added : t.bookmarks.removed);
+      }
+    } catch {
+      toast.error("Error");
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,12 +167,24 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
             <CategoryIcon name={job.category.icon} className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge variant="secondary">{job.category.name}</Badge>
               {job.status === "ACTIVE" && (
                 <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                   {t.status.active}
                 </Badge>
+              )}
+              {!isOwner && user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-8 w-8 p-0"
+                  onClick={toggleBookmark}
+                  disabled={bookmarkLoading}
+                  aria-label="Bookmark"
+                >
+                  <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                </Button>
               )}
             </div>
             <h1 className="text-xl md:text-2xl font-bold leading-tight">{job.title}</h1>

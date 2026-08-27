@@ -19,13 +19,13 @@ import {
 
 type Category = { id: string; name: string; slug: string; icon: string };
 
-export function JobsListPage() {
+export function JobsListPage({ categoryId: initialCategory }: { categoryId?: string }) {
   const { t, lang } = useI18n();
   const [categories, setCategories] = useState<Category[]>([]);
   const [jobs, setJobs] = useState<JobCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState(initialCategory || "all");
 
   useEffect(() => {
     fetch("/api/categories")

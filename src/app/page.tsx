@@ -20,6 +20,9 @@ import { WalletPage } from "@/components/views/wallet";
 import { WithdrawPage } from "@/components/views/withdraw";
 import { ProfilePage } from "@/components/views/profile";
 import { NotificationsPage } from "@/components/views/notifications";
+import { FaqPage } from "@/components/views/faq";
+import { ReferralsPage } from "@/components/views/referrals";
+import { MyBookmarksPage } from "@/components/views/my-bookmarks";
 import { AdminPage } from "@/components/admin/admin-page";
 
 export default function Home() {
@@ -34,9 +37,11 @@ export default function Home() {
       "post-job",
       "my-jobs",
       "my-submissions",
+      "my-bookmarks",
       "wallet",
       "withdraw",
       "profile",
+      "referrals",
       "notifications",
     ];
     const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-settings"];
@@ -66,7 +71,13 @@ export default function Home() {
       case "jobs":
         return <JobsListPage />;
       case "available-jobs":
-        return <JobsListPage />;
+      case "available-jobs-category":
+        return (
+          <JobsListPage
+            key={route.name === "available-jobs-category" ? route.categoryId : "all"}
+            categoryId={route.name === "available-jobs-category" ? route.categoryId : undefined}
+          />
+        );
       case "job":
         return <JobDetailPage jobId={route.id} />;
       case "post-job":
@@ -77,14 +88,20 @@ export default function Home() {
         return <MyJobsPage />;
       case "my-submissions":
         return <MySubmissionsPage />;
+      case "my-bookmarks":
+        return <MyBookmarksPage />;
       case "wallet":
         return <WalletPage />;
       case "withdraw":
         return <WithdrawPage />;
       case "profile":
         return <ProfilePage />;
+      case "referrals":
+        return <ReferralsPage />;
       case "notifications":
         return <NotificationsPage />;
+      case "faq":
+        return <FaqPage />;
       case "admin":
       case "admin-users":
       case "admin-jobs":

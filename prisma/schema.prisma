@@ -29,7 +29,22 @@ model User {
   transactions  Transaction[]
   withdrawals   Withdrawal[]
   notifications Notification[]
+  bookmarks     Bookmark[]
   adminLogs     AdminLog[]  @relation("AdminActor")
+  referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
+  referrals     User[]     @relation("Referrals")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
 }
 
 model Wallet {
@@ -75,6 +90,7 @@ model Job {
   owner          User       @relation("JobOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   category       Category   @relation(fields: [categoryId], references: [id])
   submissions    JobSubmission[]
+  bookmarks      Bookmark[]
 }
 
 model JobSubmission {

@@ -86,15 +86,15 @@ export function HomePage() {
         {loading ? (
           <LoadingState />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 stagger">
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => navigate({ name: "available-jobs" })}
+                onClick={() => navigate({ name: "available-jobs-category", categoryId: cat.id })}
                 className="group"
               >
-                <Card className="p-4 md:p-5 flex flex-col items-center text-center gap-3 hover:shadow-md hover:border-primary/30 transition-all">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Card className="p-4 md:p-5 flex flex-col items-center text-center gap-3 hover:shadow-md hover:border-primary/30 transition-all card-lift">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors group-hover:scale-110">
                     <CategoryIcon name={cat.icon} className="h-6 w-6 text-primary" />
                   </div>
                   <span className="text-sm font-medium leading-tight">

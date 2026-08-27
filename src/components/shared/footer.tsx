@@ -40,6 +40,11 @@ export function Footer() {
                 </button>
               </li>
               <li>
+                <button onClick={() => go({ name: "faq" })} className="hover:text-primary transition-colors">
+                  {t.faq.title}
+                </button>
+              </li>
+              <li>
                 <button onClick={() => go({ name: "register" })} className="hover:text-primary transition-colors">
                   {t.nav.register}
                 </button>

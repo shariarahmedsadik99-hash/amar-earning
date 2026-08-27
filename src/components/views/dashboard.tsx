@@ -17,8 +17,11 @@ import {
   Bell,
   Shield,
   Home,
+  Bookmark,
+  Gift,
 } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
+import { EarningsChart } from "@/components/shared/earnings-chart";
 
 type DashboardStats = {
   balance: number;
@@ -40,6 +43,8 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
     { name: "post-job", label: t.nav.postJob, icon: PlusCircle },
     { name: "my-jobs", label: t.nav.myJobs, icon: Briefcase },
     { name: "my-submissions", label: t.nav.mySubmissions, icon: ClipboardList },
+    { name: "my-bookmarks", label: t.bookmarks.title, icon: Bookmark },
+    { name: "referrals", label: t.referrals.title, icon: Gift },
     { name: "wallet", label: t.nav.wallet, icon: WalletIcon },
     { name: "withdraw", label: t.nav.withdraw, icon: Banknote },
     { name: "profile", label: t.nav.profile, icon: User },
@@ -172,6 +177,11 @@ export function DashboardPage() {
 
       <StatsCards stats={stats} />
 
+      {/* Earnings chart */}
+      <div className="mt-4">
+        <EarningsChart />
+      </div>
+
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3 mt-4">
         <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "available-jobs" })}>
@@ -183,6 +193,20 @@ export function DashboardPage() {
           <span className="text-sm">{t.nav.postJob}</span>
         </Button>
       </div>
+
+      {/* Referral CTA */}
+      <Card className="p-4 mt-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 flex items-center gap-4">
+        <div className="h-11 w-11 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+          <Gift className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm">{t.referrals.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{t.referrals.shareText}</p>
+        </div>
+        <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate({ name: "referrals" })}>
+          {t.common.view}
+        </Button>
+      </Card>
 
       {/* Recent jobs preview */}
       <div className="mt-6">

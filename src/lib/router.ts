@@ -10,14 +10,18 @@ export type Route =
   | { name: "job"; id: string }
   | { name: "dashboard" }
   | { name: "available-jobs" }
+  | { name: "available-jobs-category"; categoryId: string }
   | { name: "my-jobs" }
   | { name: "my-submissions" }
+  | { name: "my-bookmarks" }
   | { name: "post-job" }
   | { name: "wallet" }
   | { name: "withdraw" }
   | { name: "profile" }
+  | { name: "referrals" }
   | { name: "notifications" }
   | { name: "how-it-works" }
+  | { name: "faq" }
   | { name: "admin" }
   | { name: "admin-users" }
   | { name: "admin-jobs" }
@@ -44,11 +48,14 @@ function parseHash(): Route {
     case "dashboard":
       return { name: "dashboard" };
     case "available-jobs":
+      if (parts[1] === "category" && parts[2]) return { name: "available-jobs-category", categoryId: parts[2] };
       return { name: "available-jobs" };
     case "my-jobs":
       return { name: "my-jobs" };
     case "my-submissions":
       return { name: "my-submissions" };
+    case "my-bookmarks":
+      return { name: "my-bookmarks" };
     case "post-job":
       return { name: "post-job" };
     case "wallet":
@@ -57,10 +64,14 @@ function parseHash(): Route {
       return { name: "withdraw" };
     case "profile":
       return { name: "profile" };
+    case "referrals":
+      return { name: "referrals" };
     case "notifications":
       return { name: "notifications" };
     case "how-it-works":
       return { name: "how-it-works" };
+    case "faq":
+      return { name: "faq" };
     case "admin":
       if (parts[1] === "users") return { name: "admin-users" };
       if (parts[1] === "jobs") return { name: "admin-jobs" };
@@ -82,10 +93,14 @@ export function routeToHash(route: Route): string {
       return `#/jobs/${route.id}`;
     case "available-jobs":
       return "#/available-jobs";
+    case "available-jobs-category":
+      return `#/available-jobs/category/${route.categoryId}`;
     case "my-jobs":
       return "#/my-jobs";
     case "my-submissions":
       return "#/my-submissions";
+    case "my-bookmarks":
+      return "#/my-bookmarks";
     case "post-job":
       return "#/post-job";
     case "admin-users":
