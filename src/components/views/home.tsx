@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobCard, type JobCardData } from "@/components/shared/job-card";
 import { CategoryIcon } from "@/components/shared/category-icon";
 import { LoadingState } from "@/components/shared/states";
-import { Search, TrendingUp, ShieldCheck, Zap, ArrowRight, Wallet, Users, Trophy, Star } from "lucide-react";
+import { Search, TrendingUp, ShieldCheck, Zap, ArrowRight, Wallet, Users, Trophy, Star, Briefcase, CheckCircle2 } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -47,6 +47,7 @@ export function HomePage() {
         {/* Decorative blurred orbs */}
         <div className="absolute top-10 -left-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl animate-pulse-glow" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-emerald-300/10 blur-3xl animate-pulse-glow" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/3 h-64 w-64 rounded-full bg-teal-300/8 blur-3xl animate-pulse-glow" style={{ animationDelay: "2s" }} />
         {/* Grid pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -97,52 +98,130 @@ export function HomePage() {
               </div>
             </div>
 
-            {/* Hero illustration with decorative elements */}
+            {/* Premium glassmorphism design (no image) */}
             <div className="hidden md:flex justify-center items-center animate-fade-in-up">
-              <div className="relative w-80 h-80 lg:w-[28rem] lg:h-[28rem]">
-                {/* Glow backdrop */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-emerald-300/10 to-transparent rounded-full blur-2xl" />
-                {/* Rotating ring decoration */}
-                <div
-                  className="absolute inset-4 rounded-full border-2 border-dashed border-primary/20 animate-[spin_20s_linear_infinite]"
-                />
-                {/* Main image - curved/rounded */}
-                <div className="absolute inset-6 rounded-[2.5rem] overflow-hidden shadow-2xl ring-1 ring-primary/10">
-                  <img
-                    src="/hero-illustration-v2.png"
-                    alt="Amar Earning illustration"
-                    className="relative w-full h-full object-cover animate-float"
-                  />
-                  {/* Gradient overlay for smooth blend */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent pointer-events-none" />
+              <div className="relative w-full max-w-md">
+                {/* Main glass card - Earning Dashboard Preview */}
+                <div className="relative bg-background/60 backdrop-blur-xl rounded-3xl border border-primary/15 shadow-2xl p-6 overflow-hidden">
+                  {/* Subtle inner gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-emerald-500/5 pointer-events-none" />
+                  {/* Top shine */}
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+                  <div className="relative">
+                    {/* Card header */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">{lang === "bn" ? "মোট ব্যালেন্স" : "Total Balance"}</p>
+                          <p className="text-lg font-bold">৳2,450</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10">
+                        <TrendingUp className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-semibold text-green-600">+12.5%</span>
+                      </div>
+                    </div>
+
+                    {/* Mini bar chart */}
+                    <div className="flex items-end justify-between gap-1.5 h-20 mb-4">
+                      {[40, 55, 35, 70, 50, 85, 65].map((h, i) => (
+                        <div key={i} className="flex-1 flex flex-col justify-end">
+                          <div
+                            className={`w-full rounded-t-md transition-all duration-700 ${i === 5 ? "bg-primary" : "bg-primary/25"}`}
+                            style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Quick stats row */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 rounded-xl bg-muted/40 border border-border/50">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Wallet className="h-3 w-3 text-green-600" />
+                          <span className="text-[10px] text-muted-foreground">{lang === "bn" ? "এই সপ্তাহে" : "This Week"}</span>
+                        </div>
+                        <p className="text-sm font-bold text-green-600">+৳850</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-muted/40 border border-border/50">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Briefcase className="h-3 w-3 text-primary" />
+                          <span className="text-[10px] text-muted-foreground">{lang === "bn" ? "কাজ সম্পন্ন" : "Completed"}</span>
+                        </div>
+                        <p className="text-sm font-bold text-primary">24</p>
+                      </div>
+                    </div>
+
+                    {/* Recent activity */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-green-500/15 flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                          </div>
+                          <span className="text-xs">{lang === "bn" ? "Facebook Follow" : "Facebook Follow"}</span>
+                        </div>
+                        <span className="text-xs font-bold text-green-600">+৳5</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-green-500/15 flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                          </div>
+                          <span className="text-xs">{lang === "bn" ? "App Testing" : "App Testing"}</span>
+                        </div>
+                        <span className="text-xs font-bold text-green-600">+৳25</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
                 {/* Floating stat card - top right */}
-                <div className="absolute -top-2 -right-2 lg:-right-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float z-10" style={{ animationDelay: "0.5s" }}>
+                <div className="absolute -top-3 -right-3 bg-background/90 backdrop-blur-md border border-primary/20 rounded-2xl shadow-xl p-3 animate-float z-10" style={{ animationDelay: "0.5s" }}>
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-green-500/15 flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-xl bg-green-500/15 flex items-center justify-center">
                       <Wallet className="h-4 w-4 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">{lang === "bn" ? "আয়" : "Earned"}</p>
-                      <p className="text-sm font-bold text-green-600">+৳{formatMoney(500, lang)}</p>
+                      <p className="text-[10px] text-muted-foreground">{lang === "bn" ? "আয়" : "Earned"}</p>
+                      <p className="text-sm font-bold text-green-600">+৳500</p>
                     </div>
                   </div>
                 </div>
+
                 {/* Floating stat card - bottom left */}
-                <div className="absolute -bottom-2 -left-2 lg:-left-4 bg-background/90 backdrop-blur-md border rounded-xl shadow-lg p-3 animate-float z-10" style={{ animationDelay: "1s" }}>
+                <div className="absolute -bottom-3 -left-3 bg-background/90 backdrop-blur-md border border-primary/20 rounded-2xl shadow-xl p-3 animate-float z-10" style={{ animationDelay: "1s" }}>
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-xl bg-primary/15 flex items-center justify-center">
                       <Users className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">{lang === "bn" ? "কাজ সম্পন্ন" : "Completed"}</p>
-                      <p className="text-sm font-bold text-primary">{toBn(8)}+</p>
+                      <p className="text-[10px] text-muted-foreground">{lang === "bn" ? "সক্রিয়" : "Active"}</p>
+                      <p className="text-sm font-bold text-primary">1,240+</p>
                     </div>
                   </div>
                 </div>
-                {/* Floating coin badge - top left */}
-                <div className="absolute top-8 -left-4 bg-amber-500/90 backdrop-blur-md text-white rounded-full shadow-lg h-12 w-12 flex items-center justify-center animate-float z-10" style={{ animationDelay: "1.5s" }}>
-                  <span className="text-lg font-bold">৳</span>
+
+                {/* Floating ৳ coin badge - top left */}
+                <div className="absolute top-12 -left-6 bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl shadow-xl h-14 w-14 flex items-center justify-center animate-float z-10" style={{ animationDelay: "1.5s" }}>
+                  <span className="text-2xl font-bold drop-shadow">৳</span>
+                </div>
+
+                {/* Floating notification badge - bottom right */}
+                <div className="absolute bottom-16 -right-5 bg-background/90 backdrop-blur-md border border-primary/20 rounded-2xl shadow-xl p-2.5 animate-float z-10" style={{ animationDelay: "2s" }}>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-7 w-7 rounded-lg bg-primary/15 flex items-center justify-center relative">
+                      <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                      <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    </div>
+                    <span className="text-[10px] font-medium">{lang === "bn" ? "নিরাপদ" : "Secure"}</span>
+                  </div>
                 </div>
               </div>
             </div>
