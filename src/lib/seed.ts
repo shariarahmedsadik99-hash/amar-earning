@@ -399,14 +399,15 @@ async function ensureSettings() {
     { key: "primaryColor", value: "#22c55e" },
     { key: "minWithdrawal", value: "100" },
     { key: "paymentMethods", value: "BKASH,NAGAD,ROCKET" },
-    { key: "jobApprovalRequired", value: "false" },
+    { key: "jobApprovalRequired", value: "true" },
+    { key: "serviceCharge", value: "8" },
     { key: "maintenanceMode", value: "false" },
   ];
   for (const s of settings) {
     await db.setting.upsert({
       where: { key: s.key },
       create: s,
-      update: {},
+      update: { value: s.value },
     });
   }
 }

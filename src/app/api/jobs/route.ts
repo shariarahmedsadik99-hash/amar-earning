@@ -74,9 +74,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "কর্মী সংখ্যা সঠিক নয়" }, { status: 400 });
     }
 
-    const totalBudget = rewardNum * workersNum;
+    const settings = await getSettings();
+    const serviceCharge = settings.serviceCharge;
+    const totalBudget = rewardNum * workersNum + serviceCharge;
 
-    // Check balance
+    // Check balance (including service charge)
     const wallet = await db.wallet.findUnique({ where: { userId: user.id } });
     if (!wallet || wallet.balance < totalBudget) {
       return NextResponse.json(
@@ -85,11 +87,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const settings = await getSettings();
-    const initialStatus = settings.jobApprovalRequired ? "PENDING" : "ACTIVE";
+    // Job always starts as PENDING — admin must approve before it goes live
+    const initialStatus = "PENDING";
 
-    // Debit the wallet
-    await debitWallet(user.id, totalBudget, "JOB_SPEND", `কাজ পোস্ট: ${title}`);
+    // Debit the wallet (job budget + service charge)
+    await debitWallet(user.id, totalBudget, "JOB_SPEND", `কাজ পোস্ট: ${title} (সার্ভিস চার্জ ৳${serviceCharge} সহ)`);
 
     const job = await db.job.create({
       data: {
@@ -106,14 +108,28 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Notify the job owner
     await db.notification.create({
       data: {
         userId: user.id,
-        title: "কাজ পোস্ট সফল",
-        message: `"${title}" কাজটি সফলভাবে পোস্ট হয়েছে। ${totalBudget}৳ কেটে নেওয়া হয়েছে।`,
+        title: "কাজ পোস্ট সফল — অনুমোদনের অপেক্ষায়",
+        message: `"${title}" কাজটি সফলভাবে পোস্ট হয়েছে। ৳${totalBudget} (৳${rewardNum * workersNum} + ৳${serviceCharge} সার্ভিস চার্জ) কেটে নেওয়া হয়েছে। অ্যাডমিন অনুমোদনের পর কাজটি লাইভ হবে।`,
         type: "ANNOUNCEMENT",
       },
     });
+
+    // Notify all admins about the new job pending approval
+    const admins = await db.user.findMany({ where: { role: "ADMIN" } });
+    for (const admin of admins) {
+      await db.notification.create({
+        data: {
+          userId: admin.id,
+          title: "নতুন কাজ অনুমোদনের অপেক্ষায়",
+          message: `"${title}" কাজটি অনুমোদনের অপেক্ষায় আছে। রিভিউ করুন।`,
+          type: "ANNOUNCEMENT",
+        },
+      });
+    }
 
     return NextResponse.json({ ok: true, job });
   } catch (e) {

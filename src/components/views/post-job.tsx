@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Calculator, Wallet, AlertCircle } from "lucide-react";
+import { Loader2, Calculator, Wallet, AlertCircle, ShieldCheck } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -30,6 +30,7 @@ export function PostJobPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [balance, setBalance] = useState(0);
+  const [serviceCharge, setServiceCharge] = useState(8);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -44,6 +45,7 @@ export function PostJobPage() {
 
   useEffect(() => {
     fetch("/api/categories").then((r) => r.json()).then((d) => setCategories(d.categories || []));
+    fetch("/api/settings").then((r) => r.json()).then((d) => setServiceCharge(d.serviceCharge || 8));
     if (user) {
       fetch("/api/wallet").then((r) => r.json()).then((d) => setBalance(d.wallet?.balance || 0));
     }
@@ -71,7 +73,8 @@ export function PostJobPage() {
 
   const rewardNum = parseFloat(form.reward) || 0;
   const workersNum = parseInt(form.workerLimit) || 0;
-  const totalBudget = rewardNum * workersNum;
+  const jobBudget = rewardNum * workersNum;
+  const totalBudget = jobBudget + serviceCharge;
   const sufficient = balance >= totalBudget && totalBudget > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,10 +207,24 @@ export function PostJobPage() {
               <Calculator className="h-4 w-4 text-primary" />
               {t.postJob.totalBudget}
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {t.common.currency}{formatMoney(rewardNum, lang)} × {workersNum} = 
+            {/* Job cost breakdown */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {t.common.currency}{formatMoney(rewardNum, lang)} × {workersNum} {lang === "bn" ? "কর্মী" : "workers"}
               </span>
+              <span className="font-medium">{t.common.currency}{formatMoney(jobBudget, lang)}</span>
+            </div>
+            {/* Service charge */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                {lang === "bn" ? "সার্ভিস চার্জ" : "Service Charge"}
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{lang === "bn" ? "প্রতি কাজ" : "per job"}</span>
+              </span>
+              <span className="font-medium text-primary">{t.common.currency}{formatMoney(serviceCharge, lang)}</span>
+            </div>
+            {/* Total */}
+            <div className="flex items-center justify-between pt-2 border-t">
+              <span className="text-sm font-semibold">{lang === "bn" ? "সর্বমোট" : "Total"}</span>
               <span className={`text-xl font-bold ${sufficient ? "text-primary" : "text-destructive"}`}>
                 {t.common.currency}{formatMoney(totalBudget, lang)}
               </span>
@@ -218,6 +235,11 @@ export function PostJobPage() {
                 <span>{t.postJob.insufficientBalance}</span>
               </div>
             )}
+            {/* Info: pending approval */}
+            <div className="flex items-start gap-2 text-xs text-muted-foreground mt-2 p-2 rounded-lg bg-primary/5">
+              <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+              <span>{lang === "bn" ? "কাজ পোস্ট হওয়ার পর অ্যাডমিন অনুমোদনের পর লাইভ হবে।" : "Job will go live after admin approval."}</span>
+            </div>
           </div>
 
           <Button type="submit" className="w-full h-11" disabled={loading || !sufficient}>

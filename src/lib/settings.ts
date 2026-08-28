@@ -7,6 +7,7 @@ export type AppSettings = {
   paymentMethods: string[];
   jobApprovalRequired: boolean;
   maintenanceMode: boolean;
+  serviceCharge: number;
 };
 
 const DEFAULTS: AppSettings = {
@@ -16,6 +17,7 @@ const DEFAULTS: AppSettings = {
   paymentMethods: ["BKASH", "NAGAD", "ROCKET"],
   jobApprovalRequired: true,
   maintenanceMode: false,
+  serviceCharge: 8,
 };
 
 export async function getSettings(): Promise<AppSettings> {
@@ -37,6 +39,7 @@ export async function getSettings(): Promise<AppSettings> {
     maintenanceMode: map.maintenanceMode
       ? map.maintenanceMode === "true"
       : DEFAULTS.maintenanceMode,
+    serviceCharge: map.serviceCharge ? parseFloat(map.serviceCharge) : DEFAULTS.serviceCharge,
   };
 }
 
