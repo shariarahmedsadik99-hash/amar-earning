@@ -72,6 +72,18 @@ model Category {
   updatedAt DateTime @updatedAt
 
   jobs      Job[]
+  jobTypes  JobType[]
+}
+
+model JobType {
+  id          String   @id @default(cuid())
+  title       String
+  reward      Float
+  categoryId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
 
 model Job {

@@ -21,12 +21,14 @@ import { Loader2, Calculator, Wallet, AlertCircle } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
+type JobType = { id: string; title: string; reward: number };
 
 export function PostJobPage() {
   const { t, lang } = useI18n();
   const { user } = useAuth();
   const { navigate } = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -47,7 +49,25 @@ export function PostJobPage() {
     }
   }, [user]);
 
+  // Fetch job types when category changes
+  useEffect(() => {
+    if (!form.categoryId) {
+      setJobTypes([]);
+      return;
+    }
+    fetch(`/api/job-types?categoryId=${form.categoryId}`)
+      .then((r) => r.json())
+      .then((d) => setJobTypes(d.jobTypes || []));
+  }, [form.categoryId]);
+
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  const selectJobType = (jobTypeId: string) => {
+    const jt = jobTypes.find((j) => j.id === jobTypeId);
+    if (jt) {
+      setForm((p) => ({ ...p, title: jt.title, reward: String(jt.reward) }));
+    }
+  };
 
   const rewardNum = parseFloat(form.reward) || 0;
   const workersNum = parseInt(form.workerLimit) || 0;
@@ -98,22 +118,51 @@ export function PostJobPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Card className="p-5 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="title">{t.postJob.jobTitle}</Label>
-            <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} required placeholder={lang === "bn" ? "যেমন: Facebook Page Follow" : "e.g. Facebook Page Follow"} />
-          </div>
-
-          <div className="space-y-1.5">
             <Label>{t.postJob.category}</Label>
-            <Select value={form.categoryId} onValueChange={(v) => set("categoryId", v)}>
+            <Select
+              value={form.categoryId}
+              onValueChange={(v) => {
+                set("categoryId", v);
+                set("title", "");
+                set("reward", "");
+              }}
+            >
               <SelectTrigger><SelectValue placeholder={lang === "bn" ? "ক্যাটাগরি বাছুন" : "Select category"} /></SelectTrigger>
               <SelectContent>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {lang === "bn" ? t.categories[c.slug.replace(/-/g, "") as keyof typeof t.categories] || c.name : c.name}
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Job Type selector — auto-fills title and reward */}
+          {form.categoryId && jobTypes.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>{lang === "bn" ? "কাজের ধরন (ঐচ্ছিক)" : "Job Type (optional)"}</Label>
+              <Select onValueChange={selectJobType}>
+                <SelectTrigger>
+                  <SelectValue placeholder={lang === "bn" ? "কাজের ধরন বাছুন — টাইটেল ও দাম অটো-ফিল হবে" : "Select job type — auto-fills title & price"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {jobTypes.map((jt) => (
+                    <SelectItem key={jt.id} value={jt.id}>
+                      <span className="flex items-center justify-between w-full">
+                        <span>{jt.title}</span>
+                        <span className="text-primary font-bold ml-2">৳{jt.reward}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="title">{t.postJob.jobTitle}</Label>
+            <Input id="title" value={form.title} onChange={(e) => set("title", e.target.value)} required placeholder={lang === "bn" ? "যেমন: Facebook Page Follow" : "e.g. Facebook Page Follow"} />
           </div>
 
           <div className="space-y-1.5">

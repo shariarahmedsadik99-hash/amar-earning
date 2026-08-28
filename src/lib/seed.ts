@@ -245,12 +245,20 @@ export async function seedDatabase() {
 
 async function ensureCategories() {
   const cats = [
-    { name: "Social Media", slug: "social-media", icon: "Share2" },
-    { name: "Website Visit", slug: "website-visit", icon: "Globe" },
-    { name: "App Testing", slug: "app-testing", icon: "Smartphone" },
-    { name: "Data Entry", slug: "data-entry", icon: "Table" },
-    { name: "Content", slug: "content", icon: "PenLine" },
-    { name: "Other", slug: "other", icon: "Briefcase" },
+    { name: "Facebook", slug: "facebook", icon: "Facebook" },
+    { name: "Telegram", slug: "telegram", icon: "Send" },
+    { name: "Gmail", slug: "gmail", icon: "Mail" },
+    { name: "Identity Verification", slug: "identity-verification", icon: "ShieldCheck" },
+    { name: "Mobile Application", slug: "mobile-application", icon: "Smartphone" },
+    { name: "Review", slug: "review", icon: "Star" },
+    { name: "Tiktok", slug: "tiktok", icon: "Music" },
+    { name: "Whatsapp", slug: "whatsapp", icon: "MessageCircle" },
+    { name: "Youtube", slug: "youtube", icon: "Youtube" },
+    { name: "Twitter", slug: "twitter", icon: "Twitter" },
+    { name: "Toffee", slug: "toffee", icon: "Tv" },
+    { name: "Snapchat", slug: "snapchat", icon: "Camera" },
+    { name: "Airdrop/Offer Join", slug: "airdrop-offer-join", icon: "Gift" },
+    { name: "Answer", slug: "answer", icon: "MessageSquare" },
   ];
   for (const c of cats) {
     await db.category.upsert({
@@ -258,6 +266,130 @@ async function ensureCategories() {
       create: c,
       update: { name: c.name, icon: c.icon },
     });
+  }
+
+  // Seed job types for each category
+  const jobTypesData: Record<string, Array<{ title: string; reward: number }>> = {
+    facebook: [
+      { title: "Facebook Page Follow + Invite", reward: 2 },
+      { title: "Facebook Post Share + Comment + Like", reward: 2 },
+      { title: "Facebook Birthday Wish", reward: 2 },
+      { title: "Facebook Group Join", reward: 2 },
+      { title: "Facebook Page Invite 100", reward: 2 },
+      { title: "Facebook Page Invite 500", reward: 2 },
+      { title: "Facebook Page Invite 1000", reward: 2 },
+      { title: "Facebook Id Create", reward: 5 },
+      { title: "Facebook Report", reward: 2 },
+    ],
+    telegram: [
+      { title: "Telegram Channel Join", reward: 2 },
+      { title: "Telegram Group Join", reward: 2 },
+      { title: "Telegram Group Post", reward: 2 },
+    ],
+    gmail: [
+      { title: "New Gmail Account", reward: 6 },
+      { title: "Old Gmail Account", reward: 8 },
+      { title: "Own Info Gmail Create", reward: 8 },
+    ],
+    "identity-verification": [
+      { title: "Application", reward: 40 },
+      { title: "Other KYC Verification", reward: 40 },
+      { title: "Website", reward: 40 },
+    ],
+    "mobile-application": [
+      { title: "Download and create", reward: 9 },
+      { title: "Download and visit", reward: 7 },
+      { title: "Download + install", reward: 6 },
+      { title: "Download + install + review", reward: 7 },
+      { title: "Download Only", reward: 5 },
+    ],
+    review: [
+      { title: "Facebook Review", reward: 2 },
+      { title: "Google Map Review", reward: 3 },
+      { title: "Play Store Review", reward: 3 },
+    ],
+    tiktok: [
+      { title: "Follow", reward: 2 },
+      { title: "Save", reward: 2 },
+      { title: "Live Join 1-5 min", reward: 3 },
+      { title: "Create a Video", reward: 20 },
+      { title: "Comment", reward: 2 },
+      { title: "Like + Follow", reward: 2 },
+    ],
+    whatsapp: [
+      { title: "Join a Channel", reward: 2 },
+      { title: "Join a Group", reward: 2 },
+    ],
+    youtube: [
+      { title: "Comment", reward: 2 },
+      { title: "Subscribe", reward: 2 },
+      { title: "Like", reward: 2 },
+      { title: "Like + Comment", reward: 2.4 },
+      { title: "Create a Video", reward: 100 },
+      { title: "Reels & Short", reward: 2 },
+      { title: "Watchtime 1-3 min + ads view", reward: 3 },
+      { title: "Watch Video 1-25 min", reward: 6 },
+      { title: "Watch Video + Subscribe", reward: 3 },
+      { title: "Watch Video 1-30 min", reward: 16 },
+      { title: "Watch Video 1-8 min", reward: 8 },
+      { title: "Like + Comment + Subscribe + Share", reward: 3 },
+      { title: "Watch Video 1-5 min + Subscribe + Share", reward: 4 },
+      { title: "Share a Video", reward: 2 },
+      { title: "Gmail Account + Channel Create", reward: 14 },
+    ],
+    twitter: [
+      { title: "Connect", reward: 2 },
+      { title: "Favourite", reward: 2 },
+      { title: "Follow", reward: 2 },
+      { title: "Follow + Favourite + Retweet", reward: 2 },
+      { title: "Follow + Like", reward: 2 },
+      { title: "New Twitter Account", reward: 8 },
+      { title: "Old Twitter Account", reward: 8 },
+      { title: "Share a Post", reward: 2 },
+      { title: "Re-Tweet", reward: 2 },
+    ],
+    toffee: [
+      { title: "Comment", reward: 2 },
+      { title: "Follow", reward: 2 },
+      { title: "Like", reward: 2 },
+      { title: "Watch Video 1-10 min", reward: 3 },
+      { title: "Watch Video 1-20 min", reward: 4 },
+      { title: "Views", reward: 2 },
+    ],
+    snapchat: [
+      { title: "Follow", reward: 2 },
+    ],
+    "airdrop-offer-join": [
+      { title: "Vote", reward: 2 },
+      { title: "Exchanger Offer", reward: 25 },
+      { title: "Others", reward: 20 },
+      { title: "Red Pack Claim", reward: 3 },
+    ],
+    answer: [
+      { title: "Answer Only", reward: 3 },
+      { title: "Long Answer + Link (30+ words)", reward: 3 },
+      { title: "Short Answer + Link (up to 30 words)", reward: 5 },
+    ],
+  };
+
+  for (const [slug, types] of Object.entries(jobTypesData)) {
+    const category = await db.category.findUnique({ where: { slug } });
+    if (!category) continue;
+    for (const jt of types) {
+      const existing = await db.jobType.findFirst({
+        where: { title: jt.title, categoryId: category.id },
+      });
+      if (!existing) {
+        await db.jobType.create({
+          data: { title: jt.title, reward: jt.reward, categoryId: category.id },
+        });
+      } else {
+        await db.jobType.update({
+          where: { id: existing.id },
+          data: { reward: jt.reward },
+        });
+      }
+    }
   }
 }
 

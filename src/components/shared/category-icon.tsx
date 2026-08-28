@@ -7,6 +7,18 @@ import {
   Table,
   PenLine,
   Briefcase,
+  Send,
+  Mail,
+  ShieldCheck,
+  Star,
+  Music,
+  MessageCircle,
+  Tv,
+  Camera,
+  Gift,
+  MessageSquare,
+  ThumbsUp,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +29,22 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Table,
   PenLine,
   Briefcase,
+  Send,
+  Mail,
+  ShieldCheck,
+  Star,
+  Music,
+  MessageCircle,
+  Tv,
+  Camera,
+  Gift,
+  MessageSquare,
+  ThumbsUp,
+  Play,
+  // Brand icon fallbacks
+  Facebook: ThumbsUp,
+  Youtube: Play,
+  Twitter: MessageSquare,
 };
 
 export function CategoryIcon({

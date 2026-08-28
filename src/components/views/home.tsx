@@ -256,9 +256,7 @@ export function HomePage() {
                     <CategoryIcon name={cat.icon} className="h-6 w-6 text-primary" />
                   </div>
                   <span className="text-sm font-medium leading-tight">
-                    {lang === "bn"
-                      ? t.categories[cat.slug.replace(/-/g, "") as keyof typeof t.categories] || cat.name
-                      : cat.name}
+                    {cat.name}
                   </span>
                 </Card>
               </button>

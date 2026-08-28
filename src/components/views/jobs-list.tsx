@@ -108,7 +108,7 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
               <SelectItem value="all">{t.common.all}</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
-                  {lang === "bn" ? t.categories[c.slug.replace(/-/g, "") as keyof typeof t.categories] || c.name : c.name}
+                  {c.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -245,7 +245,7 @@ export function JobsListPage({ categoryId: initialCategory }: { categoryId?: str
         {categories.map((c) => (
           <Chip key={c.id} active={category === c.id} onClick={() => setCategory(c.id)}>
             <CategoryIcon name={c.icon} className="h-3.5 w-3.5" />
-            {lang === "bn" ? t.categories[c.slug.replace(/-/g, "") as keyof typeof t.categories] || c.name : c.name}
+            {c.name}
           </Chip>
         ))}
       </div>
