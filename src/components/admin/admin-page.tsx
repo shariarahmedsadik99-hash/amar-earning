@@ -68,6 +68,7 @@ import {
   Star,
   StarOff,
   Flag,
+  ArrowDownToLine,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
 import { AdminCharts } from "@/components/shared/admin-charts";
@@ -211,6 +212,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-jobs", labelBn: "কাজ", labelEn: "Jobs", icon: Briefcase },
   { route: "admin-submissions", labelBn: "সাবমিশন", labelEn: "Submissions", icon: ClipboardList },
   { route: "admin-withdrawals", labelBn: "উইথড্র", labelEn: "Withdrawals", icon: Banknote },
+  { route: "admin-deposits", labelBn: "ডিপোজিট", labelEn: "Deposits", icon: ArrowDownToLine },
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
   { route: "admin-reports", labelBn: "রিপোর্ট", labelEn: "Reports", icon: Flag },
   { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
@@ -2132,6 +2134,142 @@ function AnnounceView() {
 }
 
 /* =========================================================================
+ * DepositsView - manage deposit requests
+ * =======================================================================*/
+function DepositsView() {
+  const lang = useLang();
+  const t = useI18n().t;
+  const [deposits, setDeposits] = useState<Array<{
+    id: string;
+    amount: number;
+    method: string;
+    senderNumber: string;
+    transactionId: string;
+    status: string;
+    rejectReason: string | null;
+    createdAt: string;
+    user: { name: string; username: string; email: string };
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("PENDING");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/deposits?scope=admin&status=${filter}`, { cache: "no-store" });
+      const data = await res.json();
+      setDeposits(data.deposits || []);
+    } catch {
+      toast.error(L(lang, "লোড ব্যর্থ", "Failed to load"));
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, lang]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const act = async (id: string, action: "approve" | "reject") => {
+    const reason = action === "reject" ? prompt(L(lang, "প্রত্যাখ্যানের কারণ:", "Reject reason:")) : undefined;
+    try {
+      const res = await fetch("/api/admin/deposits", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ depositId: id, action, rejectReason: reason }),
+      });
+      if (res.ok) {
+        toast.success(L(lang, "সফল", "Done"));
+        load();
+      }
+    } catch {
+      toast.error("Error");
+    }
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title={L(lang, "ডিপোজিট", "Deposits")}
+        description={L(lang, "ইউজারদের ডিপোজিট রিকোয়েস্ট", "User deposit requests")}
+      />
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4">
+        {["PENDING", "APPROVED", "REJECTED"].map((s) => (
+          <Button
+            key={s}
+            size="sm"
+            variant={filter === s ? "default" : "outline"}
+            onClick={() => setFilter(s)}
+          >
+            {s === "PENDING" ? L(lang, "অপেক্ষমাণ", "Pending") :
+             s === "APPROVED" ? L(lang, "অনুমোদিত", "Approved") :
+             L(lang, "প্রত্যাখ্যাত", "Rejected")}
+          </Button>
+        ))}
+      </div>
+
+      {loading ? (
+        <LoadingState text={L(lang, "লোড হচ্ছে...", "Loading...")} />
+      ) : deposits.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          {L(lang, "কোনো ডিপোজিট নেই", "No deposits")}
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {deposits.map((d) => (
+            <Card key={d.id} className="p-4">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-base">{t.common.currency}{formatMoney(d.amount, lang)}</h3>
+                    <Badge variant="secondary">{d.method}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {L(lang, "ইউজার", "User")}: {d.user.name} (@{d.user.username})
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {L(lang, "নম্বর", "Number")}: <span className="font-mono">{d.senderNumber}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {L(lang, "ট্রানজেকশন আইডি", "Transaction ID")}: <span className="font-mono font-bold">{d.transactionId}</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{formatDateTime(d.createdAt, lang)}</p>
+                </div>
+                <Badge
+                  className={
+                    d.status === "APPROVED"
+                      ? "bg-green-500/10 text-green-600 border-green-500/20"
+                      : d.status === "REJECTED"
+                      ? "bg-red-500/10 text-red-600 border-red-500/20"
+                      : "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
+                  }
+                >
+                  {t.status[d.status.toLowerCase() as keyof typeof t.status] || d.status}
+                </Badge>
+              </div>
+              {d.status === "PENDING" && (
+                <div className="flex gap-2 mt-2">
+                  <Button size="sm" className="h-8 text-xs flex-1" onClick={() => act(d.id, "approve")}>
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    {L(lang, "অনুমোদন", "Approve")}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-destructive flex-1" onClick={() => act(d.id, "reject")}>
+                    <XCircle className="h-3 w-3 mr-1" />
+                    {L(lang, "প্রত্যাখ্যান", "Reject")}
+                  </Button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
  * ReportsView - manage user job reports
  * =======================================================================*/
 function ReportsView() {
@@ -2297,6 +2435,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <CategoriesView />;
       case "admin-reports":
         return <ReportsView />;
+      case "admin-deposits":
+        return <DepositsView />;
       case "admin-announce":
         return <AnnounceView />;
       case "admin-settings":

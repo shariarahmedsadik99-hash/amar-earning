@@ -18,6 +18,7 @@ import { MyJobsPage } from "@/components/views/my-jobs";
 import { MySubmissionsPage } from "@/components/views/my-submissions";
 import { WalletPage } from "@/components/views/wallet";
 import { WithdrawPage } from "@/components/views/withdraw";
+import { DepositPage } from "@/components/views/deposit";
 import { ProfilePage } from "@/components/views/profile";
 import { NotificationsPage } from "@/components/views/notifications";
 import { NotificationSettingsPage } from "@/components/views/notification-settings";
@@ -47,12 +48,13 @@ export default function Home() {
       "my-bookmarks",
       "wallet",
       "withdraw",
+      "deposit",
       "profile",
       "referrals",
       "notifications",
       "notification-settings",
     ];
-    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-settings", "admin-announce"];
+    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-deposits", "admin-settings", "admin-announce"];
 
     if (!user && (protectedRoutes.includes(route.name) || adminRoutes.includes(route.name))) {
       navigate({ name: "login" });
@@ -102,6 +104,8 @@ export default function Home() {
         return <WalletPage />;
       case "withdraw":
         return <WithdrawPage />;
+      case "deposit":
+        return <DepositPage />;
       case "profile":
         return <ProfilePage />;
       case "referrals":
@@ -129,6 +133,7 @@ export default function Home() {
       case "admin-withdrawals":
       case "admin-categories":
       case "admin-reports":
+      case "admin-deposits":
       case "admin-settings":
       case "admin-announce":
         return <AdminPage route={route} />;

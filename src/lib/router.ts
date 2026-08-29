@@ -17,6 +17,7 @@ export type Route =
   | { name: "post-job" }
   | { name: "wallet" }
   | { name: "withdraw" }
+  | { name: "deposit" }
   | { name: "profile" }
   | { name: "referrals" }
   | { name: "notifications" }
@@ -35,6 +36,7 @@ export type Route =
   | { name: "admin-withdrawals" }
   | { name: "admin-categories" }
   | { name: "admin-reports" }
+  | { name: "admin-deposits" }
   | { name: "admin-settings" }
   | { name: "admin-announce" };
 
@@ -72,6 +74,8 @@ function parseHash(): Route {
       return { name: "wallet" };
     case "withdraw":
       return { name: "withdraw" };
+    case "deposit":
+      return { name: "deposit" };
     case "profile":
       return { name: "profile" };
     case "referrals":
@@ -102,6 +106,7 @@ function parseHash(): Route {
       if (parts[1] === "withdrawals") return { name: "admin-withdrawals" };
       if (parts[1] === "categories") return { name: "admin-categories" };
       if (parts[1] === "reports") return { name: "admin-reports" };
+      if (parts[1] === "deposits") return { name: "admin-deposits" };
       if (parts[1] === "settings") return { name: "admin-settings" };
       if (parts[1] === "announce") return { name: "admin-announce" };
       return { name: "admin" };
@@ -140,6 +145,8 @@ export function routeToHash(route: Route): string {
       return "#/admin/categories";
     case "admin-reports":
       return "#/admin/reports";
+    case "admin-deposits":
+      return "#/admin/deposits";
     case "admin-settings":
       return "#/admin/settings";
     case "admin-announce":

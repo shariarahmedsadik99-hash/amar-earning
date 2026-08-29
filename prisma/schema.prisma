@@ -33,6 +33,7 @@ model User {
   bookmarks     Bookmark[]
   reports       JobReport[]
   ratings       JobRating[]
+  deposits      Deposit[]
   adminLogs     AdminLog[]  @relation("AdminActor")
   referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
   referrals     User[]     @relation("Referrals")
@@ -211,4 +212,19 @@ model JobReport {
   reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, reporterId])
+}
+
+model Deposit {
+  id             String   @id @default(cuid())
+  userId         String
+  amount         Float
+  method         String   // BKASH | NAGAD | ROCKET | etc
+  senderNumber   String   // user's number that sent money
+  transactionId  String   // transaction ID from payment
+  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectReason   String?
+  createdAt      DateTime @default(now())
+  processedAt    DateTime?
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

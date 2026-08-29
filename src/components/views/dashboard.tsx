@@ -19,6 +19,7 @@ import {
   Home,
   Bookmark,
   Gift,
+  ArrowDownToLine,
 } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
 import { EarningsChart } from "@/components/shared/earnings-chart";
@@ -50,6 +51,7 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
     { name: "my-bookmarks", label: t.bookmarks.title, icon: Bookmark },
     { name: "referrals", label: t.referrals.title, icon: Gift },
     { name: "wallet", label: t.nav.wallet, icon: WalletIcon },
+    { name: "deposit", label: lang === "bn" ? "টাকা যোগ" : "Deposit", icon: ArrowDownToLine },
     { name: "withdraw", label: t.nav.withdraw, icon: Banknote },
     { name: "profile", label: t.nav.profile, icon: User },
   ];

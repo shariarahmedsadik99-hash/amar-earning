@@ -7,7 +7,7 @@ import { DashboardLayout } from "./dashboard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/shared/states";
-import { Banknote, Wallet as WalletIcon, TrendingUp, TrendingDown, Clock } from "lucide-react";
+import { Banknote, Wallet as WalletIcon, TrendingUp, TrendingDown, Clock, ArrowDownToLine } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type WalletData = {
@@ -56,10 +56,16 @@ export function WalletPage() {
     <DashboardLayout active="wallet">
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-xl md:text-2xl font-bold">{t.wallet.title}</h1>
-        <Button size="sm" onClick={() => navigate({ name: "withdraw" })}>
-          <Banknote className="h-4 w-4 mr-1" />
-          {t.nav.withdraw}
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate({ name: "deposit" })}>
+            <ArrowDownToLine className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">{lang === "bn" ? "টাকা যোগ" : "Deposit"}</span>
+          </Button>
+          <Button size="sm" onClick={() => navigate({ name: "withdraw" })}>
+            <Banknote className="h-4 w-4 mr-1" />
+            {t.nav.withdraw}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
