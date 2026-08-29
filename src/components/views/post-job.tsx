@@ -64,10 +64,25 @@ export function PostJobPage() {
 
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
+  const [selectedJobType, setSelectedJobType] = useState<JobType | null>(null);
+  const minReward = selectedJobType?.reward || 0;
+
   const selectJobType = (jobTypeId: string) => {
     const jt = jobTypes.find((j) => j.id === jobTypeId);
     if (jt) {
+      setSelectedJobType(jt);
       setForm((p) => ({ ...p, title: jt.title, reward: String(jt.reward) }));
+    }
+  };
+
+  // Update reward but enforce minimum
+  const updateReward = (v: string) => {
+    const val = parseFloat(v) || 0;
+    if (selectedJobType && val < selectedJobType.reward) {
+      // Don't allow below minimum — reset to minimum
+      set("reward", String(selectedJobType.reward));
+    } else {
+      set("reward", v);
     }
   };
 
@@ -79,6 +94,13 @@ export function PostJobPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate minimum reward if job type selected
+    if (selectedJobType && rewardNum < selectedJobType.reward) {
+      toast.error(lang === "bn"
+        ? `সর্বনিম্ন দাম ৳${selectedJobType.reward} দিতে হবে`
+        : `Minimum reward is ৳${selectedJobType.reward}`);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/jobs", {
@@ -128,6 +150,7 @@ export function PostJobPage() {
                 set("categoryId", v);
                 set("title", "");
                 set("reward", "");
+                setSelectedJobType(null);
               }}
             >
               <SelectTrigger><SelectValue placeholder={lang === "bn" ? "ক্যাটাগরি বাছুন" : "Select category"} /></SelectTrigger>
@@ -187,8 +210,31 @@ export function PostJobPage() {
         <Card className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="reward">{t.postJob.rewardPerWorker} (৳)</Label>
-              <Input id="reward" type="number" min="1" step="0.01" value={form.reward} onChange={(e) => set("reward", e.target.value)} required placeholder="5" />
+              <Label htmlFor="reward" className="flex items-center gap-1.5">
+                {t.postJob.rewardPerWorker} (৳)
+                {selectedJobType && (
+                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                    {lang === "bn" ? `সর্বনিম্ন ৳${minReward}` : `Min ৳${minReward}`}
+                  </span>
+                )}
+              </Label>
+              <Input
+                id="reward"
+                type="number"
+                min={minReward || 1}
+                step="0.01"
+                value={form.reward}
+                onChange={(e) => updateReward(e.target.value)}
+                required
+                placeholder={selectedJobType ? String(minReward) : "5"}
+              />
+              {selectedJobType && (
+                <p className="text-[11px] text-muted-foreground">
+                  {lang === "bn"
+                    ? `এই কাজের সর্বনিম্ন দাম ৳${minReward}। আপনি চাইলে বেশি দিতে পারেন কিন্তু কম দিতে পারবেন না।`
+                    : `Minimum price for this job is ৳${minReward}. You can increase but not decrease.`}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="workerLimit">{t.postJob.numWorkers}</Label>
