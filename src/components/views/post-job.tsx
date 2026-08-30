@@ -75,30 +75,23 @@ export function PostJobPage() {
     }
   };
 
-  // Update reward but enforce minimum
-  const updateReward = (v: string) => {
-    const val = parseFloat(v) || 0;
-    if (selectedJobType && val < selectedJobType.reward) {
-      // Don't allow below minimum — reset to minimum
-      set("reward", String(selectedJobType.reward));
-    } else {
-      set("reward", v);
-    }
-  };
-
   const rewardNum = parseFloat(form.reward) || 0;
   const workersNum = parseInt(form.workerLimit) || 0;
   const jobBudget = rewardNum * workersNum;
   const totalBudget = jobBudget + serviceCharge;
+
+  // Check if reward is below minimum
+  const isBelowMin = selectedJobType && rewardNum > 0 && rewardNum < selectedJobType.reward;
   const sufficient = balance >= totalBudget && totalBudget > 0;
+  const canSubmit = sufficient && !isBelowMin;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Validate minimum reward if job type selected
     if (selectedJobType && rewardNum < selectedJobType.reward) {
       toast.error(lang === "bn"
-        ? `সর্বনিম্ন দাম ৳${selectedJobType.reward} দিতে হবে`
-        : `Minimum reward is ৳${selectedJobType.reward}`);
+        ? `সর্বনিম্ন দাম ৳${selectedJobType.reward} দিতে হবে! আপনি ৳${rewardNum} দিয়েছেন।`
+        : `Minimum price is ৳${selectedJobType.reward}! You entered ৳${rewardNum}.`);
       return;
     }
     setLoading(true);
@@ -224,11 +217,24 @@ export function PostJobPage() {
                 min={minReward || 1}
                 step="0.01"
                 value={form.reward}
-                onChange={(e) => updateReward(e.target.value)}
+                onChange={(e) => set("reward", e.target.value)}
                 required
                 placeholder={selectedJobType ? String(minReward) : "5"}
+                className={isBelowMin ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
-              {selectedJobType && (
+              {/* Red error when below minimum */}
+              {isBelowMin && (
+                <div className="flex items-start gap-1.5 text-xs text-red-600 font-medium p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>
+                    {lang === "bn"
+                      ? `ভুল! এই কাজের সর্বনিম্ন দাম ৳${minReward}। আপনি ৳${rewardNum} দিয়েছেন। দয়া করে ৳${minReward} বা তার বেশি দিন।`
+                      : `Error! Minimum price is ৳${minReward}. You entered ৳${rewardNum}. Please enter ৳${minReward} or more.`}
+                  </span>
+                </div>
+              )}
+              {/* Normal info when valid */}
+              {selectedJobType && !isBelowMin && (
                 <p className="text-[11px] text-muted-foreground">
                   {lang === "bn"
                     ? `এই কাজের সর্বনিম্ন দাম ৳${minReward}। আপনি চাইলে বেশি দিতে পারেন কিন্তু কম দিতে পারবেন না।`
@@ -288,7 +294,7 @@ export function PostJobPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11" disabled={loading || !sufficient}>
+          <Button type="submit" className="w-full h-11" disabled={loading || !canSubmit}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {t.postJob.publish}
           </Button>
