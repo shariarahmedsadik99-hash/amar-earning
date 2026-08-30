@@ -41,7 +41,8 @@ export function WithdrawPage() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ method: "BKASH", accountNumber: "", amount: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [minWithdrawal, setMinWithdrawal] = useState(100);
+  const [minWithdrawal, setMinWithdrawal] = useState(50);
+  const [withdrawalFee, setWithdrawalFee] = useState(3);
 
   const load = async () => {
     const [wRes, wdRes, sRes] = await Promise.all([
@@ -55,7 +56,8 @@ export function WithdrawPage() {
     setWithdrawals(wdData.withdrawals || []);
     if (sRes && sRes.ok) {
       const sData = await sRes.json();
-      setMinWithdrawal(sData.minWithdrawal || 100);
+      setMinWithdrawal(sData.minWithdrawal || 50);
+      setWithdrawalFee(sData.withdrawalFee || 3);
     }
     setLoading(false);
   };
@@ -63,6 +65,9 @@ export function WithdrawPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const amountNum = parseFloat(form.amount) || 0;
+  const userReceives = Math.max(amountNum - withdrawalFee, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +83,9 @@ export function WithdrawPage() {
         toast.error(data.error || "Failed");
         return;
       }
-      toast.success(t.withdraw.submit + " ✓");
+      toast.success(lang === "bn"
+        ? `উইথড্র রিকোয়েস্ট সফল! ফি ৳${data.fee}, আপনি পাবেন ৳${data.userReceives}`
+        : `Withdrawal requested! Fee ৳${data.fee}, you receive ৳${data.userReceives}`);
       setForm({ method: "BKASH", accountNumber: "", amount: "" });
       load();
     } catch {
@@ -181,6 +188,27 @@ export function WithdrawPage() {
             />
           </div>
 
+          {/* Fee breakdown */}
+          {amountNum > 0 && (
+            <div className="p-4 rounded-xl bg-muted/50 border space-y-2 animate-fade-in-up">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{lang === "bn" ? "উইথড্র পরিমাণ" : "Withdrawal Amount"}</span>
+                <span className="font-medium">৳{formatMoney(amountNum, lang)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-1">
+                  {lang === "bn" ? "উইথড্র ফি" : "Withdrawal Fee"}
+                  <span className="text-[10px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full">{lang === "bn" ? "প্রতি উইথড্র" : "per withdrawal"}</span>
+                </span>
+                <span className="font-medium text-red-600">-৳{formatMoney(withdrawalFee, lang)}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t">
+                <span className="text-sm font-semibold">{lang === "bn" ? "আপনি পাবেন" : "You Receive"}</span>
+                <span className="text-lg font-bold text-green-600">৳{formatMoney(userReceives, lang)}</span>
+              </div>
+            </div>
+          )}
+
           <Button type="submit" className="w-full h-11" disabled={submitting}>
             {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Banknote className="h-4 w-4 mr-2" />}
             {t.withdraw.submit}
@@ -224,6 +252,9 @@ export function WithdrawPage() {
                   <div>
                     <p className="text-sm font-medium">{t.common.currency}{formatMoney(w.amount, lang)}</p>
                     <p className="text-xs text-muted-foreground">{w.method} • {w.accountNumber.slice(0, 4)}****</p>
+                    <p className="text-[10px] text-green-600 font-medium">
+                      {lang === "bn" ? "পেয়েছেন" : "Received"}: ৳{formatMoney(w.amount - withdrawalFee, lang)}
+                    </p>
                     {w.rejectReason && <p className="text-xs text-destructive mt-0.5">⚠️ {w.rejectReason}</p>}
                   </div>
                 </div>

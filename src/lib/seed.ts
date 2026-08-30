@@ -397,10 +397,11 @@ async function ensureSettings() {
   const settings = [
     { key: "websiteName", value: "Amar Earning" },
     { key: "primaryColor", value: "#22c55e" },
-    { key: "minWithdrawal", value: "100" },
+    { key: "minWithdrawal", value: "50" },
     { key: "paymentMethods", value: "BKASH,NAGAD,ROCKET" },
     { key: "jobApprovalRequired", value: "true" },
     { key: "serviceCharge", value: "8" },
+    { key: "withdrawalFee", value: "3" },
     { key: "maintenanceMode", value: "false" },
   ];
   for (const s of settings) {

@@ -1385,13 +1385,28 @@ function WithdrawalsView() {
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+              <div className="grid grid-cols-2 gap-2 text-center text-xs mb-3">
                 <div className="p-2 rounded-lg bg-muted/50">
                   <p className="font-bold text-sm text-primary">
                     {t.common.currency}
                     {formatMoney(w.amount, lang)}
                   </p>
                   <p className="text-muted-foreground">{L(lang, "পরিমাণ", "Amount")}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-muted/50">
+                  <p className="font-bold text-sm text-green-600">
+                    {t.common.currency}
+                    {formatMoney(w.amount - 3, lang)}
+                  </p>
+                  <p className="text-muted-foreground">{L(lang, "ইউজার পাবে", "User Receives")}</p>
+                </div>
+              </div>
+
+              {/* Fee + method + account row */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+                <div className="p-2 rounded-lg bg-red-500/5 border border-red-500/20">
+                  <p className="font-bold text-sm text-red-600">-৳3</p>
+                  <p className="text-muted-foreground">{L(lang, "ফি", "Fee")}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-muted/50">
                   <p className="font-bold text-sm">{methodLabel(w.method)}</p>

@@ -8,16 +8,18 @@ export type AppSettings = {
   jobApprovalRequired: boolean;
   maintenanceMode: boolean;
   serviceCharge: number;
+  withdrawalFee: number;
 };
 
 const DEFAULTS: AppSettings = {
   websiteName: "Amar Earning",
   primaryColor: "#22c55e",
-  minWithdrawal: 100,
+  minWithdrawal: 50,
   paymentMethods: ["BKASH", "NAGAD", "ROCKET"],
   jobApprovalRequired: true,
   maintenanceMode: false,
   serviceCharge: 8,
+  withdrawalFee: 3,
 };
 
 export async function getSettings(): Promise<AppSettings> {
@@ -40,6 +42,7 @@ export async function getSettings(): Promise<AppSettings> {
       ? map.maintenanceMode === "true"
       : DEFAULTS.maintenanceMode,
     serviceCharge: map.serviceCharge ? parseFloat(map.serviceCharge) : DEFAULTS.serviceCharge,
+    withdrawalFee: map.withdrawalFee ? parseFloat(map.withdrawalFee) : DEFAULTS.withdrawalFee,
   };
 }
 
