@@ -110,6 +110,25 @@ export function ReferralsPage() {
         <p className="text-sm text-muted-foreground mt-1">{t.referrals.subtitle}</p>
       </div>
 
+      {/* Commission info banner */}
+      <Card className="mb-6 p-4 bg-gradient-to-r from-primary/10 to-emerald-500/5 border-primary/20 animate-fade-in-up">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+            <Coins className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">
+              {lang === "bn" ? "২% লাইফটাইম কমিশন!" : "2% Lifetime Commission!"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {lang === "bn"
+                ? "আপনার রেফার করা ইউজার যতবার উইথড্র করবে, প্রতিবার আপনি উইথড্র অ্যামাউন্টের ২% পাবেন। যেমন: ১০০০৳ উইথড্র করলে আপনি পাবেন ২০৳।"
+                : "Every time your referred user withdraws, you get 2% of the withdrawal amount. Example: 1000৳ withdrawal = you get 20৳."}
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {loading ? (
         <LoadingState text={t.common.loading} />
       ) : (

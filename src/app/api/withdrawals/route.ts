@@ -180,6 +180,49 @@ export async function PATCH(req: NextRequest) {
           });
         }
       });
+
+      // --- Referral commission: when a referred user withdraws, referrer gets 2% ---
+      const withdrawer = await db.user.findUnique({
+        where: { id: withdrawal.userId },
+        select: { id: true, name: true, referredById: true },
+      });
+      if (withdrawer?.referredById) {
+        const commission = Math.round((withdrawal.amount * 2) / 100 * 100) / 100; // 2% commission
+        if (commission > 0) {
+          // Credit referrer's wallet
+          const referrerWallet = await db.wallet.findUnique({
+            where: { userId: withdrawer.referredById },
+          });
+          if (referrerWallet) {
+            const newBalance = referrerWallet.balance + commission;
+            await db.wallet.update({
+              where: { userId: withdrawer.referredById },
+              data: {
+                balance: newBalance,
+                totalEarned: { increment: commission },
+              },
+            });
+            await db.transaction.create({
+              data: {
+                userId: withdrawer.referredById,
+                type: "REFERRAL_BONUS",
+                amount: commission,
+                description: `রেফারেল কমিশন: ${withdrawer.name} এর উইথড্র ৳${withdrawal.amount} থেকে ২%`,
+                balanceAfter: newBalance,
+              },
+            });
+            // Notify referrer
+            await db.notification.create({
+              data: {
+                userId: withdrawer.referredById,
+                title: "রেফারেল কমিশন!",
+                message: `আপনার রেফার করা ${withdrawer.name} ৳${withdrawal.amount} উইথড্র করেছেন। আপনি ২% কমিশন হিসেবে ৳${commission} পেয়েছেন!`,
+                type: "ANNOUNCEMENT",
+              },
+            });
+          }
+        }
+      }
     } else if (action === "reject") {
       // Refund the held amount
       await refundHeldAmount(
