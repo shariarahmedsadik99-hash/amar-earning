@@ -401,7 +401,7 @@ async function ensureSettings() {
     { key: "paymentMethods", value: "BKASH,NAGAD,ROCKET" },
     { key: "jobApprovalRequired", value: "true" },
     { key: "serviceCharge", value: "8" },
-    { key: "withdrawalFee", value: "3" },
+    { key: "withdrawalFeePercent", value: "5" },
     { key: "maintenanceMode", value: "false" },
   ];
   for (const s of settings) {

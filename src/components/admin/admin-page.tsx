@@ -1396,7 +1396,7 @@ function WithdrawalsView() {
                 <div className="p-2 rounded-lg bg-muted/50">
                   <p className="font-bold text-sm text-green-600">
                     {t.common.currency}
-                    {formatMoney(w.amount - 3, lang)}
+                    {formatMoney(Math.round(w.amount * 95) / 100, lang)}
                   </p>
                   <p className="text-muted-foreground">{L(lang, "ইউজার পাবে", "User Receives")}</p>
                 </div>
@@ -1405,8 +1405,8 @@ function WithdrawalsView() {
               {/* Fee + method + account row */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
                 <div className="p-2 rounded-lg bg-red-500/5 border border-red-500/20">
-                  <p className="font-bold text-sm text-red-600">-৳3</p>
-                  <p className="text-muted-foreground">{L(lang, "ফি", "Fee")}</p>
+                  <p className="font-bold text-sm text-red-600">-৳{formatMoney(Math.round(w.amount * 5) / 100, lang)}</p>
+                  <p className="text-muted-foreground">{L(lang, "ফি (৫%)", "Fee (5%)")}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-muted/50">
                   <p className="font-bold text-sm">{methodLabel(w.method)}</p>

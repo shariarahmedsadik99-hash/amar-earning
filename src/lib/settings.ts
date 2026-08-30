@@ -8,7 +8,7 @@ export type AppSettings = {
   jobApprovalRequired: boolean;
   maintenanceMode: boolean;
   serviceCharge: number;
-  withdrawalFee: number;
+  withdrawalFeePercent: number;
 };
 
 const DEFAULTS: AppSettings = {
@@ -19,7 +19,7 @@ const DEFAULTS: AppSettings = {
   jobApprovalRequired: true,
   maintenanceMode: false,
   serviceCharge: 8,
-  withdrawalFee: 3,
+  withdrawalFeePercent: 5,
 };
 
 export async function getSettings(): Promise<AppSettings> {
@@ -42,7 +42,7 @@ export async function getSettings(): Promise<AppSettings> {
       ? map.maintenanceMode === "true"
       : DEFAULTS.maintenanceMode,
     serviceCharge: map.serviceCharge ? parseFloat(map.serviceCharge) : DEFAULTS.serviceCharge,
-    withdrawalFee: map.withdrawalFee ? parseFloat(map.withdrawalFee) : DEFAULTS.withdrawalFee,
+    withdrawalFeePercent: map.withdrawalFeePercent ? parseFloat(map.withdrawalFeePercent) : DEFAULTS.withdrawalFeePercent,
   };
 }
 

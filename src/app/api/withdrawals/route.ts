@@ -65,8 +65,9 @@ export async function POST(req: NextRequest) {
     }
 
     const settings = await getSettings();
-    const fee = settings.withdrawalFee;
-    const userReceives = amountNum - fee;
+    const feePercent = settings.withdrawalFeePercent;
+    const fee = Math.round((amountNum * feePercent) / 100 * 100) / 100;
+    const userReceives = Math.round((amountNum - fee) * 100) / 100;
 
     if (amountNum < settings.minWithdrawal) {
       return NextResponse.json(
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     if (userReceives <= 0) {
       return NextResponse.json(
-        { error: `উইথড্র পরিমাণ ৳${fee} ফি এর চেয়ে বেশি হতে হবে` },
+        { error: `উইথড্র পরিমাণ ফি এর চেয়ে বেশি হতে হবে` },
         { status: 400 }
       );
     }
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Hold the amount (full amount including fee)
-    await holdAmount(user.id, amountNum, "WITHDRAWAL", `উইথড্র রিকোয়েস্ট: ${method} ${accountNumber} (ফি ৳${fee}, ইউজার পাবে ৳${userReceives})`);
+    await holdAmount(user.id, amountNum, "WITHDRAWAL", `উইথড্র রিকোয়েস্ট: ${method} ${accountNumber} (ফি ${feePercent}% = ৳${fee}, ইউজার পাবে ৳${userReceives})`);
 
     const withdrawal = await db.withdrawal.create({
       data: {
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: admin.id,
           title: "নতুন উইথড্র রিকোয়েস্ট",
-          message: `${user.name} ৳${amountNum} উইথড্র করতে চান (${method})। ফি ৳${fee}, ইউজার পাবে ৳${userReceives}।`,
+          message: `${user.name} ৳${amountNum} উইথড্র করতে চান (${method})। ফি ${feePercent}% = ৳${fee}, ইউজার পাবে ৳${userReceives}।`,
           type: "ANNOUNCEMENT",
         },
       });
@@ -118,12 +119,12 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         title: "উইথড্র রিকোয়েস্ট গৃহীত",
-        message: `আপনার ৳${amountNum} উইথড্র রিকোয়েস্ট গৃহীত হয়েছে। ফি ৳${fee}, আপনি পাবেন ৳${userReceives}। অ্যাডমিন অনুমোদনের পর টাকা পাঠানো হবে।`,
+        message: `আপনার ৳${amountNum} উইথড্র রিকোয়েস্ট গৃহীত হয়েছে। ফি ${feePercent}% = ৳${fee}, আপনি পাবেন ৳${userReceives}। অ্যাডমিন অনুমোদনের পর টাকা পাঠানো হবে।`,
         type: "ANNOUNCEMENT",
       },
     });
 
-    return NextResponse.json({ ok: true, withdrawal, fee, userReceives });
+    return NextResponse.json({ ok: true, withdrawal, fee, userReceives, feePercent });
   } catch (e) {
     console.error("Withdraw error:", e);
     return NextResponse.json({ error: "সার্ভার ত্রুটি" }, { status: 500 });
