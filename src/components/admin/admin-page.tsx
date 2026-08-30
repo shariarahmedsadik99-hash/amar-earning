@@ -1413,7 +1413,7 @@ function WithdrawalsView() {
                   <p className="text-muted-foreground">{L(lang, "মাধ্যম", "Method")}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-muted/50">
-                  <p className="font-bold text-xs">{w.accountNumber.slice(0, 4)}****</p>
+                  <p className="font-bold text-xs font-mono">{w.accountNumber}</p>
                   <p className="text-muted-foreground">{L(lang, "অ্যাকাউন্ট", "Account")}</p>
                 </div>
               </div>
