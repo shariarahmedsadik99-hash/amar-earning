@@ -32,6 +32,8 @@ import {
   Loader2,
   Send,
   Bookmark,
+  PlusCircle,
+  XCircle,
 } from "lucide-react";
 import { formatMoney, formatDate, toBn } from "@/lib/format";
 
@@ -61,7 +63,9 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
   const [loading, setLoading] = useState(true);
   const [mySubmission, setMySubmission] = useState<{ status: string } | null>(null);
   const [showProof, setShowProof] = useState(false);
-  const [proof, setProof] = useState({ textProof: "", urlProof: "", imageProof: "" });
+  const [proofItems, setProofItems] = useState<Array<{ text: string; image: string }>>([
+    { text: "", image: "" },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
@@ -117,22 +121,55 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
     }
   };
 
+  const addProofItem = () => {
+    setProofItems([...proofItems, { text: "", image: "" }]);
+  };
+
+  const removeProofItem = (index: number) => {
+    if (proofItems.length > 1) {
+      setProofItems(proofItems.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateProofItem = (index: number, field: "text" | "image", value: string) => {
+    setProofItems(proofItems.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       navigate({ name: "login" } as Route);
       return;
     }
-    if (!proof.textProof && !proof.urlProof && !proof.imageProof) {
-      toast.error(t.proof.title);
+    // Check at least one field has content
+    const hasContent = proofItems.some(item => item.text.trim() || item.image.trim());
+    if (!hasContent) {
+      toast.error(lang === "bn" ? "অন্তত একটি প্রমাণ দিন" : "Please provide at least one proof");
       return;
     }
+
+    // Combine all items into a structured proof
+    const textParts: string[] = [];
+    const imageParts: string[] = [];
+    proofItems.forEach((item, i) => {
+      if (item.text.trim()) {
+        textParts.push(item.text.trim());
+      }
+      if (item.image.trim()) {
+        imageParts.push(item.image.trim());
+      }
+    });
+
+    const textProof = textParts.join("\n---\n");
+    const imageProof = imageParts.join(", ");
+    const urlProof = ""; // kept for API compatibility
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, ...proof }),
+        body: JSON.stringify({ jobId, textProof, imageProof, urlProof }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -142,7 +179,7 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
       toast.success(t.proof.success);
       setMySubmission({ status: "PENDING" });
       setShowProof(false);
-      setProof({ textProof: "", urlProof: "", imageProof: "" });
+      setProofItems([{ text: "", image: "" }]);
     } catch {
       toast.error("Network error");
     } finally {
@@ -326,40 +363,66 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
         <Card className="p-5 md:p-6">
           <h2 className="font-semibold text-base mb-4">{t.proof.title}</h2>
           <form onSubmit={handleSubmitProof} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="flex items-center gap-1.5">
-                <FileCheck className="h-3.5 w-3.5" /> {t.proof.textProof}
-              </Label>
-              <Textarea
-                value={proof.textProof}
-                onChange={(e) => setProof({ ...proof, textProof: e.target.value })}
-                placeholder={lang === "bn" ? "আপনার প্রমাণ লিখুন..." : "Write your proof..."}
-                rows={4}
-              />
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5">
-                  <Link2 className="h-3.5 w-3.5" /> {t.proof.urlProof}
-                </Label>
-                <Input
-                  value={proof.urlProof}
-                  onChange={(e) => setProof({ ...proof, urlProof: e.target.value })}
-                  placeholder="https://..."
-                />
+            {/* Dynamic proof items */}
+            {proofItems.map((item, index) => (
+              <div key={index} className="p-4 rounded-xl border bg-muted/20 space-y-3">
+                {/* Item header with number + remove button */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {lang === "bn" ? `প্রমাণ ${index + 1}` : `Proof ${index + 1}`}
+                  </span>
+                  {proofItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeProofItem(index)}
+                      className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      {lang === "bn" ? "সরান" : "Remove"}
+                    </button>
+                  )}
+                </div>
+
+                {/* Screenshot URL field */}
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5 text-xs">
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    {lang === "bn" ? "স্ক্রিনশট লিংক" : "Screenshot URL"}
+                  </Label>
+                  <Input
+                    value={item.image}
+                    onChange={(e) => updateProofItem(index, "image", e.target.value)}
+                    placeholder={lang === "bn" ? "ছবির লিংক দিন..." : "Paste screenshot link..."}
+                  />
+                </div>
+
+                {/* Text proof field */}
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1.5 text-xs">
+                    <FileCheck className="h-3.5 w-3.5" />
+                    {lang === "bn" ? "টেক্সট প্রমাণ" : "Text Proof"}
+                  </Label>
+                  <Textarea
+                    value={item.text}
+                    onChange={(e) => updateProofItem(index, "text", e.target.value)}
+                    placeholder={lang === "bn" ? "আপনার প্রমাণ লিখুন..." : "Write your proof..."}
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5" /> {t.proof.imageProof}
-                </Label>
-                <Input
-                  value={proof.imageProof}
-                  onChange={(e) => setProof({ ...proof, imageProof: e.target.value })}
-                  placeholder={lang === "bn" ? "ছবির লিংক" : "Image URL"}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
+            ))}
+
+            {/* Add more button */}
+            <button
+              type="button"
+              onClick={addProofItem}
+              className="w-full py-3 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium text-primary"
+            >
+              <PlusCircle className="h-4 w-4" />
+              {lang === "bn" ? "আরও প্রমাণ যোগ করুন" : "Add More Proof"}
+            </button>
+
+            <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setShowProof(false)}>
                 {t.common.cancel}
               </Button>
