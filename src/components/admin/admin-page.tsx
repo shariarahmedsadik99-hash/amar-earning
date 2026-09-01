@@ -69,6 +69,8 @@ import {
   StarOff,
   Flag,
   ArrowDownToLine,
+  CreditCard,
+  PlusCircle,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
 import { AdminCharts } from "@/components/shared/admin-charts";
@@ -213,6 +215,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-submissions", labelBn: "সাবমিশন", labelEn: "Submissions", icon: ClipboardList },
   { route: "admin-withdrawals", labelBn: "উইথড্র", labelEn: "Withdrawals", icon: Banknote },
   { route: "admin-deposits", labelBn: "ডিপোজিট", labelEn: "Deposits", icon: ArrowDownToLine },
+  { route: "admin-payment", labelBn: "পেমেন্ট গেটওয়ে", labelEn: "Payment Gateway", icon: CreditCard },
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
   { route: "admin-reports", labelBn: "রিপোর্ট", labelEn: "Reports", icon: Flag },
   { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
@@ -2149,6 +2152,276 @@ function AnnounceView() {
 }
 
 /* =========================================================================
+ * PaymentGatewayView - manage payment methods (add/remove/edit/logo/color)
+ * =======================================================================*/
+function PaymentGatewayView() {
+  const lang = useLang();
+  type Method = {
+    key: string;
+    labelBn: string;
+    labelEn: string;
+    number: string;
+    type: string;
+    color: string;
+    textColor: string;
+    logo: string;
+    instructionsBn: string;
+    instructionsEn: string;
+    active: boolean;
+  };
+
+  const [methods, setMethods] = useState<Method[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/payment-methods", { cache: "no-store" });
+      const data = await res.json();
+      setMethods(data.methods || []);
+    } catch {
+      toast.error(L(lang, "লোড ব্যর্থ", "Failed to load"));
+    } finally {
+      setLoading(false);
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/payment-methods", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ methods }),
+      });
+      if (res.ok) {
+        toast.success(L(lang, "সেভ সফল", "Saved successfully"));
+        setEditingIndex(null);
+      } else {
+        toast.error("Failed");
+      }
+    } catch {
+      toast.error("Error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addNewMethod = () => {
+    setMethods([
+      ...methods,
+      {
+        key: "",
+        labelBn: "",
+        labelEn: "",
+        number: "",
+        type: "PERSONAL",
+        color: "#22c55e",
+        textColor: "#ffffff",
+        logo: "💳",
+        instructionsBn: "",
+        instructionsEn: "",
+        active: true,
+      },
+    ]);
+    setEditingIndex(methods.length);
+  };
+
+  const updateMethod = (index: number, field: keyof Method, value: string | boolean) => {
+    setMethods(methods.map((m, i) => (i === index ? { ...m, [field]: value } : m)));
+  };
+
+  const removeMethod = (index: number) => {
+    setMethods(methods.filter((_, i) => i !== index));
+    setEditingIndex(null);
+  };
+
+  const PRESET_LOGOS = ["📱", "💰", "🚀", "💳", "🏦", "💵", "🪙", "🏧", "✅", "🔵", "🟠", "🟣"];
+
+  return (
+    <div>
+      <SectionHeader
+        title={L(lang, "পেমেন্ট গেটওয়ে সেটিংস", "Payment Gateway Settings")}
+        description={L(lang, "পেমেন্ট মেথড যোগ/সরান, লোগো ও কালার কাস্টমাইজ করুন", "Add/remove payment methods, customize logo & color")}
+      />
+
+      {loading ? (
+        <LoadingState text={L(lang, "লোড হচ্ছে...", "Loading...")} />
+      ) : (
+        <div className="space-y-4">
+          {/* Payment method cards */}
+          {methods.map((m, i) => (
+            <Card key={i} className="p-4 overflow-hidden">
+              {/* Color header bar */}
+              <div
+                className="-mx-4 -mt-4 px-4 py-3 mb-3 flex items-center justify-between"
+                style={{ backgroundColor: m.color, color: m.textColor }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{m.logo}</span>
+                  <div>
+                    <p className="font-bold text-sm">{m.labelEn || L(lang, "নতুন মেথড", "New Method")}</p>
+                    <p className="text-[10px] opacity-90">{m.type === "PERSONAL" ? L(lang, "পার্সোনাল", "Personal") : L(lang, "মার্চেন্ট", "Merchant")}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEditingIndex(editingIndex === i ? null : i)}
+                    className="px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-medium"
+                  >
+                    {editingIndex === i ? L(lang, "বন্ধ", "Close") : L(lang, "সম্পাদনা", "Edit")}
+                  </button>
+                  <button
+                    onClick={() => removeMethod(i)}
+                    className="px-2 py-1 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-xs font-medium"
+                  >
+                    🗑
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick info when not editing */}
+              {editingIndex !== i && (
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <span className="text-muted-foreground">{L(lang, "নম্বর", "Number")}: </span>
+                    <span className="font-mono font-bold">{m.number || "—"}</span>
+                  </div>
+                  <Badge variant="outline" className={m.active ? "text-green-600 border-green-500/30" : "text-red-600 border-red-500/30"}>
+                    {m.active ? L(lang, "সক্রিয়", "Active") : L(lang, "নিষ্ক্রিয়", "Inactive")}
+                  </Badge>
+                </div>
+              )}
+
+              {/* Edit form */}
+              {editingIndex === i && (
+                <div className="space-y-3 animate-fade-in-up">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "নাম (EN)", "Name (EN)")}</Label>
+                      <Input value={m.labelEn} onChange={(e) => updateMethod(i, "labelEn", e.target.value)} placeholder="bKash" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "নাম (BN)", "Name (BN)")}</Label>
+                      <Input value={m.labelBn} onChange={(e) => updateMethod(i, "labelBn", e.target.value)} placeholder="বিকাশ" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "কী (Key)", "Key")}</Label>
+                      <Input value={m.key} onChange={(e) => updateMethod(i, "key", e.target.value.toUpperCase())} placeholder="BKASH" className="font-mono" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "নম্বর", "Number")}</Label>
+                      <Input value={m.number} onChange={(e) => updateMethod(i, "number", e.target.value)} placeholder="01XXXXXXXXX" className="font-mono" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "টাইপ", "Type")}</Label>
+                      <select
+                        value={m.type}
+                        onChange={(e) => updateMethod(i, "type", e.target.value)}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="PERSONAL">{L(lang, "পার্সোনাল", "Personal")}</option>
+                        <option value="MERCHANT">{L(lang, "মার্চেন্ট", "Merchant")}</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "কালার", "Color")}</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={m.color}
+                          onChange={(e) => updateMethod(i, "color", e.target.value)}
+                          className="h-9 w-12 rounded-md border border-input cursor-pointer"
+                        />
+                        <Input value={m.color} onChange={(e) => updateMethod(i, "color", e.target.value)} className="font-mono text-xs flex-1" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logo picker */}
+                  <div className="space-y-1">
+                    <Label className="text-xs">{L(lang, "লোগো (Emoji)", "Logo (Emoji)")}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {PRESET_LOGOS.map((logo) => (
+                        <button
+                          key={logo}
+                          onClick={() => updateMethod(i, "logo", logo)}
+                          className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
+                            m.logo === logo ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          {logo}
+                        </button>
+                      ))}
+                      <Input
+                        value={m.logo}
+                        onChange={(e) => updateMethod(i, "logo", e.target.value)}
+                        className="w-20 font-mono text-lg text-center"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Instructions */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "নির্দেশনা (BN)", "Instructions (BN)")}</Label>
+                      <Input value={m.instructionsBn} onChange={(e) => updateMethod(i, "instructionsBn", e.target.value)} placeholder="বিকাশ অ্যাপে টাকা পাঠান..." />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "নির্দেশনা (EN)", "Instructions (EN)")}</Label>
+                      <Input value={m.instructionsEn} onChange={(e) => updateMethod(i, "instructionsEn", e.target.value)} placeholder="Send money via app..." />
+                    </div>
+                  </div>
+
+                  {/* Active toggle */}
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                    <span className="text-sm font-medium">{L(lang, "সক্রিয়", "Active")}</span>
+                    <button
+                      onClick={() => updateMethod(i, "active", !m.active)}
+                      className={`relative h-6 w-11 rounded-full transition-colors ${m.active ? "bg-primary" : "bg-muted-foreground/30"}`}
+                    >
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${m.active ? "translate-x-5" : "translate-x-0.5"}`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          ))}
+
+          {/* Add new method button */}
+          <button
+            onClick={addNewMethod}
+            className="w-full py-4 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium text-primary"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {L(lang, "নতুন পেমেন্ট মেথড যোগ করুন", "Add New Payment Method")}
+          </button>
+
+          {/* Save button */}
+          <Button onClick={handleSave} className="w-full h-11" disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <SettingsIcon className="h-4 w-4 mr-2" />}
+            {L(lang, "সেভ করুন", "Save All Changes")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
  * DepositsView - manage deposit requests
  * =======================================================================*/
 function DepositsView() {
@@ -2450,6 +2723,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <CategoriesView />;
       case "admin-reports":
         return <ReportsView />;
+      case "admin-payment":
+        return <PaymentGatewayView />;
       case "admin-deposits":
         return <DepositsView />;
       case "admin-announce":

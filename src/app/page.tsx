@@ -54,7 +54,7 @@ export default function Home() {
       "notifications",
       "notification-settings",
     ];
-    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-deposits", "admin-settings", "admin-announce"];
+    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-deposits", "admin-payment", "admin-settings", "admin-announce"];
 
     if (!user && (protectedRoutes.includes(route.name) || adminRoutes.includes(route.name))) {
       navigate({ name: "login" });
@@ -134,6 +134,7 @@ export default function Home() {
       case "admin-categories":
       case "admin-reports":
       case "admin-deposits":
+      case "admin-payment":
       case "admin-settings":
       case "admin-announce":
         return <AdminPage route={route} />;
