@@ -79,11 +79,14 @@ export function PostJobPage() {
   const workersNum = parseInt(form.workerLimit) || 0;
   const jobBudget = rewardNum * workersNum;
   const totalBudget = jobBudget + serviceCharge;
+  const minJobBudget = 50; // Minimum total job budget (reward × workers) must be at least 50
 
-  // Check if reward is below minimum
+  // Check if reward is below minimum (per job type)
   const isBelowMin = selectedJobType && rewardNum > 0 && rewardNum < selectedJobType.reward;
+  // Check if total job budget is below 50
+  const isBelowMinBudget = jobBudget > 0 && jobBudget < minJobBudget;
   const sufficient = balance >= totalBudget && totalBudget > 0;
-  const canSubmit = sufficient && !isBelowMin;
+  const canSubmit = sufficient && !isBelowMin && !isBelowMinBudget;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +95,13 @@ export function PostJobPage() {
       toast.error(lang === "bn"
         ? `সর্বনিম্ন দাম ৳${selectedJobType.reward} দিতে হবে! আপনি ৳${rewardNum} দিয়েছেন।`
         : `Minimum price is ৳${selectedJobType.reward}! You entered ৳${rewardNum}.`);
+      return;
+    }
+    // Validate minimum total budget (reward × workers >= 50)
+    if (jobBudget < minJobBudget) {
+      toast.error(lang === "bn"
+        ? `মোট বাজেট কমপক্ষে ৳${minJobBudget} হতে হবে! আপনার বাজেট ৳${jobBudget} (${rewardNum} × ${workersNum})। কর্মী সংখ্যা বাড়ান বা পুরস্কার বাড়ান।`
+        : `Total budget must be at least ৳${minJobBudget}! Your budget is ৳${jobBudget} (${rewardNum} × ${workersNum}). Increase workers or reward.`);
       return;
     }
     setLoading(true);
@@ -260,12 +270,23 @@ export function PostJobPage() {
               {t.postJob.totalBudget}
             </div>
             {/* Job cost breakdown */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
+            <div className={`flex items-center justify-between text-sm ${isBelowMinBudget ? "text-red-600" : ""}`}>
+              <span className={isBelowMinBudget ? "" : "text-muted-foreground"}>
                 {t.common.currency}{formatMoney(rewardNum, lang)} × {workersNum} {lang === "bn" ? "কর্মী" : "workers"}
               </span>
-              <span className="font-medium">{t.common.currency}{formatMoney(jobBudget, lang)}</span>
+              <span className={`font-medium ${isBelowMinBudget ? "text-red-600" : ""}`}>{t.common.currency}{formatMoney(jobBudget, lang)}</span>
             </div>
+            {/* Minimum budget warning */}
+            {isBelowMinBudget && (
+              <div className="flex items-start gap-1.5 text-xs text-red-600 font-medium p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>
+                  {lang === "bn"
+                    ? `মোট বাজেট কমপক্ষে ৳${minJobBudget} হতে হবে! আপনার বাজেট ৳${jobBudget}। ${Math.ceil(minJobBudget / (rewardNum || 1)) - workersNum > 0 ? `আরও ${Math.ceil(minJobBudget / (rewardNum || 1)) - workersNum} জন কর্মী যোগ করুন বা পুরস্কার বাড়ান।` : "পুরস্কার বাড়ান।"}`
+                    : `Total budget must be at least ৳${minJobBudget}! Your budget is ৳${jobBudget}. Increase workers or reward.`}
+                </span>
+              </div>
+            )}
             {/* Service charge */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-1">
