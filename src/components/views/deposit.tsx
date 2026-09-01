@@ -23,6 +23,8 @@ type PaymentMethod = {
   color: string;
   textColor: string;
   logo: string;
+  logoType: string;
+  imageUrl: string;
   instructionsBn: string;
   instructionsEn: string;
   active: boolean;
@@ -139,7 +141,14 @@ export function DepositPage() {
               className="p-4 flex items-center gap-3"
               style={{ backgroundColor: method.color, color: method.textColor }}
             >
-              <span className="text-2xl">{method.logo}</span>
+              {method.logoType === "image" && method.imageUrl ? (
+                <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/20 shrink-0">
+                  { }
+                  <img src={method.imageUrl} alt={method.labelEn} className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                </div>
+              ) : (
+                <span className="text-2xl">{method.logo}</span>
+              )}
               <div>
                 <p className="font-bold text-sm">{lang === "bn" ? method.labelBn : method.labelEn}</p>
                 <p className="text-[10px] opacity-90">
@@ -275,10 +284,15 @@ export function DepositPage() {
                 <div key={d.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
+                      className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
                       style={{ backgroundColor: method?.color || "#888", color: method?.textColor || "#fff" }}
                     >
-                      <span className="text-base">{method?.logo || "💳"}</span>
+                      {method?.logoType === "image" && method?.imageUrl ? (
+                         
+                        <img src={method.imageUrl} alt="" className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <span className="text-base">{method?.logo || "💳"}</span>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold">

@@ -2165,6 +2165,8 @@ function PaymentGatewayView() {
     color: string;
     textColor: string;
     logo: string;
+    logoType: string; // "emoji" | "image"
+    imageUrl: string;
     instructionsBn: string;
     instructionsEn: string;
     active: boolean;
@@ -2225,6 +2227,8 @@ function PaymentGatewayView() {
         color: "#22c55e",
         textColor: "#ffffff",
         logo: "💳",
+        logoType: "emoji",
+        imageUrl: "",
         instructionsBn: "",
         instructionsEn: "",
         active: true,
@@ -2264,7 +2268,14 @@ function PaymentGatewayView() {
                 style={{ backgroundColor: m.color, color: m.textColor }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{m.logo}</span>
+                  {m.logoType === "image" && m.imageUrl ? (
+                    <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/20 shrink-0">
+                      { }
+                      <img src={m.imageUrl} alt="logo" className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                  ) : (
+                    <span className="text-2xl">{m.logo}</span>
+                  )}
                   <div>
                     <p className="font-bold text-sm">{m.labelEn || L(lang, "নতুন মেথড", "New Method")}</p>
                     <p className="text-[10px] opacity-90">{m.type === "PERSONAL" ? L(lang, "পার্সোনাল", "Personal") : L(lang, "মার্চেন্ট", "Merchant")}</p>
@@ -2350,28 +2361,87 @@ function PaymentGatewayView() {
                     </div>
                   </div>
 
-                  {/* Logo picker */}
+                  {/* Logo section — Emoji or Image URL */}
                   <div className="space-y-1">
-                    <Label className="text-xs">{L(lang, "লোগো (Emoji)", "Logo (Emoji)")}</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {PRESET_LOGOS.map((logo) => (
-                        <button
-                          key={logo}
-                          onClick={() => updateMethod(i, "logo", logo)}
-                          className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
-                            m.logo === logo ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
-                          }`}
-                        >
-                          {logo}
-                        </button>
-                      ))}
-                      <Input
-                        value={m.logo}
-                        onChange={(e) => updateMethod(i, "logo", e.target.value)}
-                        className="w-20 font-mono text-lg text-center"
-                        maxLength={2}
-                      />
+                    <Label className="text-xs">{L(lang, "লোগো", "Logo")}</Label>
+
+                    {/* Logo type toggle */}
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={() => updateMethod(i, "logoType", "emoji")}
+                        className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
+                          (m.logoType || "emoji") === "emoji" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        {L(lang, "ইমোজি", "Emoji")}
+                      </button>
+                      <button
+                        onClick={() => updateMethod(i, "logoType", "image")}
+                        className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
+                          m.logoType === "image" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                        }`}
+                      >
+                        {L(lang, "ছবি (URL)", "Image (URL)")}
+                      </button>
                     </div>
+
+                    {/* Emoji picker */}
+                    {(m.logoType || "emoji") === "emoji" && (
+                      <div className="flex flex-wrap gap-2">
+                        {PRESET_LOGOS.map((logo) => (
+                          <button
+                            key={logo}
+                            onClick={() => updateMethod(i, "logo", logo)}
+                            className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
+                              m.logo === logo ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                            }`}
+                          >
+                            {logo}
+                          </button>
+                        ))}
+                        <Input
+                          value={m.logo}
+                          onChange={(e) => updateMethod(i, "logo", e.target.value)}
+                          className="w-20 font-mono text-lg text-center"
+                          maxLength={2}
+                        />
+                      </div>
+                    )}
+
+                    {/* Image URL picker */}
+                    {m.logoType === "image" && (
+                      <div className="space-y-2">
+                        <Input
+                          value={m.imageUrl || ""}
+                          onChange={(e) => updateMethod(i, "imageUrl", e.target.value)}
+                          placeholder="https://example.com/bank-logo.png"
+                          className="text-xs"
+                        />
+                        {/* Preview */}
+                        {m.imageUrl && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                            <div
+                              className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: m.color }}
+                            >
+                              { }
+                              <img
+                                src={m.imageUrl}
+                                alt="logo"
+                                className="h-7 w-7 object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                            </div>
+                            <div className="text-xs">
+                              <span className="text-muted-foreground">{L(lang, "প্রিভিউ", "Preview")}: </span>
+                              <span className="font-medium">{m.imageUrl.split("/").pop()}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Instructions */}
