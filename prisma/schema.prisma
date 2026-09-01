@@ -21,6 +21,7 @@ model User {
   referralCode  String?  @unique
   referredById  String?
   notifySettings String? @default("{\"submissionApproved\":true,\"submissionRejected\":true,\"withdrawalApproved\":true,\"withdrawalRejected\":true,\"jobCompleted\":true,\"announcement\":true}")
+  withdrawPin  String?  // 4-digit hashed PIN for withdrawals
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { holdAmount, refundHeldAmount, creditWallet, notify, isNotificationEnabled } from "@/lib/wallet";
 import { getSettings } from "@/lib/settings";
+import { verifyPin } from "@/app/api/withdraw-pin/route";
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,7 +45,26 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { method, accountNumber, amount } = body;
+    const { method, accountNumber, amount, withdrawPin } = body;
+
+    // --- Verify withdraw PIN ---
+    const fullUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { withdrawPin: true },
+    });
+
+    if (!fullUser?.withdrawPin) {
+      return NextResponse.json({ error: "উইথড্র PIN সেট করা হয়নি। প্রোফাইল সেটিংস থেকে PIN সেট করুন।", noPin: true }, { status: 400 });
+    }
+
+    if (!withdrawPin) {
+      return NextResponse.json({ error: "উইথড্র PIN দিন" }, { status: 400 });
+    }
+
+    const pinValid = await verifyPin(withdrawPin, fullUser.withdrawPin);
+    if (!pinValid) {
+      return NextResponse.json({ error: "ভুল উইথড্র PIN" }, { status: 400 });
+    }
 
     if (!method || !accountNumber || !amount) {
       return NextResponse.json({ error: "সব ফিল্ড পূরণ করুন" }, { status: 400 });

@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Banknote, Loader2, Clock, CheckCircle2, XCircle, ShieldCheck, Lightbulb } from "lucide-react";
+import { Banknote, Loader2, Clock, CheckCircle2, XCircle, ShieldCheck, Lightbulb, KeyRound } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type WalletData = { balance: number; pendingBalance: number };
@@ -39,16 +39,18 @@ export function WithdrawPage() {
   const [wallet, setWallet] = useState<WalletData>({ balance: 0, pendingBalance: 0 });
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ method: "BKASH", accountNumber: "", amount: "" });
+  const [form, setForm] = useState({ method: "BKASH", accountNumber: "", amount: "", withdrawPin: "" });
   const [submitting, setSubmitting] = useState(false);
   const [minWithdrawal, setMinWithdrawal] = useState(50);
   const [withdrawalFeePercent, setWithdrawalFeePercent] = useState(5);
+  const [hasPin, setHasPin] = useState(false);
 
   const load = async () => {
-    const [wRes, wdRes, sRes] = await Promise.all([
+    const [wRes, wdRes, sRes, pinRes] = await Promise.all([
       fetch("/api/wallet"),
       fetch("/api/withdrawals"),
       fetch("/api/settings").catch(() => null),
+      fetch("/api/withdraw-pin").catch(() => null),
     ]);
     const wData = await wRes.json();
     const wdData = await wdRes.json();
@@ -58,6 +60,10 @@ export function WithdrawPage() {
       const sData = await sRes.json();
       setMinWithdrawal(sData.minWithdrawal || 50);
       setWithdrawalFeePercent(sData.withdrawalFeePercent || 5);
+    }
+    if (pinRes && pinRes.ok) {
+      const pinData = await pinRes.json();
+      setHasPin(pinData.hasPin || false);
     }
     setLoading(false);
   };
@@ -87,7 +93,7 @@ export function WithdrawPage() {
       toast.success(lang === "bn"
         ? `উইথড্র রিকোয়েস্ট সফল! ফি ${data.feePercent}% = ৳${data.fee}, আপনি পাবেন ৳${data.userReceives}`
         : `Withdrawal requested! Fee ${data.feePercent}% = ৳${data.fee}, you receive ৳${data.userReceives}`);
-      setForm({ method: "BKASH", accountNumber: "", amount: "" });
+      setForm({ method: "BKASH", accountNumber: "", amount: "", withdrawPin: "" });
       load();
     } catch {
       toast.error("Network error");
@@ -210,7 +216,38 @@ export function WithdrawPage() {
             </div>
           )}
 
-          <Button type="submit" className="w-full h-11" disabled={submitting}>
+          {/* Withdraw PIN input */}
+          {hasPin ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="withdrawPin" className="flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5 text-primary" />
+                {lang === "bn" ? "উইথড্র PIN (৪ ডিজিট)" : "Withdraw PIN (4 digits)"}
+              </Label>
+              <Input
+                id="withdrawPin"
+                type="password"
+                maxLength={4}
+                inputMode="numeric"
+                pattern="\d{4}"
+                value={form.withdrawPin}
+                onChange={(e) => setForm({ ...form, withdrawPin: e.target.value.replace(/\D/g, "") })}
+                placeholder="••••"
+                className="tracking-widest text-center font-mono text-lg"
+                required
+              />
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 text-xs text-amber-600 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+              <KeyRound className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                {lang === "bn"
+                  ? "উইথড্র করার আগে প্রোফাইল সেটিংস থেকে একটি ৪ ডিজিটের PIN সেট করুন।"
+                  : "Please set a 4-digit PIN in profile settings before withdrawing."}
+              </span>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full h-11" disabled={submitting || (!hasPin)}>
             {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Banknote className="h-4 w-4 mr-2" />}
             {t.withdraw.submit}
           </Button>
