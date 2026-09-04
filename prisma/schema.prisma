@@ -11,6 +11,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// When using Turso (libsql://), the adapter handles the connection.
+// Set DATABASE_URL to any non-empty value for Prisma to not complain.
+// Actual connection is handled by @prisma/adapter-libsql in db.ts
+
 model User {
   id            String   @id @default(cuid())
   name          String
