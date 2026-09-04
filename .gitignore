@@ -61,3 +61,4 @@ agent-ctx/
 local-*
 prompt
 test
+bun.lock
