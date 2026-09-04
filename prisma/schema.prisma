@@ -11,10 +11,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// When using Turso (libsql://), the adapter handles the connection.
-// Set DATABASE_URL to any non-empty value for Prisma to not complain.
-// Actual connection is handled by @prisma/adapter-libsql in db.ts
-
 model User {
   id            String   @id @default(cuid())
   name          String
@@ -175,6 +171,21 @@ model Withdrawal {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Deposit {
+  id             String   @id @default(cuid())
+  userId         String
+  amount         Float
+  method         String   // BKASH | NAGAD | ROCKET | etc
+  senderNumber   String   // user's number that sent money
+  transactionId  String   // transaction ID from payment
+  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectReason   String?
+  createdAt      DateTime @default(now())
+  processedAt    DateTime?
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -218,19 +229,4 @@ model JobReport {
   reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, reporterId])
-}
-
-model Deposit {
-  id             String   @id @default(cuid())
-  userId         String
-  amount         Float
-  method         String   // BKASH | NAGAD | ROCKET | etc
-  senderNumber   String   // user's number that sent money
-  transactionId  String   // transaction ID from payment
-  status         String   @default("PENDING") // PENDING | APPROVED | REJECTED
-  rejectReason   String?
-  createdAt      DateTime @default(now())
-  processedAt    DateTime?
-
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
