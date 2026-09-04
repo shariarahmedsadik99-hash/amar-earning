@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { createClient } from '@libsql/client'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -7,24 +9,18 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL || "file:./db/custom.db"
 
-  // For Turso/libSQL, we create a regular PrismaClient with the URL
-  // The adapter approach requires async init which doesn't work with the current architecture
-  // Instead, we pass the full URL with authToken as query param
-  let dbUrl = url
-  if (url.startsWith('libsql://') && process.env.DATABASE_AUTH_TOKEN) {
-    // Prisma supports libSQL URLs with authToken as query param via the driver adapter
-    // But for simplicity, we use direct connection with embedded token
-    const separator = url.includes('?') ? '&' : '?'
-    dbUrl = `${url}${separator}authToken=${process.env.DATABASE_AUTH_TOKEN}`
+  // For Turso/libSQL
+  if (url.startsWith('libsql://')) {
+    const authToken = process.env.DATABASE_AUTH_TOKEN
+    const libsql = createClient({ url, authToken })
+    const adapter = new PrismaLibSql(libsql)
+    return new PrismaClient({ adapter })
   }
 
+  // Local SQLite fallback
   return new PrismaClient({
-    datasources: {
-      db: {
-        url: dbUrl,
-      },
-    },
-    log: process.env.NODE_ENV !== 'production' ? ['error', 'warn'] : ['error'],
+    datasources: { db: { url } },
+    log: ['error'],
   })
 }
 

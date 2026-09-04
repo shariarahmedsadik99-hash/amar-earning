@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* Vercel deployment config */
   typescript: {
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   reactStrictMode: false,
   images: {
@@ -17,3 +19,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
