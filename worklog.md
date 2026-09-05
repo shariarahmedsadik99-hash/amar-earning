@@ -1009,3 +1009,28 @@ Stage Summary:
 - SUSPEND_REPORTED action automatically suspends the reported user.
 - Both parties get bilingual notification on resolution.
 - Committed (b668262) and pushed to GitHub — Vercel will auto-redeploy.
+
+---
+Task ID: fix-categories-not-loading
+Agent: main (Z.ai Code)
+Task: "amar ei website e age fix ctagori chilo ekhon seta nai" — categories were showing before, now gone
+
+Work Log:
+- Checked Turso database directly: all 14 categories + 72 job types exist in DB.
+- Checked dev.log: `GET /api/categories 200 in 57s` — the API was returning 200 but taking 57 seconds!
+- Root cause: `/api/categories` route called `await seedDatabase()` on every request. `seedDatabase()` → `ensureCategories()` runs 14 `category.upsert()` + 72×2 `jobType.findFirst/create/update` = ~158 DB round-trips to Turso per request. Each Turso network query ~300ms → 158 × 300ms = ~47s total.
+- Also found `/api/jobs/list` had the same `await seedDatabase()` call.
+- Fix applied:
+  1. Removed `seedDatabase()` call from `/api/categories` route — just fetch categories directly.
+  2. Removed `seedDatabase()` call from `/api/jobs/list` route.
+  3. Optimized `seedDatabase()` itself: added fast-path `if (catCount > 0) return;` so `/api/seed` is also fast when already seeded.
+  4. Optimized `ensureCategories()`: added `if (existingCount >= 14) return;` early exit.
+  5. Optimized `ensureSettings()`: added `if (existingCount >= 8) return;` early exit.
+- Verified via curl: categories API now returns in 1.1s (was 57s — 50x faster).
+- Verified via agent-browser: home page now shows all 14 categories (Facebook, Youtube, Telegram, Tiktok, Twitter, etc.) in the "কাজের ক্যাটাগরি" section.
+- Committed (046e3a1) and pushed to GitHub.
+
+Stage Summary:
+- Categories are back and loading in ~1 second instead of ~57 seconds.
+- The website now works correctly — all 14 categories visible on home page.
+- Vercel will auto-redeploy with this fix.
