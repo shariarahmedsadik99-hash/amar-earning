@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState, LoadingState } from "@/components/shared/states";
 import { CertificateButton } from "@/components/shared/certificate-button";
-import { ClipboardList } from "lucide-react";
+import { UserReportDialog } from "@/components/shared/user-report-dialog";
+import { ClipboardList, ShieldAlert } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type Submission = {
@@ -22,7 +23,7 @@ type Submission = {
   rejectReason: string | null;
   createdAt: string;
   reviewedAt: string | null;
-  job: { title: string; reward: number; category: { name: string } };
+  job: { id: string; title: string; reward: number; ownerId: string; category: { name: string } };
 };
 
 export function MySubmissionsPage() {
@@ -109,9 +110,20 @@ export function MySubmissionsPage() {
 
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[10px] text-muted-foreground">{formatDateTime(s.createdAt, lang)}</p>
-                    {s.status === "APPROVED" && (
-                      <CertificateButton submissionId={s.id} />
-                    )}
+                    <div className="flex items-center gap-1">
+                      <UserReportDialog
+                        reportedId={s.job.ownerId}
+                        reportedRole="employer"
+                        jobId={s.job.id}
+                        submissionId={s.id}
+                        trigger="icon"
+                        triggerVariant="ghost"
+                        triggerSize="sm"
+                      />
+                      {s.status === "APPROVED" && (
+                        <CertificateButton submissionId={s.id} />
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}

@@ -37,6 +37,10 @@ model User {
   ratings       JobRating[]
   deposits      Deposit[]
   adminLogs     AdminLog[]  @relation("AdminActor")
+  // Dispute reports: ones filed by this user, ones filed against this user, and ones this admin resolved
+  reportsFiled   UserReport[] @relation("ReportReporter")
+  reportsAgainst UserReport[] @relation("ReportSubject")
+  resolvedReports UserReport[] @relation("ReportResolver")
   referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
   referrals     User[]     @relation("Referrals")
 }
@@ -112,6 +116,7 @@ model Job {
   bookmarks      Bookmark[]
   reports        JobReport[]
   ratings        JobRating[]
+  userReports    UserReport[]
 }
 
 model JobSubmission {
@@ -128,6 +133,7 @@ model JobSubmission {
 
   job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userReports  UserReport[]
 
   @@unique([jobId, userId])
 }
@@ -229,4 +235,31 @@ model JobReport {
   reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, reporterId])
+}
+
+// Dispute reports between users (worker vs employer).
+// Reasons cover non-payment, fake issue, wrong submission, abuse, etc.
+model UserReport {
+  id            String    @id @default(cuid())
+  reporterId    String    // who filed the report
+  reportedId    String    // who is being reported
+  jobId         String?  // optional context: which job this is about
+  submissionId  String?  // optional context: which submission this is about
+  reason        String   // NON_PAYMENT | FAKE_ISSUE | WRONG_SUBMISSION | ABUSE | SPAM | OTHER
+  detail         String?  // free-form description from reporter
+  status        String    @default("PENDING") // PENDING | REVIEWING | RESOLVED | DISMISSED
+  adminNote     String?  // admin's private note on resolution
+  resolution    String?  // REFUND_WORKER | WARN_REPORTED | SUSPEND_REPORTED | NO_ACTION | OTHER
+  resolvedById  String?  // admin who resolved
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  reporter      User      @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported      User      @relation("ReportSubject", fields: [reportedId], references: [id], onDelete: Cascade)
+  resolver      User?     @relation("ReportResolver", fields: [resolvedById], references: [id])
+  job           Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  submission    JobSubmission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+
+  @@index([reportedId])
+  @@index([status])
 }

@@ -69,6 +69,7 @@ import {
   StarOff,
   Flag,
   ArrowDownToLine,
+  ArrowRight,
   CreditCard,
   PlusCircle,
 } from "lucide-react";
@@ -218,6 +219,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-payment", labelBn: "পেমেন্ট গেটওয়ে", labelEn: "Payment Gateway", icon: CreditCard },
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
   { route: "admin-reports", labelBn: "রিপোর্ট", labelEn: "Reports", icon: Flag },
+  { route: "admin-disputes", labelBn: "বিরোধ", labelEn: "Disputes", icon: ShieldAlert },
   { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
   { route: "admin-settings", labelBn: "সেটিংস", labelEn: "Settings", icon: SettingsIcon },
 ];
@@ -2759,6 +2761,310 @@ function ReportsView() {
 }
 
 /* =========================================================================
+ * DisputesView - manage user-vs-user disputes (UserReport)
+ * =======================================================================*/
+type DisputeReport = {
+  id: string;
+  reason: string;
+  detail: string | null;
+  status: string;
+  resolution: string | null;
+  adminNote: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  reporter: { id: string; name: string; username: string; email: string };
+  reported: { id: string; name: string; username: string; email: string; status: string };
+  job: { id: string; title: string; reward: number; ownerId: string } | null;
+  resolver: { id: string; name: string } | null;
+};
+
+function DisputesView() {
+  const lang = useLang();
+  const [reports, setReports] = useState<DisputeReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("PENDING");
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [resolution, setResolution] = useState("REFUND_WORKER");
+  const [adminNote, setAdminNote] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/user-reports?status=${filter}`, { cache: "no-store" });
+    const data = await res.json();
+    setReports(data.reports || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  const act = async (id: string, action: "resolve" | "dismiss") => {
+    if (action === "resolve") {
+      if (!confirm(L(lang,
+        "আপনি কি নিশ্চিত যে এই রিপোর্টটি সমাধান করতে চান?",
+        "Are you sure you want to resolve this report?"
+      ))) return;
+    } else {
+      if (!confirm(L(lang,
+        "আপনি কি নিশ্চিত যে এই রিপোর্টটি বাতিল করতে চান?",
+        "Are you sure you want to dismiss this report?"
+      ))) return;
+    }
+    setResolving(id);
+    try {
+      const res = await fetch("/api/admin/user-reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reportId: id,
+          action,
+          resolution: action === "resolve" ? resolution : undefined,
+          adminNote: adminNote.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(L(lang, "সম্পন্ন হয়েছে ✓", "Done ✓"));
+        setActiveId(null);
+        setAdminNote("");
+        load();
+      } else {
+        toast.error(data.error || "Failed");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setResolving(null);
+    }
+  };
+
+  const reasonLabels: Record<string, { bn: string; en: string }> = {
+    NON_PAYMENT: { bn: "টাকা পরিশোধ করেনি", en: "Non-payment" },
+    FAKE_ISSUE: { bn: "ভুয়া সমস্যা", en: "Fake issue" },
+    WRONG_SUBMISSION: { bn: "ভুল কাজ", en: "Wrong submission" },
+    ABUSE: { bn: "হয়রানি", en: "Abuse" },
+    SPAM: { bn: "স্প্যাম", en: "Spam" },
+    OTHER: { bn: "অন্যান্য", en: "Other" },
+  };
+
+  const resolutionLabels: Record<string, { bn: string; en: string }> = {
+    REFUND_WORKER: { bn: "কর্মীকে টাকা ফেরত", en: "Refund worker" },
+    WARN_REPORTED: { bn: "সতর্ক করুন", en: "Warn reported" },
+    SUSPEND_REPORTED: { bn: "স্থগিত করুন", en: "Suspend reported" },
+    NO_ACTION: { bn: "কোনো ব্যবস্থা নয়", en: "No action" },
+    OTHER: { bn: "অন্যান্য", en: "Other" },
+  };
+
+  const statusBadgeClass = (s: string) => {
+    if (s === "PENDING") return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20";
+    if (s === "REVIEWING") return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+    if (s === "RESOLVED") return "bg-green-500/10 text-green-600 border-green-500/20";
+    return "bg-muted text-muted-foreground border-border";
+  };
+
+  const stats = {
+    total: reports.length,
+    pending: reports.filter((r) => r.status === "PENDING" || r.status === "REVIEWING").length,
+    resolved: reports.filter((r) => r.status === "RESOLVED").length,
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title={L(lang, "বিরোধ রিপোর্ট", "Dispute Reports")}
+        description={L(lang, "ইউজারদের মধ্যে বিরোধের তালিকা", "List of user-vs-user disputes")}
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <Card className="p-3 text-center">
+          <p className="text-xl font-bold">{toBn(stats.total)}</p>
+          <p className="text-[10px] text-muted-foreground">{L(lang, "মোট", "Total")}</p>
+        </Card>
+        <Card className="p-3 text-center">
+          <p className="text-xl font-bold text-yellow-600">{toBn(stats.pending)}</p>
+          <p className="text-[10px] text-muted-foreground">{L(lang, "অপেক্ষমাণ", "Pending")}</p>
+        </Card>
+        <Card className="p-3 text-center">
+          <p className="text-xl font-bold text-green-600">{toBn(stats.resolved)}</p>
+          <p className="text-[10px] text-muted-foreground">{L(lang, "সমাধান", "Resolved")}</p>
+        </Card>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {[
+          { v: "PENDING", bn: "অপেক্ষমাণ", en: "Pending" },
+          { v: "RESOLVED", bn: "সমাধান", en: "Resolved" },
+          { v: "DISMISSED", bn: "বাতিল", en: "Dismissed" },
+        ].map((s) => (
+          <Button
+            key={s.v}
+            size="sm"
+            variant={filter === s.v ? "default" : "outline"}
+            onClick={() => setFilter(s.v)}
+          >
+            {L(lang, s.bn, s.en)}
+          </Button>
+        ))}
+      </div>
+
+      {loading ? (
+        <LoadingState text={L(lang, "লোড হচ্ছে...", "Loading...")} />
+      ) : reports.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          {L(lang, "কোনো বিরোধ নেই", "No disputes")}
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {reports.map((r) => {
+            const expanded = activeId === r.id;
+            return (
+              <Card key={r.id} className="p-4">
+                {/* Reporter → Reported */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                      <span className="font-medium">{r.reporter.name}</span>
+                      <span className="text-muted-foreground">(@{r.reporter.username})</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                      <span className="font-medium text-destructive">{r.reported.name}</span>
+                      <span className="text-muted-foreground">(@{r.reported.username})</span>
+                    </div>
+                    {r.job && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {L(lang, "কাজ", "Job")}: {r.job.title} • ৳{formatMoney(r.job.reward, lang)}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className={`shrink-0 ${statusBadgeClass(r.status)}`}>
+                    {r.status === "PENDING" ? L(lang, "অপেক্ষমাণ", "Pending") :
+                     r.status === "REVIEWING" ? L(lang, "পর্যালোচনাধীন", "Reviewing") :
+                     r.status === "RESOLVED" ? L(lang, "সমাধান", "Resolved") :
+                     L(lang, "বাতিল", "Dismissed")}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                    {reasonLabels[r.reason] ? L(lang, reasonLabels[r.reason].bn, reasonLabels[r.reason].en) : r.reason}
+                  </Badge>
+                  <span className="text-[10px] text-muted-foreground">{formatDateTime(r.createdAt, lang)}</span>
+                </div>
+
+                {r.detail && (
+                  <p className="text-xs text-muted-foreground mb-2 p-2 rounded-lg bg-muted/30 whitespace-pre-wrap">
+                    {r.detail}
+                  </p>
+                )}
+
+                {r.reported.status === "SUSPENDED" && (
+                  <p className="text-[10px] text-red-600 mb-1">⚠️ {L(lang, "রিপোর্টকৃত ইউজার স্থগিত", "Reported user is suspended")}</p>
+                )}
+
+                {r.resolution && r.status !== "PENDING" && (
+                  <p className="text-[10px] text-green-600 mb-1">
+                    {L(lang, "সিদ্ধান্ত", "Resolution")}:{" "}
+                    {resolutionLabels[r.resolution] ? L(lang, resolutionLabels[r.resolution].bn, resolutionLabels[r.resolution].en) : r.resolution}
+                    {r.resolver && ` • ${r.resolver.name}`}
+                  </p>
+                )}
+
+                {r.adminNote && (
+                  <p className="text-[10px] text-muted-foreground mb-1 italic">
+                    {L(lang, "অ্যাডমিন নোট", "Admin note")}: {r.adminNote}
+                  </p>
+                )}
+
+                {(r.status === "PENDING" || r.status === "REVIEWING") && (
+                  <div className="mt-2 pt-2 border-t">
+                    {expanded ? (
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs">{L(lang, "সিদ্ধান্ত", "Resolution")}</Label>
+                          <select
+                            value={resolution}
+                            onChange={(e) => setResolution(e.target.value)}
+                            className="mt-1 w-full h-9 rounded-md border bg-background px-3 text-sm"
+                          >
+                            <option value="REFUND_WORKER">{L(lang, "কর্মীকে টাকা ফেরত দিন", "Refund the worker")}</option>
+                            <option value="WARN_REPORTED">{L(lang, "রিপোর্টকৃতকে সতর্ক করুন", "Warn reported user")}</option>
+                            <option value="SUSPEND_REPORTED">{L(lang, "রিপোর্টকৃতকে স্থগিত করুন", "Suspend reported user")}</option>
+                            <option value="NO_ACTION">{L(lang, "কোনো ব্যবস্থা নয়", "No action")}</option>
+                            <option value="OTHER">{L(lang, "অন্যান্য", "Other")}</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">{L(lang, "অ্যাডমিন নোট (ঐচ্ছিক)", "Admin note (optional)")}</Label>
+                          <Textarea
+                            value={adminNote}
+                            onChange={(e) => setAdminNote(e.target.value)}
+                            rows={2}
+                            maxLength={500}
+                            placeholder={L(lang, "সিদ্ধান্তের কারণ", "Reason for the decision")}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs flex-1"
+                            disabled={resolving === r.id}
+                            onClick={() => act(r.id, "resolve")}
+                          >
+                            {resolving === r.id ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            )}
+                            {L(lang, "সমাধান করুন", "Resolve")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs flex-1 text-destructive"
+                            disabled={resolving === r.id}
+                            onClick={() => act(r.id, "dismiss")}
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            {L(lang, "বাতিল", "Dismiss")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 text-xs"
+                            onClick={() => { setActiveId(null); setAdminNote(""); }}
+                          >
+                            {L(lang, "বন্ধ", "Cancel")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        onClick={() => { setActiveId(r.id); setResolution("REFUND_WORKER"); setAdminNote(""); }}
+                      >
+                        <ShieldAlert className="h-3 w-3 mr-1" />
+                        {L(lang, "পর্যালোচনা করুন", "Review")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
  * Main AdminPage
  * =======================================================================*/
 
@@ -2793,6 +3099,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <CategoriesView />;
       case "admin-reports":
         return <ReportsView />;
+      case "admin-disputes":
+        return <DisputesView />;
       case "admin-payment":
         return <PaymentGatewayView />;
       case "admin-deposits":

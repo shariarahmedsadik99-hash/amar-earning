@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState, LoadingState } from "@/components/shared/states";
+import { UserReportDialog } from "@/components/shared/user-report-dialog";
 import { toast } from "sonner";
-import { Briefcase, Eye, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Briefcase, Eye, CheckCircle2, XCircle, Loader2, ShieldAlert } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type MyJob = {
@@ -34,7 +35,7 @@ type Submission = {
   imageProof: string | null;
   urlProof: string | null;
   createdAt: string;
-  user: { name: string; username: string };
+  user: { id: string; name: string; username: string };
 };
 
 export function MyJobsPage() {
@@ -198,18 +199,31 @@ function JobRow({
               <div key={s.id} className="p-3 rounded-lg border bg-muted/30">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-medium">{s.user.name} (@{s.user.username})</span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      s.status === "PENDING"
-                        ? "text-yellow-600 border-yellow-500/30"
-                        : s.status === "APPROVED"
-                        ? "text-green-600 border-green-500/30"
-                        : "text-red-600 border-red-500/30"
-                    }
-                  >
-                    {t.status[s.status.toLowerCase() as keyof typeof t.status] || s.status}
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge
+                      variant="outline"
+                      className={
+                        s.status === "PENDING"
+                          ? "text-yellow-600 border-yellow-500/30"
+                          : s.status === "APPROVED"
+                          ? "text-green-600 border-green-500/30"
+                          : "text-red-600 border-red-500/30"
+                      }
+                    >
+                      {t.status[s.status.toLowerCase() as keyof typeof t.status] || s.status}
+                    </Badge>
+                    <UserReportDialog
+                      reportedId={s.user.id}
+                      reportedName={s.user.name}
+                      reportedRole="worker"
+                      jobId={job.id}
+                      submissionId={s.id}
+                      defaultReason="WRONG_SUBMISSION"
+                      trigger="icon"
+                      triggerVariant="ghost"
+                      triggerSize="sm"
+                    />
+                  </div>
                 </div>
                 {s.textProof && <p className="text-xs text-muted-foreground mb-1">📝 {s.textProof}</p>}
                 {s.urlProof && <p className="text-xs text-muted-foreground mb-1">🔗 {s.urlProof}</p>}

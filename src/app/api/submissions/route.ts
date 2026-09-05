@@ -39,8 +39,17 @@ export async function GET(req: NextRequest) {
     const submissions = await db.jobSubmission.findMany({
       where,
       include: {
-        job: { select: { title: true, reward: true, categoryId: true, category: true } },
-        user: { select: { name: true, username: true } },
+        job: {
+          select: {
+            id: true,
+            title: true,
+            reward: true,
+            categoryId: true,
+            ownerId: true,
+            category: true,
+          },
+        },
+        user: { select: { id: true, name: true, username: true } },
       },
       orderBy: { createdAt: "desc" },
       take: 100,

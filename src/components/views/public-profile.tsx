@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { useAuth } from "@/lib/auth-context";
 import { useRouter, type Route } from "@/lib/router";
 import { formatMoney, toBn, formatDate } from "@/lib/format";
 import { LoadingState, EmptyState } from "@/components/shared/states";
+import { UserReportDialog } from "@/components/shared/user-report-dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +90,7 @@ const KEY_COLOR: Record<string, string> = {
 
 export function PublicProfilePage({ username }: { username: string }) {
   const { t, lang } = useI18n();
+  const { user: currentUser } = useAuth();
   const { navigate } = useRouter();
 
   const [data, setData] = useState<{ user: PublicUser; badges: PublicBadge[] } | null>(null);
@@ -234,6 +237,20 @@ export function PublicProfilePage({ username }: { username: string }) {
               </span>
             </div>
           </div>
+
+          {/* Report this user (only for logged-in, non-self, non-admin-profile) */}
+          {currentUser && currentUser.id !== user.id && !isAdmin && (
+            <div className="absolute top-3 right-3">
+              <UserReportDialog
+                reportedId={user.id}
+                reportedName={user.name || user.username}
+                reportedRole="user"
+                trigger="icon"
+                triggerVariant="ghost"
+                triggerSize="sm"
+              />
+            </div>
+          )}
         </div>
       </Card>
 
