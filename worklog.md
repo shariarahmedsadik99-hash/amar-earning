@@ -1034,3 +1034,26 @@ Stage Summary:
 - Categories are back and loading in ~1 second instead of ~57 seconds.
 - The website now works correctly — all 14 categories visible on home page.
 - Vercel will auto-redeploy with this fix.
+
+---
+Task ID: fix-post-job-empty-fields-error
+Agent: main (Z.ai Code)
+Task: "job post korle সব ফিল্ড পূরণ করুন ei error asche" — post job shows "fill all fields" error
+
+Work Log:
+- Inspected `/api/jobs` POST route: validation checks `!title || !description || !instructions || !requiredProof || !categoryId || !deadline` → returns "সব ফিল্ড পূরণ করুন".
+- Inspected post-job.tsx form: the deadline field was initialized as empty string `deadline: ""`. The date input showed a default value (7 days from now) via `value={form.deadline || defaultDeadline}`, but the React state remained `""`. When the user submitted without manually changing the date, the API received `deadline: ""` → validation failed.
+- Also found the submit body was `{ ...form, deadline: form.deadline }` — redundant and didn't add the fallback.
+- Fix applied:
+  1. Moved `defaultDeadline` computation above the `useState` call.
+  2. Initialized `form.deadline` with `defaultDeadline` so state is always populated.
+  3. Added fallback in submit body: `deadline: form.deadline || defaultDeadline`.
+- Verified via curl: POST /api/jobs with a complete form body returns 200 with a PENDING job (admin approval required). The employer's wallet was debited correctly.
+- Cleaned up the test job from the database.
+- Dev log confirms: `POST /api/jobs 200 in 2.1s`.
+- Committed (b90e440) and pushed to GitHub.
+
+Stage Summary:
+- The "সব ফিল্ড পূরণ করুন" error is fixed — job posting now works correctly.
+- The deadline field now defaults to 7 days from today and is properly sent to the API.
+- Vercel will auto-redeploy.
