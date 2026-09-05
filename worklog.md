@@ -924,3 +924,21 @@ For Vercel production deployment, set these EXACT env vars in Vercel → Setting
 | JWT_SECRET | amar-earning-super-secret-2026 |
 
 After setting these, trigger a redeploy in Vercel (Deployments → "Redeploy" with "Use existing build cache" UNCHECKED) so the new env vars take effect.
+
+---
+Task ID: remove-demo-login
+Agent: main (Z.ai Code)
+Task: Remove demo admin account access from login page
+
+Work Log:
+- Located demo credentials block in src/components/views/login.tsx (lines 127-133): a `bg-muted/50` card listing Worker / Employer / Admin demo credentials.
+- Searched entire src/ for other demo references — only `src/lib/seed.ts` retains hardcoded demo password hashes (used by the seeding script, NOT the UI). No demo auto-fill buttons, no `setIdentifier("admin")` helpers anywhere.
+- Removed the demo accounts hint card from login.tsx (8 lines deleted).
+- Verified via agent-browser: cleared localStorage + cookies, reloaded, opened login page — `document.body.innerText` no longer contains "Demo", "admin123", "worker123", or "employer123".
+- Committed and pushed to GitHub: 94f4f9b.
+
+Stage Summary:
+- Demo credentials UI hint removed from production login page.
+- Login now only shows: identifier input, password input (with show/hide), remember me, forgot password, submit, register link.
+- Seed script remains intact for local dev (not exposed to end users).
+- Pushed to origin/main — Vercel will auto-redeploy.
