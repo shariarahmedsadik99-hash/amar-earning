@@ -32,6 +32,8 @@ export function PostJobPage() {
   const [balance, setBalance] = useState(0);
   const [serviceCharge, setServiceCharge] = useState(8);
   const [loading, setLoading] = useState(false);
+  // Compute default deadline once (7 days from now) and use it as initial value
+  const defaultDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -40,7 +42,7 @@ export function PostJobPage() {
     reward: "",
     workerLimit: "",
     categoryId: "",
-    deadline: "",
+    deadline: defaultDeadline,
   });
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export function PostJobPage() {
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, deadline: form.deadline }),
+        body: JSON.stringify({ ...form, deadline: form.deadline || defaultDeadline }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -124,8 +126,6 @@ export function PostJobPage() {
       setLoading(false);
     }
   };
-
-  const defaultDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 md:py-10">
