@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/shared/logo";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, Gift } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export function RegisterPage() {
   const { t } = useI18n();
@@ -59,7 +59,7 @@ export function RegisterPage() {
         return;
       }
       await refresh();
-      toast.success("৳50 " + (t.wallet.title) + " ✓");
+      toast.success(t.auth.registerTitle + " ✓");
       navigate({ name: "dashboard" } as Route);
     } catch {
       toast.error("Network error");
@@ -75,10 +75,6 @@ export function RegisterPage() {
           <Logo size="lg" />
           <h1 className="mt-5 text-2xl font-bold">{t.auth.registerTitle}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t.auth.registerSubtitle}</p>
-          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-            <Gift className="h-3 w-3" />
-            ৳50 Signup Bonus
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">

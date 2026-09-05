@@ -598,8 +598,8 @@ export function LeaderboardPage() {
             </h2>
             <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
               {lang === "bn"
-                ? "রেজিস্টার করুন, সাইন-আপ বোনাস পান এবং পরবর্তী টপ আর্নার হন।"
-                : "Sign up, get a signup bonus, and become a top earner."}
+                ? "রেজিস্টার করুন, কাজ শুরু করুন এবং পরবর্তী টপ আর্নার হন।"
+                : "Sign up, start working, and become a top earner."}
             </p>
             <Button
               size="lg"

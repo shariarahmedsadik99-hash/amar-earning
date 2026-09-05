@@ -50,20 +50,10 @@ export async function POST(req: NextRequest) {
         referredById: referrerId,
         wallet: {
           create: {
-            balance: 50,
-            totalEarned: 50,
+            balance: 0,
+            totalEarned: 0,
           },
         },
-      },
-    });
-
-    await db.transaction.create({
-      data: {
-        userId: user.id,
-        type: "DEPOSIT",
-        amount: 50,
-        description: "সাইনআপ বোনাস",
-        balanceAfter: 50,
       },
     });
 
@@ -83,7 +73,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         title: "Amar Earning-এ স্বাগতম!",
-        message: "আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। ৳৫০ সাইনআপ বোনাস পেয়েছেন।",
+        message: "আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। এখনই কাজ শুরু করুন।",
         type: "ANNOUNCEMENT",
       },
     });
