@@ -875,3 +875,52 @@ The platform is stable and feature-rich from previous rounds. All core flows and
 8. Add a job alerts system (email/notify when new jobs in preferred categories are posted).
 9. Add a dark theme toggle persistence check across all pages.
 10. Add a platform stats export (CSV/JSON download).
+
+---
+Task ID: turso-login-fix
+Agent: main (Z.ai Code)
+Task: "tumi valo kore turso er sathe connect kore daw er poreo login hoi na" - Fix Turso connection so login works
+
+Work Log:
+- Read worklog.md and discovered previous Turso issues; local .env had only `DATABASE_URL=file:/home/z/my-project/db/custom.db` and db/ folder was missing entirely — so login failed locally.
+- Searched scripts/ folder and found Turso credentials in scripts/test-turso-full.ts:
+  - URL: libsql://amar-earning-shariarahmed0.aws-ap-south-1.turso.io
+  - Token: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9... (full token restored)
+- Rewrote .env with all 4 required variables:
+  - DATABASE_URL (Turso libsql URL — used by Prisma schema validator)
+  - DATABASE_AUTH_TOKEN (Turso token — standard)
+  - TURSO_DATABASE_URL + TURSO_AUTH_TOKEN (used by src/lib/db.ts adapter path)
+  - JWT_SECRET=amar-earning-super-secret-2026
+  - NEXT_PUBLIC_BASE_URL=https://amar-earning.vercel.app
+- Wrote scripts/test-turso-check.ts and ran it — Turso connection ✅; 15 tables present (User, Wallet, Category, JobType, Job, JobSubmission, JobRating, Transaction, Withdrawal, Deposit, Notification, Bookmark, JobReport, Setting, AdminLog); 3 users present (admin, worker, employer all ACTIVE).
+- Started dev server with `(bun run dev > dev.log 2>&1 &)` (subshell pattern, survives bash session exit). Confirmed port 3000 ready in ~290ms.
+- Tested login API directly with curl:
+  - admin/admin123 → 200, ADMIN role ✅
+  - admin@amarearning.com/admin123 → 200 ✅
+  - worker/worker123 → 200 ✅
+  - employer/employer123 → 200 ✅
+- Tested login via agent-browser:
+  - Opened http://localhost:3000/ — page renders (200 in 6.2s compile)
+  - Clicked লগইন button → login form appeared
+  - Filled identifier="admin" + password="admin123"
+  - Clicked লগইন submit → redirected to dashboard
+  - Verified: "স্বাগতম, Admin 👋" heading shown, অ্যাডমিন button visible, all dashboard navigation present
+- Checked dev.log: POST /api/auth/login 200, GET /api/auth/me 200, GET /api/earnings 200, GET /api/recommendations 200 — no 500 errors.
+- Checked browser errors/console: clean (only React DevTools info and Fast Refresh logs).
+
+Stage Summary:
+- Turso connection fully working with proper credentials in .env
+- Login works end-to-end for all 3 accounts (admin, worker, employer)
+- Dashboard renders correctly with real data from Turso
+- No console errors, no API 500s
+
+For Vercel production deployment, set these EXACT env vars in Vercel → Settings → Environment Variables:
+| Variable | Value |
+|---|---|
+| DATABASE_URL | libsql://amar-earning-shariarahmed0.aws-ap-south-1.turso.io |
+| DATABASE_AUTH_TOKEN | eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODg1MjM0NTQsImlkIjoiMDFhMDY3N2EtNTkwMS03NDA3LWJkZjktNjE0NjcyYjgxZjQwIiwia2lkIjoieTRyR3A4ekV2TEQ0YnpydDE2aUVCT2h2di1zSXV1SnE0cmYyWl9RaEV3RSIsInJpZCI6IjEwZmY4YTE0LTQ3MGQtNGFhYS05ZTcxLWIzM2NkOWZjNjI1ZSJ9.Rwvs4HJ1InUax6x3Ww2kjylj-p5Uy7aOZCjpwJRm9IQM56YDAeQxbsBgduGdCAHtk8z3Wh49Cu8OZQuHSY-yBg |
+| TURSO_DATABASE_URL | libsql://amar-earning-shariarahmed0.aws-ap-south-1.turso.io |
+| TURSO_AUTH_TOKEN | (same as DATABASE_AUTH_TOKEN above) |
+| JWT_SECRET | amar-earning-super-secret-2026 |
+
+After setting these, trigger a redeploy in Vercel (Deployments → "Redeploy" with "Use existing build cache" UNCHECKED) so the new env vars take effect.
