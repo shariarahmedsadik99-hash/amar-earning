@@ -973,3 +973,39 @@ Stage Summary:
 - Welcome notification no longer mentions any bonus.
 - Referral reward (referrer gets ৳20) remains intact.
 - Pushed to GitHub — Vercel will auto-redeploy.
+
+---
+Task ID: dispute-report-system
+Agent: main (Z.ai Code)
+Task: Worker ar employe chaile report request dite parbe ar admin seta dekhte pabe — dispute reporting system
+
+Work Log:
+- Added new `UserReport` Prisma model with fields: reporterId, reportedId, jobId?, submissionId?, reason (NON_PAYMENT | FAKE_ISSUE | WRONG_SUBMISSION | ABUSE | SPAM | OTHER), detail?, status, adminNote?, resolution (REFUND_WORKER | WARN_REPORTED | SUSPEND_REPORTED | NO_ACTION | OTHER), resolvedById?, createdAt, resolvedAt?. Relations to User (3 named relations: ReportReporter, ReportSubject, ReportResolver), Job, JobSubmission.
+- Pushed table directly to Turso via libsql DDL script (since Prisma db push writes to local SQLite due to schema datasource).
+- Created `POST /api/user-reports`: validates reported user exists, optional job/submission linkage (verifies it links the two parties), prevents duplicate active reports per submission. Notifies all admins.
+- Created `GET /api/user-reports`: lists reports filed by OR against current user with reporter/reported/job details.
+- Created `GET /api/admin/user-reports`: admin-only, lists all disputes with filters by status + reason.
+- Created `PATCH /api/admin/user-reports`: admin resolves (REFUND_WORKER auto credits worker + debits employer; SUSPEND_REPORTED auto suspends user) or dismisses (NO_ACTION). Writes AdminLog, notifies both reporter and reported with bilingual verdict.
+- Updated `/api/submissions` GET to also return `job.id`, `job.ownerId`, `user.id` (needed to wire report buttons with context).
+- Created shared `UserReportDialog` component — role-aware: employer (worker reporting), worker (employer reporting), user (generic). Different reason sets per direction (worker gets WRONG_SUBMISSION-focused, employer gets NON_PAYMENT/FAKE_ISSUE-focused).
+- Added Report icon button to My Submissions page (worker can report employer for each submission).
+- Added Report icon button to My Jobs → submission list (employer can report worker for each submission, defaults to WRONG_SUBMISSION).
+- Added Report icon to Public Profile page header (top-right, only for logged-in non-self non-admin-profile).
+- Created `MyReportsPage` view + route `#/my-reports` + dashboard nav item with ShieldAlert icon.
+- Created `DisputesView` admin component + route `#/admin/disputes` + admin nav item "বিরোধ/Disputes". Shows reporter→reported with arrow, reason, detail, status badge, resolution + adminNote + resolver. Expandable review panel with resolution dropdown (5 options), admin note textarea, resolve + dismiss buttons with confirm dialog. Stats grid: total, pending, resolved.
+- Added 30+ i18n keys (`userReports.*` + `adminDisputes.*`) in both bn and en.
+- Verified end-to-end via curl: created dispute (NON_PAYMENT worker→employer) → admin listed it → admin resolved with WARN_REPORTED + adminNote → both parties notified.
+- Verified via agent-browser:
+  - Admin Disputes page shows the resolved dispute with all fields.
+  - Worker "My Reports" page shows the dispute with status, resolution, date, detail.
+
+Stage Summary:
+- Full user-vs-user dispute reporting system working end-to-end.
+- Worker can report employer (non-payment, fake issue, abuse).
+- Employer can report worker (wrong submission, abuse, spam).
+- Anyone can report any user from their public profile.
+- Admin sees all disputes with stats + filters; can resolve with 5 actions (refund/warn/suspend/no-action/other) + private admin note.
+- REFUND_WORKER action automatically credits the worker and debits the employer.
+- SUSPEND_REPORTED action automatically suspends the reported user.
+- Both parties get bilingual notification on resolution.
+- Committed (b668262) and pushed to GitHub — Vercel will auto-redeploy.
