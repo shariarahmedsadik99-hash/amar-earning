@@ -123,14 +123,6 @@ export function LoginPage() {
             {t.nav.register}
           </button>
         </div>
-
-        {/* Demo accounts hint */}
-        <div className="mt-5 p-3 rounded-lg bg-muted/50 border text-xs text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Demo Accounts:</p>
-          <p>👤 Worker: worker@amarearning.com / worker123</p>
-          <p>💼 Employer: employer@amarearning.com / employer123</p>
-          <p>🛡️ Admin: admin@amarearning.com / admin123</p>
-        </div>
       </Card>
     </div>
   );
