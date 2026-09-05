@@ -5,7 +5,12 @@ export async function seedDatabase() {
   // Check if already seeded
   const userCount = await db.user.count();
   if (userCount > 0) {
-    // Still ensure categories exist
+    // Already seeded — quick check if categories exist; if yes, skip entirely
+    const catCount = await db.category.count();
+    if (catCount > 0) {
+      return; // Fast path: DB is already fully seeded, nothing to do
+    }
+    // Categories missing but users exist — ensure them
     await ensureCategories();
     await ensureSettings();
     await ensureAdmin();
@@ -244,6 +249,10 @@ export async function seedDatabase() {
 }
 
 async function ensureCategories() {
+  // Fast path: if categories already exist, skip entirely
+  const existingCount = await db.category.count();
+  if (existingCount >= 14) return;
+
   const cats = [
     { name: "Facebook", slug: "facebook", icon: "Facebook" },
     { name: "Telegram", slug: "telegram", icon: "Send" },
@@ -394,6 +403,10 @@ async function ensureCategories() {
 }
 
 async function ensureSettings() {
+  // Fast path: if settings already exist, skip entirely
+  const existingCount = await db.setting.count();
+  if (existingCount >= 8) return;
+
   const settings = [
     { key: "websiteName", value: "Amar Earning" },
     { key: "primaryColor", value: "#22c55e" },

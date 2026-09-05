@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { seedDatabase } from "@/lib/seed";
 
 export async function GET(req: NextRequest) {
   try {
-    await seedDatabase();
-
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const search = searchParams.get("search");
