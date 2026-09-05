@@ -942,3 +942,34 @@ Stage Summary:
 - Login now only shows: identifier input, password input (with show/hide), remember me, forgot password, submit, register link.
 - Seed script remains intact for local dev (not exposed to end users).
 - Pushed to origin/main — Vercel will auto-redeploy.
+
+---
+Task ID: remove-signup-bonus
+Agent: main (Z.ai Code)
+Task: "sigin bonus eta remove kore daw" - Remove signup bonus feature
+
+Work Log:
+- Searched codebase for all signup bonus references: register page UI, register API, leaderboard CTA, seed data.
+- Updated `src/components/views/register.tsx`:
+  - Removed the "৳50 Signup Bonus" badge with Gift icon next to the subtitle.
+  - Removed the `Gift` import from lucide-react.
+  - Changed success toast from `"৳50 wallet ✓"` to `"নতুন অ্যাকাউন্ট তৈরি করুন ✓"` (registration success).
+- Updated `src/app/api/auth/register/route.ts`:
+  - New user wallet now starts at `balance: 0, totalEarned: 0` (was 50/50).
+  - Removed the "সাইনআপ বোনাস" DEPOSIT transaction creation block.
+  - Updated welcome notification message from "৳৫০ সাইনআপ বোনাস পেয়েছেন" to "এখনই কাজ শুরু করুন" (no bonus mention).
+- Updated `src/components/views/leaderboard.tsx`:
+  - bn: "রেজিস্টার করুন, সাইন-আপ বোনাস পান..." → "রেজিস্টার করুন, কাজ শুরু করুন..."
+  - en: "Sign up, get a signup bonus..." → "Sign up, start working, and become a top earner."
+- Referral system unchanged: referrer still gets ৳20 bonus (separate feature).
+- Verified via API: created test user → wallet balance = 0, totalEarned = 0, transactions = NONE. ✓
+- Verified via agent-browser: register page body text no longer contains "Signup Bonus", "৳50", or "Gift". ✓
+- Cleaned up the test user from the database.
+- Committed (6f8ecb1) and pushed to origin/main.
+
+Stage Summary:
+- Signup bonus feature completely removed from the production register flow.
+- New users now start with an empty wallet (৳0) and must earn money through work.
+- Welcome notification no longer mentions any bonus.
+- Referral reward (referrer gets ৳20) remains intact.
+- Pushed to GitHub — Vercel will auto-redeploy.
