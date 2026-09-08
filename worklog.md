@@ -1057,3 +1057,49 @@ Stage Summary:
 - The "সব ফিল্ড পূরণ করুন" error is fixed — job posting now works correctly.
 - The deadline field now defaults to 7 days from today and is properly sent to the API.
 - Vercel will auto-redeploy.
+
+---
+Task ID: cloudflare-r2-storage
+Agent: main (Z.ai Code)
+Task: Cloudflare R2 storage system for image store
+
+Work Log:
+- Installed @aws-sdk/client-s3 (R2 is S3-compatible).
+- Created src/lib/r2.ts:
+  - R2 S3 client with endpoint https://<accountId>.r2.cloudflarestorage.com
+  - uploadImage(): validates content type (JPEG/PNG/WEBP/GIF/HEIC/HEIF), max 5 MB,
+    generates unique key proofs/<timestamp>-<random>.<ext>, sets 1-year immutable cache.
+  - deleteObject(): for cleanup.
+  - isR2Configured: env-var presence check.
+- Created POST /api/upload route:
+  - Auth required (returns 401 if not logged in).
+  - Accepts multipart/form-data with field "file".
+  - Validates file size + content type.
+  - Calls uploadImage() and returns { url, key, size, contentType }.
+  - Returns 503 if R2 not configured.
+- Created shared ImageUploader component:
+  - Drag-and-drop zone with hover + drag-over states.
+  - Click to browse (hidden file input).
+  - Paste image from clipboard (onPaste).
+  - Image preview with open-in-new-tab + remove buttons.
+  - "Uploaded ✓" green badge on success.
+  - Loading spinner during upload.
+  - URL fallback toggle (paste link instead) — so form works even without R2.
+  - Bilingual labels (bn/en).
+- Replaced the screenshot URL input in job-detail proof form with ImageUploader.
+- Updated .env.example with 5 R2 env vars.
+- Created docs/R2_SETUP.md: step-by-step guide (create bucket, enable public
+  access, generate API tokens, configure env vars, verify).
+- Verified via agent-browser:
+  - Job detail proof form now shows "ছবি আপলোড করুন" drag-drop zone.
+  - URL fallback "লিংক দিয়ে যোগ করুন" visible.
+  - /api/upload returns 503 "R2 storage is not configured" (expected, since
+    no R2 credentials set locally).
+- Committed (d7ac8fc) and pushed to GitHub.
+
+Stage Summary:
+- Full Cloudflare R2 image storage system implemented and integrated.
+- User needs to add 5 R2 env vars (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_URL) to enable uploads.
+- Setup guide in docs/R2_SETUP.md.
+- If R2 not configured, ImageUploader falls back to URL input so the form works.
