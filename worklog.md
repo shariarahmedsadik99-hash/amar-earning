@@ -1103,3 +1103,30 @@ Stage Summary:
   R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_URL) to enable uploads.
 - Setup guide in docs/R2_SETUP.md.
 - If R2 not configured, ImageUploader falls back to URL input so the form works.
+
+---
+Task ID: r2-credentials-configured
+Agent: main (Z.ai Code)
+Task: Configure Cloudflare R2 with real credentials + verify upload works
+
+Work Log:
+- User provided the correct R2 S3 credentials (after an initial attempt with the Cloudflare API token instead of the S3 Secret Access Key):
+  - Account ID: ef73fdbb4703843f96e7c8a455fe289c
+  - Access Key ID: 9a81b79de8db678c342853e015877159
+  - Secret Access Key: b3209f075bdb0ffe311500349774a0b7605373df7fd04486d1c665bce1c8bf8c
+  - Bucket name: amarearning (not amar-earning)
+  - Custom domain: image.amarearning.site
+- Discovered the /api/upload/route.ts file had been emptied by an auto-commit; recreated it with the full implementation.
+- Updated .env with the correct credentials.
+- Restarted dev server and tested upload end-to-end:
+  1. Login as worker → 200 OK
+  2. POST /api/upload with a 1x1 PNG → 200 OK with URL: https://image.amarearning.site/proofs/1788874348126-evhoms01.png
+  3. Second upload test → 200 OK with URL: https://image.amarearning.site/proofs/1788874407783-m2jkurop.png
+  4. Verified both images are publicly accessible (HTTP 200, content-type image/png).
+- Verified via agent-browser: job detail → "কাজ শুরু করুন" → proof form opens → "ছবি আপলোড করুন" drag-drop zone visible → file input present (count = 1).
+- Committed the restored upload route (9f3527f) and pushed to GitHub. The .env file is gitignored so R2 credentials are NOT pushed.
+
+Stage Summary:
+- Cloudflare R2 image storage is fully working end-to-end.
+- Images upload to the `amarearning` bucket and are served via the custom domain image.amarearning.site.
+- For Vercel production: user must add the same 5 R2 env vars in Vercel → Settings → Environment Variables.
