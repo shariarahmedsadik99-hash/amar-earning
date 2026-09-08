@@ -16,6 +16,7 @@ import { OwnerReputation } from "@/components/shared/owner-reputation";
 import { ShareButton } from "@/components/shared/share-button";
 import { ReportButton } from "@/components/shared/report-button";
 import { JobRatingWidget } from "@/components/shared/job-rating-widget";
+import { ImageUploader } from "@/components/shared/image-uploader";
 import { LoadingState } from "@/components/shared/states";
 import { useRecentJobs } from "@/lib/use-recent-jobs";
 import { toast } from "sonner";
@@ -383,18 +384,13 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
                   )}
                 </div>
 
-                {/* Screenshot URL field */}
-                <div className="space-y-1.5">
-                  <Label className="flex items-center gap-1.5 text-xs">
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    {lang === "bn" ? "স্ক্রিনশট লিংক" : "Screenshot URL"}
-                  </Label>
-                  <Input
-                    value={item.image}
-                    onChange={(e) => updateProofItem(index, "image", e.target.value)}
-                    placeholder={lang === "bn" ? "ছবির লিংক দিন..." : "Paste screenshot link..."}
-                  />
-                </div>
+                {/* Screenshot upload (R2 image or URL fallback) */}
+                <ImageUploader
+                  value={item.image}
+                  onChange={(url) => updateProofItem(index, "image", url)}
+                  label={lang === "bn" ? "স্ক্রিনশট" : "Screenshot"}
+                  allowUrl={true}
+                />
 
                 {/* Text proof field */}
                 <div className="space-y-1.5">
