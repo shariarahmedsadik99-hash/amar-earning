@@ -1130,3 +1130,30 @@ Stage Summary:
 - Cloudflare R2 image storage is fully working end-to-end.
 - Images upload to the `amarearning` bucket and are served via the custom domain image.amarearning.site.
 - For Vercel production: user must add the same 5 R2 env vars in Vercel → Settings → Environment Variables.
+
+---
+Task ID: fix-proof-image-not-visible
+Agent: main (Z.ai Code)
+Task: "client jokhon kaj complete kore proof image sent kore tokhon job post je korche se proof image dekhte pare na" — employer couldn't see worker's uploaded proof image
+
+Work Log:
+- Inspected my-jobs.tsx (employer's "My Jobs" → submissions view): only rendered `textProof` and `urlProof` as text; `imageProof` was completely ignored.
+- Inspected admin-page.tsx SubmissionsView: had a plain text link "🖼️ ছবি দেখুন" — no thumbnail.
+- Confirmed via DB query: imageProof field contains real R2 URLs (e.g. https://image.amarearning.site/proofs/1788949168219-6j3q0q63.png).
+- Fixed my-jobs.tsx:
+  - Added `Image as ImageIcon` and `ExternalLink` to lucide imports.
+  - Replaced the plain text rendering with a thumbnail grid: parses comma-separated URLs, shows 80x80 thumbnails with hover ring, click opens full-size in new tab, "স্ক্রিনশট:" label above.
+  - onError hides broken images gracefully.
+- Fixed admin-page.tsx SubmissionsView:
+  - Replaced the "🖼️ ছবি দেখুন" text link with actual thumbnail rendering (same thumbnail pattern).
+- Also restored the /api/upload/route.ts file which had been deleted by an auto-commit sync.
+- Verified end-to-end:
+  - Created a test submission with imageProof = R2 URL.
+  - Admin submissions page renders 5 proof image thumbnails from real R2 uploads.
+  - Confirmed via DOM inspection: `<img src="https://image.amarearning.site/proofs/1788966157650-upx6wiqd.png">` present and visible (80x80px).
+- Committed (a3ed43f) and pushed to GitHub.
+
+Stage Summary:
+- Employers can now see the proof image thumbnails when reviewing worker submissions on the My Jobs page.
+- Admins also see thumbnails (not just a text link) on the admin submissions review page.
+- Click any thumbnail to open the full-size image in a new tab.
