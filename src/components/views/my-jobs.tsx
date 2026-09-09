@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmptyState, LoadingState } from "@/components/shared/states";
 import { UserReportDialog } from "@/components/shared/user-report-dialog";
 import { toast } from "sonner";
-import { Briefcase, Eye, CheckCircle2, XCircle, Loader2, ShieldAlert } from "lucide-react";
+import { Briefcase, Eye, CheckCircle2, XCircle, Loader2, ShieldAlert, Image as ImageIcon, ExternalLink } from "lucide-react";
 import { formatMoney, toBn, formatDateTime } from "@/lib/format";
 
 type MyJob = {
@@ -227,6 +227,36 @@ function JobRow({
                 </div>
                 {s.textProof && <p className="text-xs text-muted-foreground mb-1">📝 {s.textProof}</p>}
                 {s.urlProof && <p className="text-xs text-muted-foreground mb-1">🔗 {s.urlProof}</p>}
+                {s.imageProof && (
+                  <div className="mt-2 mb-1">
+                    <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
+                      <ImageIcon className="h-3 w-3" />
+                      {lang === "bn" ? "স্ক্রিনশট:" : "Screenshot:"}
+                    </p>
+                    {/* Parse comma-separated image URLs and show thumbnails */}
+                    {s.imageProof.split(",").map((url, idx) => url.trim()).filter(Boolean).map((url, idx) => (
+                      <a
+                        key={idx}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mr-2 mb-2 group relative"
+                      >
+                        <img
+                          src={url}
+                          alt={`proof-${idx}`}
+                          className="h-20 w-20 object-cover rounded-lg border hover:ring-2 hover:ring-primary transition-all"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                        <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-background/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ExternalLink className="h-2.5 w-2.5" />
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground">{formatDateTime(s.createdAt, lang)}</p>
                 {s.status === "PENDING" && (
                   <div className="flex gap-2 mt-2">

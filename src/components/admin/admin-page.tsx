@@ -1214,14 +1214,25 @@ function SubmissionsView() {
                       </a>
                     )}
                     {s.imageProof && (
-                      <a
-                        href={s.imageProof}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        🖼️ {L(lang, "ছবি দেখুন", "View image")}
-                      </a>
+                      <div className="flex flex-col gap-1.5">
+                        {s.imageProof.split(",").map((u: string, idx: number) => u.trim()).filter(Boolean).map((url: string, idx: number) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block group relative"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={url}
+                              alt={`proof-${idx}`}
+                              className="h-20 w-20 object-cover rounded-lg border hover:ring-2 hover:ring-primary transition-all"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                            />
+                          </a>
+                        ))}
+                      </div>
                     )}
                     {!s.textProof && !s.urlProof && !s.imageProof && (
                       <p className="text-muted-foreground italic">
