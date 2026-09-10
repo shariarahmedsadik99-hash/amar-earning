@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { creditWallet, notify, isNotificationEnabled } from "@/lib/wallet";
+import { creditWallet, debitWallet, notify, isNotificationEnabled, checkAndAwardReferralBonus } from "@/lib/wallet";
 
 // GET - list submissions (filtered by user, or by job owner)
 export async function GET(req: NextRequest) {
@@ -219,6 +219,15 @@ export async function PATCH(req: NextRequest) {
           });
         }
       });
+
+      // After the worker is credited, check if they hit the ৳1000 referral
+      // milestone. If they were referred and haven't received the bonus yet,
+      // award ৳20 to their referrer now.
+      try {
+        await checkAndAwardReferralBonus(submission.userId, "EARN");
+      } catch (e) {
+        console.error("Referral bonus check failed:", e);
+      }
     } else if (action === "reject") {
       // Check if worker has this notification type enabled
       const shouldNotify = await isNotificationEnabled(submission.userId, "SUBMISSION_REJECTED");

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { debitWallet } from "@/lib/wallet";
+import { debitWallet, checkAndAwardReferralBonus } from "@/lib/wallet";
 import { getSettings } from "@/lib/settings";
 
 // Get single job
@@ -129,6 +129,15 @@ export async function POST(req: NextRequest) {
           type: "ANNOUNCEMENT",
         },
       });
+    }
+
+    // After the employer's wallet is debited, check if they hit the ৳1000
+    // referral milestone (total spent on jobs). If they were referred and
+    // haven't received the bonus yet, award ৳20 to their referrer now.
+    try {
+      await checkAndAwardReferralBonus(user.id, "JOB_POST");
+    } catch (e) {
+      console.error("Referral bonus check (job post) failed:", e);
     }
 
     return NextResponse.json({ ok: true, job });

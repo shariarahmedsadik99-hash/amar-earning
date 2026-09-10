@@ -1,5 +1,106 @@
 import { db } from "./db";
 
+/**
+ * Referral bonus configuration.
+ *
+ * Bonus is NOT awarded at registration time. Instead it's awarded when the
+ * referred user hits a ৳1000 milestone:
+ *   - Worker: when totalEarned reaches ৳1000 (checked after each submission approval)
+ *   - Employer: when they post a job with total budget (reward × workers) ≥ ৳1000
+ */
+export const REFERRAL_BONUS_AMOUNT = 20;
+export const REFERRAL_MILESTONE = 1000; // ৳1000
+
+/**
+ * Check if a referred user has hit the referral milestone, and if so,
+ * award the referrer the bonus. Safe to call multiple times — it checks
+ * for an existing REFERRAL_BONUS transaction with the referred user's id
+ * in the description to avoid double-awarding.
+ *
+ * @param referredUserId  The user who was referred (whose activity triggered the check)
+ * @param trigger         "EARN" (worker earned) | "JOB_POST" (employer posted a job)
+ * @returns true if the bonus was awarded (or already had been), false if not applicable
+ */
+export async function checkAndAwardReferralBonus(
+  referredUserId: string,
+  trigger: "EARN" | "JOB_POST"
+): Promise<boolean> {
+  const referred = await db.user.findUnique({
+    where: { id: referredUserId },
+    select: { id: true, name: true, username: true, referredById: true },
+  });
+  if (!referred || !referred.referredById) return false;
+
+  // Avoid double-awarding: check if we already gave a REFERRAL_BONUS for this user.
+  // We store the referred user's id in the description for dedup.
+  const dedupTag = `ref:${referred.id}`;
+  const existing = await db.transaction.findFirst({
+    where: {
+      userId: referred.referredById,
+      type: "REFERRAL_BONUS",
+      description: { contains: dedupTag },
+    },
+  });
+  if (existing) return true; // already awarded
+
+  // Determine if the milestone is met
+  let milestoneMet = false;
+  let milestoneReason = "";
+
+  if (trigger === "EARN") {
+    // Worker earnings milestone
+    const wallet = await db.wallet.findUnique({ where: { userId: referred.id } });
+    const totalEarned = wallet?.totalEarned ?? 0;
+    if (totalEarned >= REFERRAL_MILESTONE) {
+      milestoneMet = true;
+      milestoneReason = `৳${REFERRAL_MILESTONE} আয়`;
+    }
+  } else if (trigger === "JOB_POST") {
+    // Employer job-post milestone — checked by caller (job post route)
+    // The caller should only invoke this when total job budget >= 1000,
+    // so we trust the trigger here.
+    const wallet = await db.wallet.findUnique({ where: { userId: referred.id } });
+    const totalSpent = wallet?.totalSpent ?? 0;
+    if (totalSpent >= REFERRAL_MILESTONE) {
+      milestoneMet = true;
+      milestoneReason = `৳${REFERRAL_MILESTONE} কাজ পোস্ট`;
+    }
+  }
+
+  if (!milestoneMet) return false;
+
+  // Award the bonus to the referrer
+  const description = `রেফারেল বোনাস: ${referred.name} (@${referred.username}) — ${milestoneReason} [${dedupTag}]`;
+  await creditWallet(
+    referred.referredById,
+    REFERRAL_BONUS_AMOUNT,
+    "REFERRAL_BONUS",
+    description
+  );
+
+  // Notify the referrer
+  await db.notification.create({
+    data: {
+      userId: referred.referredById,
+      title: "রেফারেল বোনাস! 🎉",
+      message: `${referred.name} (@${referred.username}) ${milestoneReason} করেছেন। আপনি ৳${REFERRAL_BONUS_AMOUNT} রেফারেল বোনাস পেয়েছেন।`,
+      type: "ANNOUNCEMENT",
+    },
+  });
+
+  // Notify the referred user that their referrer was rewarded
+  await db.notification.create({
+    data: {
+      userId: referred.id,
+      title: "মাইলস্টোন অর্জন! 🎉",
+      message: `আপনি ${milestoneReason} মাইলস্টোন অর্জন করেছেন। আপনার রেফারার বোনাস পেয়েছেন। কাজ চালিয়ে যান!`,
+      type: "ANNOUNCEMENT",
+    },
+  });
+
+  return true;
+}
+
 export async function creditWallet(
   userId: string,
   amount: number,

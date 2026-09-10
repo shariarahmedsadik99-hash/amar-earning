@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword, createSession } from "@/lib/auth";
-import { creditWallet } from "@/lib/wallet";
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,17 +56,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (referrerId) {
-      await creditWallet(referrerId, 20, "REFERRAL_BONUS", `রেফারেল বোনাস: ${username}`);
-      await db.notification.create({
-        data: {
-          userId: referrerId,
-          title: "রেফারেল বোনাস!",
-          message: `${name} আপনার রেফারেলে যুক্ত হয়েছেন। ৳২০ বোনাস পেয়েছেন।`,
-          type: "ANNOUNCEMENT",
-        },
-      });
-    }
+    // NOTE: Referral bonus is NO LONGER awarded at registration time.
+    // Instead, it is awarded when the referred user hits a ৳1000 milestone:
+    //   - Worker: when their total earnings reach ৳1000 (checked in submission approve)
+    //   - Employer: when they post a job worth ৳1000+ (checked in job post route)
+    // See src/lib/wallet.ts → checkAndAwardReferralBonus()
 
     await db.notification.create({
       data: {

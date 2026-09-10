@@ -17,6 +17,7 @@ import {
   UserPlus,
   ClipboardCheck,
   Coins,
+  Award,
 } from "lucide-react";
 import { formatMoney, formatDate, toBn } from "@/lib/format";
 import { toast } from "sonner";
@@ -220,6 +221,13 @@ export function ReferralsPage() {
                   <p className="text-sm leading-relaxed text-foreground">{step.text}</p>
                 </Card>
               ))}
+            </div>
+            {/* Milestone note */}
+            <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20 flex items-start gap-2">
+              <Award className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {t.referrals.milestoneNote}
+              </p>
             </div>
           </section>
 
