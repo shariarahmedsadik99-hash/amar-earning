@@ -1157,3 +1157,37 @@ Stage Summary:
 - Employers can now see the proof image thumbnails when reviewing worker submissions on the My Jobs page.
 - Admins also see thumbnails (not just a text link) on the admin submissions review page.
 - Click any thumbnail to open the full-size image in a new tab.
+
+---
+Task ID: referral-milestone-bonus
+Agent: main (Z.ai Code)
+Task: "Reffer bonus tokhoni dewa hobe jokhon worker 1000 tk income korbe ar je job post korbe se 1000 tkr job post korle refer bonus add hobe"
+
+Work Log:
+- Removed the immediate ৳20 referral bonus from register API (it was awarded at registration time before).
+- Created checkAndAwardReferralBonus(userId, trigger) helper in src/lib/wallet.ts:
+  - Looks up the user's referredById; returns false if not referred.
+  - Dedup check: searches for existing REFERRAL_BONUS transaction with 'ref:<userId>' tag in description → prevents double-awarding.
+  - For EARN trigger: checks if worker's totalEarned ≥ ৳1000.
+  - For JOB_POST trigger: checks if employer's totalSpent ≥ ৳1000.
+  - If milestone met: credits referrer ৳20, creates REFERRAL_BONUS transaction, notifies both referrer (bonus earned) and referred user (milestone reached).
+  - Exports REFERRAL_BONUS_AMOUNT (20) and REFERRAL_MILESTONE (1000) constants.
+- Wired the check into two flows:
+  1. src/app/api/submissions/route.ts PATCH (approve): after the db.$transaction credits the worker, call checkAndAwardReferralBonus(workerId, 'EARN').
+  2. src/app/api/jobs/route.ts POST: after debitWallet for a job post, call checkAndAwardReferralBonus(employerId, 'JOB_POST').
+- Updated i18n (bn + en):
+  - referrals.step3: now explains the ৳1000 milestone rule.
+  - referrals.milestoneNote: new banner text.
+  - faq.q6/a6: updated to explain the milestone condition.
+- Updated src/components/views/referrals.tsx: added Award icon + a milestone note banner (primary-tinted) below the 'How it works' steps.
+- Verified:
+  - Registered a new user with admin's referral code (ADMIN001) → no REFERRAL_BONUS transaction created (correct — waits for milestone).
+  - Referrals page shows new step3 text + milestone note banner.
+- Also restored /api/upload/route.ts (deleted by auto-sync again).
+- Committed (ef42b5c + 019c8ed) and pushed to GitHub.
+
+Stage Summary:
+- Referral bonus is now milestone-based (৳1000 earned or ৳1000 spent), not registration-based.
+- Prevents abuse: referrers can't just create fake accounts to farm bonuses.
+- Dedup tag ensures the bonus is only paid once per referred user.
+- Both referrer and referred user get notified when the milestone is hit.
