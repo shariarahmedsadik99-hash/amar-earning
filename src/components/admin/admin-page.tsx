@@ -70,6 +70,7 @@ import {
   Flag,
   ArrowDownToLine,
   ArrowRight,
+  Phone as PhoneIcon,
   CreditCard,
   PlusCircle,
 } from "lucide-react";
@@ -2174,6 +2175,7 @@ function PaymentGatewayView() {
     labelBn: string;
     labelEn: string;
     number: string;
+    phone: string; // contact/help-line phone number (separate from payment number)
     type: string;
     color: string;
     textColor: string;
@@ -2195,7 +2197,24 @@ function PaymentGatewayView() {
     try {
       const res = await fetch("/api/admin/payment-methods", { cache: "no-store" });
       const data = await res.json();
-      setMethods(data.methods || []);
+      // Normalize: ensure each method has phone field (backward-compat)
+      const loaded: Method[] = (data.methods || []).map((m: Partial<Method>) => ({
+        key: m.key || "",
+        labelBn: m.labelBn || "",
+        labelEn: m.labelEn || "",
+        number: m.number || "",
+        phone: m.phone || "",
+        type: m.type || "PERSONAL",
+        color: m.color || "#22c55e",
+        textColor: m.textColor || "#ffffff",
+        logo: m.logo || "💳",
+        logoType: m.logoType || "emoji",
+        imageUrl: m.imageUrl || "",
+        instructionsBn: m.instructionsBn || "",
+        instructionsEn: m.instructionsEn || "",
+        active: m.active !== false,
+      }));
+      setMethods(loaded);
     } catch {
       toast.error(L(lang, "লোড ব্যর্থ", "Failed to load"));
     } finally {
@@ -2236,6 +2255,7 @@ function PaymentGatewayView() {
         labelBn: "",
         labelEn: "",
         number: "",
+        phone: "",
         type: "PERSONAL",
         color: "#22c55e",
         textColor: "#ffffff",
@@ -2265,7 +2285,7 @@ function PaymentGatewayView() {
     <div>
       <SectionHeader
         title={L(lang, "পেমেন্ট গেটওয়ে সেটিংস", "Payment Gateway Settings")}
-        description={L(lang, "পেমেন্ট মেথড যোগ/সরান, লোগো ও কালার কাস্টমাইজ করুন", "Add/remove payment methods, customize logo & color")}
+        description={L(lang, "পেমেন্ট মেথড যোগ/সরান, নম্বর, ফোন, লোগো ও কালার কাস্টমাইজ করুন", "Add/remove methods, customize number, phone, logo & color")}
       />
 
       {loading ? (
@@ -2274,92 +2294,125 @@ function PaymentGatewayView() {
         <div className="space-y-4">
           {/* Payment method cards */}
           {methods.map((m, i) => (
-            <Card key={i} className="p-4 overflow-hidden">
+            <Card key={i} className="p-0 overflow-hidden border-2 hover:border-primary/30 transition-colors">
               {/* Color header bar */}
               <div
-                className="-mx-4 -mt-4 px-4 py-3 mb-3 flex items-center justify-between"
-                style={{ backgroundColor: m.color, color: m.textColor }}
+                className="px-4 py-3 flex items-center justify-between relative overflow-hidden"
+                style={{ background: `linear-gradient(135deg, ${m.color} 0%, ${m.color}dd 100%)`, color: m.textColor }}
               >
-                <div className="flex items-center gap-2">
+                <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/10" />
+                <div className="flex items-center gap-2.5 relative">
                   {m.logoType === "image" && m.imageUrl ? (
-                    <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/20 shrink-0">
-                      { }
+                    <div className="h-9 w-9 rounded-xl overflow-hidden flex items-center justify-center bg-white/20 shrink-0 backdrop-blur">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={m.imageUrl} alt="logo" className="h-6 w-6 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     </div>
                   ) : (
-                    <span className="text-2xl">{m.logo}</span>
+                    <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-xl shrink-0">
+                      {m.logo}
+                    </div>
                   )}
                   <div>
                     <p className="font-bold text-sm">{m.labelEn || L(lang, "নতুন মেথড", "New Method")}</p>
                     <p className="text-[10px] opacity-90">{m.type === "PERSONAL" ? L(lang, "পার্সোনাল", "Personal") : L(lang, "মার্চেন্ট", "Merchant")}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 relative">
                   <button
                     onClick={() => setEditingIndex(editingIndex === i ? null : i)}
-                    className="px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-medium"
+                    className="px-2.5 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-medium transition-colors"
                   >
                     {editingIndex === i ? L(lang, "বন্ধ", "Close") : L(lang, "সম্পাদনা", "Edit")}
                   </button>
                   <button
                     onClick={() => removeMethod(i)}
-                    className="px-2 py-1 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-xs font-medium"
+                    className="px-2 py-1 rounded-lg bg-red-500/30 hover:bg-red-500/50 text-xs font-medium transition-colors"
+                    title={L(lang, "মুছুন", "Remove")}
                   >
                     🗑
                   </button>
                 </div>
               </div>
 
-              {/* Quick info when not editing */}
-              {editingIndex !== i && (
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{L(lang, "নম্বর", "Number")}: </span>
-                    <span className="font-mono font-bold">{m.number || "—"}</span>
-                  </div>
-                  <Badge variant="outline" className={m.active ? "text-green-600 border-green-500/30" : "text-red-600 border-red-500/30"}>
-                    {m.active ? L(lang, "সক্রিয়", "Active") : L(lang, "নিষ্ক্রিয়", "Inactive")}
-                  </Badge>
-                </div>
-              )}
-
-              {/* Edit form */}
-              {editingIndex === i && (
-                <div className="space-y-3 animate-fade-in-up">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "নাম (EN)", "Name (EN)")}</Label>
-                      <Input value={m.labelEn} onChange={(e) => updateMethod(i, "labelEn", e.target.value)} placeholder="bKash" />
+              {/* Card body */}
+              <div className="p-4">
+                {/* Quick info when not editing */}
+                {editingIndex !== i && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                    <div className="p-2 rounded-lg bg-muted/30">
+                      <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">{L(lang, "নম্বর", "Number")}</p>
+                      <p className="font-mono font-bold truncate">{m.number || "—"}</p>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "নাম (BN)", "Name (BN)")}</Label>
-                      <Input value={m.labelBn} onChange={(e) => updateMethod(i, "labelBn", e.target.value)} placeholder="বিকাশ" />
+                    <div className="p-2 rounded-lg bg-muted/30">
+                      <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">{L(lang, "ফোন", "Phone")}</p>
+                      <p className="font-mono font-bold truncate">{m.phone || "—"}</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/30 flex items-center justify-between">
+                      <div>
+                        <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-medium">{L(lang, "স্ট্যাটাস", "Status")}</p>
+                        <Badge variant="outline" className={m.active ? "text-green-600 border-green-500/30" : "text-red-600 border-red-500/30"}>
+                          {m.active ? L(lang, "সক্রিয়", "Active") : L(lang, "নিষ্ক্রিয়", "Inactive")}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "কী (Key)", "Key")}</Label>
-                      <Input value={m.key} onChange={(e) => updateMethod(i, "key", e.target.value.toUpperCase())} placeholder="BKASH" className="font-mono" />
+                {/* Edit form */}
+                {editingIndex === i && (
+                  <div className="space-y-3 animate-fade-in-up">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "নাম (EN)", "Name (EN)")}</Label>
+                        <Input value={m.labelEn} onChange={(e) => updateMethod(i, "labelEn", e.target.value)} placeholder="bKash" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "নাম (BN)", "Name (BN)")}</Label>
+                        <Input value={m.labelBn} onChange={(e) => updateMethod(i, "labelBn", e.target.value)} placeholder="বিকাশ" />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "নম্বর", "Number")}</Label>
-                      <Input value={m.number} onChange={(e) => updateMethod(i, "number", e.target.value)} placeholder="01XXXXXXXXX" className="font-mono" />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "টাইপ", "Type")}</Label>
-                      <select
-                        value={m.type}
-                        onChange={(e) => updateMethod(i, "type", e.target.value)}
-                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                      >
-                        <option value="PERSONAL">{L(lang, "পার্সোনাল", "Personal")}</option>
-                        <option value="MERCHANT">{L(lang, "মার্চেন্ট", "Merchant")}</option>
-                      </select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "কী (Key)", "Key")}</Label>
+                        <Input value={m.key} onChange={(e) => updateMethod(i, "key", e.target.value.toUpperCase())} placeholder="BKASH" className="font-mono" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "পেমেন্ট নম্বর", "Payment Number")}</Label>
+                        <Input value={m.number} onChange={(e) => updateMethod(i, "number", e.target.value)} placeholder="01XXXXXXXXX" className="font-mono" />
+                      </div>
                     </div>
+
+                    {/* NEW: Phone field */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs flex items-center gap-1">
+                          <PhoneIcon className="h-3 w-3 text-muted-foreground" />
+                          {L(lang, "ফোন (যোগাযোগ)", "Phone (Contact)")}
+                        </Label>
+                        <Input
+                          value={m.phone}
+                          onChange={(e) => updateMethod(i, "phone", e.target.value)}
+                          placeholder="01XXXXXXXXX"
+                          className="font-mono"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          {L(lang, "হেল্পলাইন বা যোগাযোগের নম্বর (পেমেন্ট নম্বর থেকে আলাদা)", "Help-line or contact number (separate from payment number)")}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "টাইপ", "Type")}</Label>
+                        <select
+                          value={m.type}
+                          onChange={(e) => updateMethod(i, "type", e.target.value)}
+                          className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                          <option value="PERSONAL">{L(lang, "পার্সোনাল", "Personal")}</option>
+                          <option value="MERCHANT">{L(lang, "মার্চেন্ট", "Merchant")}</option>
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="space-y-1">
                       <Label className="text-xs">{L(lang, "কালার", "Color")}</Label>
                       <div className="flex items-center gap-2">
@@ -2372,115 +2425,115 @@ function PaymentGatewayView() {
                         <Input value={m.color} onChange={(e) => updateMethod(i, "color", e.target.value)} className="font-mono text-xs flex-1" />
                       </div>
                     </div>
-                  </div>
 
-                  {/* Logo section — Emoji or Image URL */}
-                  <div className="space-y-1">
-                    <Label className="text-xs">{L(lang, "লোগো", "Logo")}</Label>
+                    {/* Logo section — Emoji or Image URL */}
+                    <div className="space-y-1">
+                      <Label className="text-xs">{L(lang, "লোগো", "Logo")}</Label>
 
-                    {/* Logo type toggle */}
-                    <div className="flex gap-2 mb-2">
-                      <button
-                        onClick={() => updateMethod(i, "logoType", "emoji")}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
-                          (m.logoType || "emoji") === "emoji" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        {L(lang, "ইমোজি", "Emoji")}
-                      </button>
-                      <button
-                        onClick={() => updateMethod(i, "logoType", "image")}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
-                          m.logoType === "image" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
-                        }`}
-                      >
-                        {L(lang, "ছবি (URL)", "Image (URL)")}
-                      </button>
-                    </div>
-
-                    {/* Emoji picker */}
-                    {(m.logoType || "emoji") === "emoji" && (
-                      <div className="flex flex-wrap gap-2">
-                        {PRESET_LOGOS.map((logo) => (
-                          <button
-                            key={logo}
-                            onClick={() => updateMethod(i, "logo", logo)}
-                            className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
-                              m.logo === logo ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
-                            }`}
-                          >
-                            {logo}
-                          </button>
-                        ))}
-                        <Input
-                          value={m.logo}
-                          onChange={(e) => updateMethod(i, "logo", e.target.value)}
-                          className="w-20 font-mono text-lg text-center"
-                          maxLength={2}
-                        />
+                      {/* Logo type toggle */}
+                      <div className="flex gap-2 mb-2">
+                        <button
+                          onClick={() => updateMethod(i, "logoType", "emoji")}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
+                            (m.logoType || "emoji") === "emoji" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                          }`}
+                        >
+                          {L(lang, "ইমোজি", "Emoji")}
+                        </button>
+                        <button
+                          onClick={() => updateMethod(i, "logoType", "image")}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium border-2 transition-all ${
+                            m.logoType === "image" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                          }`}
+                        >
+                          {L(lang, "ছবি (URL)", "Image (URL)")}
+                        </button>
                       </div>
-                    )}
 
-                    {/* Image URL picker */}
-                    {m.logoType === "image" && (
-                      <div className="space-y-2">
-                        <Input
-                          value={m.imageUrl || ""}
-                          onChange={(e) => updateMethod(i, "imageUrl", e.target.value)}
-                          placeholder="https://example.com/bank-logo.png"
-                          className="text-xs"
-                        />
-                        {/* Preview */}
-                        {m.imageUrl && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                            <div
-                              className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: m.color }}
+                      {/* Emoji picker */}
+                      {(m.logoType || "emoji") === "emoji" && (
+                        <div className="flex flex-wrap gap-2">
+                          {PRESET_LOGOS.map((logo) => (
+                            <button
+                              key={logo}
+                              onClick={() => updateMethod(i, "logo", logo)}
+                              className={`h-9 w-9 rounded-lg border-2 flex items-center justify-center text-lg transition-all ${
+                                m.logo === logo ? "border-primary bg-primary/10" : "border-border hover:border-primary/30"
+                              }`}
                             >
-                              { }
-                              <img
-                                src={m.imageUrl}
-                                alt="logo"
-                                className="h-7 w-7 object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = "none";
-                                }}
-                              />
+                              {logo}
+                            </button>
+                          ))}
+                          <Input
+                            value={m.logo}
+                            onChange={(e) => updateMethod(i, "logo", e.target.value)}
+                            className="w-20 font-mono text-lg text-center"
+                            maxLength={2}
+                          />
+                        </div>
+                      )}
+
+                      {/* Image URL picker */}
+                      {m.logoType === "image" && (
+                        <div className="space-y-2">
+                          <Input
+                            value={m.imageUrl || ""}
+                            onChange={(e) => updateMethod(i, "imageUrl", e.target.value)}
+                            placeholder="https://example.com/bank-logo.png"
+                            className="text-xs"
+                          />
+                          {/* Preview */}
+                          {m.imageUrl && (
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                              <div
+                                className="h-10 w-10 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
+                                style={{ backgroundColor: m.color }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={m.imageUrl}
+                                  alt="logo"
+                                  className="h-7 w-7 object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              </div>
+                              <div className="text-xs">
+                                <span className="text-muted-foreground">{L(lang, "প্রিভিউ", "Preview")}: </span>
+                                <span className="font-medium">{m.imageUrl.split("/").pop()}</span>
+                              </div>
                             </div>
-                            <div className="text-xs">
-                              <span className="text-muted-foreground">{L(lang, "প্রিভিউ", "Preview")}: </span>
-                              <span className="font-medium">{m.imageUrl.split("/").pop()}</span>
-                            </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "নির্দেশনা (BN)", "Instructions (BN)")}</Label>
+                        <Input value={m.instructionsBn} onChange={(e) => updateMethod(i, "instructionsBn", e.target.value)} placeholder="বিকাশ অ্যাপে টাকা পাঠান..." />
                       </div>
-                    )}
-                  </div>
-
-                  {/* Instructions */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "নির্দেশনা (BN)", "Instructions (BN)")}</Label>
-                      <Input value={m.instructionsBn} onChange={(e) => updateMethod(i, "instructionsBn", e.target.value)} placeholder="বিকাশ অ্যাপে টাকা পাঠান..." />
+                      <div className="space-y-1">
+                        <Label className="text-xs">{L(lang, "নির্দেশনা (EN)", "Instructions (EN)")}</Label>
+                        <Input value={m.instructionsEn} onChange={(e) => updateMethod(i, "instructionsEn", e.target.value)} placeholder="Send money via app..." />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">{L(lang, "নির্দেশনা (EN)", "Instructions (EN)")}</Label>
-                      <Input value={m.instructionsEn} onChange={(e) => updateMethod(i, "instructionsEn", e.target.value)} placeholder="Send money via app..." />
+
+                    {/* Active toggle */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
+                      <span className="text-sm font-medium">{L(lang, "সক্রিয়", "Active")}</span>
+                      <button
+                        onClick={() => updateMethod(i, "active", !m.active)}
+                        className={`relative h-6 w-11 rounded-full transition-colors ${m.active ? "bg-primary" : "bg-muted-foreground/30"}`}
+                      >
+                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${m.active ? "translate-x-5" : "translate-x-0.5"}`} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Active toggle */}
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                    <span className="text-sm font-medium">{L(lang, "সক্রিয়", "Active")}</span>
-                    <button
-                      onClick={() => updateMethod(i, "active", !m.active)}
-                      className={`relative h-6 w-11 rounded-full transition-colors ${m.active ? "bg-primary" : "bg-muted-foreground/30"}`}
-                    >
-                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${m.active ? "translate-x-5" : "translate-x-0.5"}`} />
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </Card>
           ))}
 
