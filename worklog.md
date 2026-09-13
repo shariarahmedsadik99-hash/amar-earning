@@ -1191,3 +1191,33 @@ Stage Summary:
 - Prevents abuse: referrers can't just create fake accounts to farm bonuses.
 - Dedup tag ensures the bonus is only paid once per referred user.
 - Both referrer and referred user get notified when the milestone is hit.
+
+---
+Task ID: payment-gateway-phone-field
+Agent: main (Z.ai Code)
+Task: "Eitar payment gateway te phone number field add koro ar UI aro modern koro"
+
+Work Log:
+- Added `phone` field (contact/help-line, separate from payment number) to:
+  - src/app/api/payment-methods/route.ts: GET now normalizes stored config so every method has a phone field (backward-compat for old configs). Default methods include phone.
+  - src/components/admin/admin-page.tsx PaymentGatewayView: Method type includes phone; load() normalizes; addNewMethod() includes phone:''; edit form has a new 'Phone (Contact)' input with Phone icon + help text.
+- Modernized deposit page UI (src/components/views/deposit.tsx):
+  - Gradient hero header with primary-tinted background + icon chip.
+  - Payment method cards redesigned: gradient headers (135deg), glassmorphism logo chips, decorative circles, hover lift, selected checkmark badge.
+  - Each card shows BOTH 'Payment Number' and 'Phone' fields with separate copy buttons (green check on copied state, auto-reset after 1.5s).
+  - Form card: brand header chip, instructions banner, copyable number + phone chips side by side, labeled inputs with icons (Wallet, Phone, CheckCircle2).
+  - Deposit history items redesigned with rounded-xl + shadow-sm.
+- Modernized admin PaymentGatewayView:
+  - Cards redesigned with border-2, hover:border-primary/30, gradient headers.
+  - Quick info (non-edit view) now shows 3 columns: Number, Phone, Status.
+  - Color moved to its own row; phone field paired with Type in a 2-col grid.
+- Verified end-to-end:
+  - Saved payment methods with phone numbers via admin API (PUT).
+  - GET /api/payment-methods returns phone field for all 3 methods.
+  - Deposit page shows both 'পেমেন্ট নম্বর' and 'ফোন' with copy buttons + correct values (01753326499 / 01711223344 for bKash).
+  - Admin edit form has 'Phone (Contact)' input with the saved value.
+- Committed (84e99a8) and pushed to GitHub.
+
+Stage Summary:
+- Payment gateway now supports a separate phone (contact) field per method.
+- Both the deposit page and admin payment-gateway UI have been modernized with gradients, glassmorphism chips, better spacing, and improved copy UX.
