@@ -1221,3 +1221,34 @@ Work Log:
 Stage Summary:
 - Payment gateway now supports a separate phone (contact) field per method.
 - Both the deposit page and admin payment-gateway UI have been modernized with gradients, glassmorphism chips, better spacing, and improved copy UX.
+
+---
+Task ID: admin-job-details-view
+Agent: main (Z.ai Code)
+Task: "Admin chaile job post er sob details approve korar somoy dekhte parbe" — admin should see all job post details when approving
+
+Work Log:
+- Extended AdminJob type in src/components/admin/admin-page.tsx with description, instructions, requiredProof, featured, ownerId fields (API already returned these via Prisma include without select).
+- Added detailJob state to JobsView + a Dialog (max-w-2xl, scrollable) that shows ALL job fields:
+  - Title + status badge + category + featured badge + created date.
+  - Owner info (name + @username).
+  - Stats grid: reward, slots, completed, submissions count.
+  - Total budget (reward × workerLimit).
+  - Deadline.
+  - Full description (whitespace-pre-wrap).
+  - Full instructions (whitespace-pre-wrap, multi-line preserved).
+  - Required proof (whitespace-pre-wrap).
+  - Approve / Reject action buttons at the bottom (context-aware based on status).
+- Added 'Details' button (Eye icon) on each job card in the moderation list.
+- Imported Clock, FileText, FileCheck icons from lucide-react.
+- Fixed a bug: UserIcon reference → changed to UsersIcon (already imported).
+- Verified via agent-browser:
+  - Admin jobs page shows 'বিস্তারিত' (Details) button on each card.
+  - Clicking opens a dialog with full job details (title, owner, stats, budget, deadline, description, instructions, required proof).
+  - Dialog content verified: "New Gmail Account" job shows description ("ভালোভাবে পরে তারপরে কাজ করবেন..."), instructions ("Password: Fama#53fg এইটা দিবেন..."), required proof ("Gmail And Password দিবেন!").
+  - Approve/Reject buttons work from the dialog.
+- Committed (cb89235) and pushed to GitHub.
+
+Stage Summary:
+- Admin can now see ALL job post details (description, instructions, required proof, budget, deadline, owner info) before approving or rejecting.
+- Details button is on every job card in the Job Moderation view.
