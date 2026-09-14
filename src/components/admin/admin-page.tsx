@@ -73,6 +73,9 @@ import {
   Phone as PhoneIcon,
   CreditCard,
   PlusCircle,
+  Clock,
+  FileText,
+  FileCheck,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
 import { AdminCharts } from "@/components/shared/admin-charts";
@@ -110,12 +113,17 @@ type AdminUser = {
 type AdminJob = {
   id: string;
   title: string;
+  description: string;
+  instructions: string;
+  requiredProof: string;
   reward: number;
   workerLimit: number;
   completedCount: number;
   status: string;
+  featured: boolean;
   deadline: string;
   createdAt: string;
+  ownerId: string;
   category: { name: string };
   owner: { name: string; username: string };
   _count: { submissions: number };
@@ -760,6 +768,7 @@ function JobsView() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminJob | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [detailJob, setDetailJob] = useState<AdminJob | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1009,6 +1018,15 @@ function JobsView() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => setDetailJob(job)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      {L(lang, "বিস্তারিত", "Details")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-7 text-xs text-destructive ml-auto"
                       onClick={() => setDeleteTarget(job)}
                     >
@@ -1022,6 +1040,167 @@ function JobsView() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Job detail dialog */}
+      <Dialog
+        open={!!detailJob}
+        onOpenChange={(o) => !o && setDetailJob(null)}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Briefcase className="h-4 w-4 text-primary" />
+              {detailJob?.title}
+            </DialogTitle>
+            <DialogDescription>
+              {L(lang, "কাজের সম্পূর্ণ বিবরণ", "Full job details")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailJob && (
+            <div className="space-y-4">
+              {/* Status + meta */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className={statusBadgeClass(detailJob.status)}>
+                  {statusLabel(detailJob.status, t)}
+                </Badge>
+                <Badge variant="outline" className="text-primary border-primary/30">
+                  {detailJob.category.name}
+                </Badge>
+                {detailJob.featured && (
+                  <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                    <Star className="h-3 w-3 mr-1" />
+                    {L(lang, "ফিচার্ড", "Featured")}
+                  </Badge>
+                )}
+                <span className="text-[11px] text-muted-foreground ml-auto">
+                  {L(lang, "তৈরি", "Created")}: {formatDateTime(detailJob.createdAt, lang)}
+                </span>
+              </div>
+
+              {/* Owner */}
+              <div className="p-2.5 rounded-lg bg-muted/30 flex items-center gap-2 text-xs">
+                <UsersIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground">{L(lang, "মালিক", "Owner")}:</span>
+                <span className="font-medium">{detailJob.owner.name}</span>
+                <span className="text-muted-foreground">(@{detailJob.owner.username})</span>
+              </div>
+
+              {/* Stats grid */}
+              <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="font-bold text-base text-primary">
+                    {t.common.currency}{formatMoney(detailJob.reward, lang)}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">{L(lang, "পুরস্কার", "Reward")}</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-muted/30">
+                  <p className="font-bold text-base">{toBn(detailJob.workerLimit)}</p>
+                  <p className="text-muted-foreground mt-0.5">{L(lang, "স্লট", "Slots")}</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-muted/30">
+                  <p className="font-bold text-base">{toBn(detailJob.completedCount)}</p>
+                  <p className="text-muted-foreground mt-0.5">{L(lang, "সম্পন্ন", "Done")}</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-muted/30">
+                  <p className="font-bold text-base">{toBn(detailJob._count.submissions)}</p>
+                  <p className="text-muted-foreground mt-0.5">{L(lang, "সাবমিশন", "Subs")}</p>
+                </div>
+              </div>
+
+              {/* Budget */}
+              <div className="p-2.5 rounded-lg bg-muted/30 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Wallet className="h-3.5 w-3.5" />
+                  {L(lang, "মোট বাজেট", "Total Budget")}
+                </span>
+                <span className="font-bold text-primary">
+                  {t.common.currency}{formatMoney(detailJob.reward * detailJob.workerLimit, lang)}
+                </span>
+              </div>
+
+              {/* Deadline */}
+              <div className="p-2.5 rounded-lg bg-muted/30 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {L(lang, "ডেডলাইন", "Deadline")}
+                </span>
+                <span className="font-medium">{formatDate(detailJob.deadline, lang)}</span>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold flex items-center gap-1.5 text-primary">
+                  <FileText className="h-3.5 w-3.5" />
+                  {L(lang, "বিবরণ", "Description")}
+                </p>
+                <div className="p-3 rounded-lg bg-muted/20 border text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {detailJob.description || L(lang, "(খালি)", "(empty)")}
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold flex items-center gap-1.5 text-primary">
+                  <ListChecks className="h-3.5 w-3.5" />
+                  {L(lang, "নির্দেশনা", "Instructions")}
+                </p>
+                <div className="p-3 rounded-lg bg-muted/20 border text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {detailJob.instructions || L(lang, "(খালি)", "(empty)")}
+                </div>
+              </div>
+
+              {/* Required Proof */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold flex items-center gap-1.5 text-primary">
+                  <FileCheck className="h-3.5 w-3.5" />
+                  {L(lang, "প্রয়োজনীয় প্রমাণ", "Required Proof")}
+                </p>
+                <div className="p-3 rounded-lg bg-muted/20 border text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {detailJob.requiredProof || L(lang, "(খালি)", "(empty)")}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              {(detailJob.status === "PENDING" || detailJob.status === "REJECTED") && (
+                <Button
+                  className="w-full h-10"
+                  disabled={actionLoading === `${detailJob.id}-approve`}
+                  onClick={() => {
+                    act(detailJob, "approve");
+                    setDetailJob(null);
+                  }}
+                >
+                  {actionLoading === `${detailJob.id}-approve` ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                  )}
+                  {L(lang, "অনুমোদন করুন", "Approve Job")}
+                </Button>
+              )}
+              {(detailJob.status === "PENDING" || detailJob.status === "ACTIVE") && (
+                <Button
+                  variant="outline"
+                  className="w-full h-10 text-destructive"
+                  disabled={actionLoading === `${detailJob.id}-reject`}
+                  onClick={() => {
+                    act(detailJob, "reject");
+                    setDetailJob(null);
+                  }}
+                >
+                  {actionLoading === `${detailJob.id}-reject` ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <XCircle className="h-4 w-4 mr-2" />
+                  )}
+                  {L(lang, "প্রত্যাখ্যান করুন", "Reject Job")}
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirm dialog */}
       <Dialog
