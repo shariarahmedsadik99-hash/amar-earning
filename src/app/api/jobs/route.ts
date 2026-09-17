@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { debitWallet, checkAndAwardReferralBonus } from "@/lib/wallet";
+import { debitClientBalance, checkAndAwardReferralBonus } from "@/lib/wallet";
 import { getSettings } from "@/lib/settings";
 
 // Get single job
@@ -78,11 +78,11 @@ export async function POST(req: NextRequest) {
     const serviceCharge = settings.serviceCharge;
     const totalBudget = rewardNum * workersNum + serviceCharge;
 
-    // Check balance (including service charge)
+    // Check CLIENT balance (job posting uses client balance)
     const wallet = await db.wallet.findUnique({ where: { userId: user.id } });
-    if (!wallet || wallet.balance < totalBudget) {
+    if (!wallet || wallet.clientBalance < totalBudget) {
       return NextResponse.json(
-        { error: "আপনার ব্যালেন্স এই কাজটি পোস্ট করার জন্য যথেষ্ট নয়।" },
+        { error: "আপনার ক্লায়েন্ট ব্যালেন্স এই কাজটি পোস্ট করার জন্য যথেষ্ট নয়। ফ্রিল্যান্সার ব্যালেন্স থেকে টাকা ট্রান্সফার করুন।" },
         { status: 400 }
       );
     }
@@ -90,8 +90,8 @@ export async function POST(req: NextRequest) {
     // Job always starts as PENDING — admin must approve before it goes live
     const initialStatus = "PENDING";
 
-    // Debit the wallet (job budget + service charge)
-    await debitWallet(user.id, totalBudget, "JOB_SPEND", `কাজ পোস্ট: ${title} (সার্ভিস চার্জ ৳${serviceCharge} সহ)`);
+    // Debit the CLIENT wallet (job budget + service charge)
+    await debitClientBalance(user.id, totalBudget, "JOB_SPEND", `কাজ পোস্ট: ${title} (সার্ভিস চার্জ ৳${serviceCharge} সহ)`);
 
     const job = await db.job.create({
       data: {

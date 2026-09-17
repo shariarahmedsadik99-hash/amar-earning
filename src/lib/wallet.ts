@@ -135,6 +135,76 @@ export async function creditWallet(
   return newBalance;
 }
 
+/**
+ * Credit the CLIENT balance (used when money is deposited/transferred for job posting).
+ * Does NOT touch the freelancer `balance`.
+ */
+export async function creditClientBalance(
+  userId: string,
+  amount: number,
+  type: string,
+  description: string
+) {
+  const wallet = await db.wallet.findUnique({ where: { userId } });
+  if (!wallet) throw new Error("WALLET_NOT_FOUND");
+
+  const newClientBalance = wallet.clientBalance + amount;
+  await db.wallet.update({
+    where: { userId },
+    data: {
+      clientBalance: newClientBalance,
+    },
+  });
+
+  await db.transaction.create({
+    data: {
+      userId,
+      type,
+      amount,
+      description,
+      balanceAfter: newClientBalance,
+    },
+  });
+
+  return newClientBalance;
+}
+
+/**
+ * Debit from the CLIENT balance (used when posting a job).
+ * Does NOT touch the freelancer `balance`.
+ */
+export async function debitClientBalance(
+  userId: string,
+  amount: number,
+  type: string,
+  description: string
+) {
+  const wallet = await db.wallet.findUnique({ where: { userId } });
+  if (!wallet) throw new Error("WALLET_NOT_FOUND");
+  if (wallet.clientBalance < amount) throw new Error("INSUFFICIENT_CLIENT_BALANCE");
+
+  const newClientBalance = wallet.clientBalance - amount;
+  await db.wallet.update({
+    where: { userId },
+    data: {
+      clientBalance: newClientBalance,
+      totalSpent: { increment: amount },
+    },
+  });
+
+  await db.transaction.create({
+    data: {
+      userId,
+      type,
+      amount: -amount,
+      description,
+      balanceAfter: newClientBalance,
+    },
+  });
+
+  return newClientBalance;
+}
+
 export async function debitWallet(
   userId: string,
   amount: number,

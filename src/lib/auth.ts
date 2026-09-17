@@ -112,6 +112,7 @@ export async function getCurrentUser() {
         username: true,
         email: true,
         role: true,
+        activeRole: true,
         status: true,
         referralCode: true,
         createdAt: true,

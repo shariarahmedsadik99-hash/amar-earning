@@ -21,6 +21,7 @@ import {
   Bookmark,
   Gift,
   ArrowDownToLine,
+  ArrowLeftRight,
 } from "lucide-react";
 import { formatMoney, toBn } from "@/lib/format";
 import { EarningsChart } from "@/components/shared/earnings-chart";
@@ -28,9 +29,12 @@ import { ActivityFeed } from "@/components/shared/activity-feed";
 import { WeekComparison } from "@/components/shared/week-comparison";
 import { AchievementsProgress } from "@/components/shared/achievements-progress";
 import { Recommendations } from "@/components/shared/recommendations";
+import { RoleSwitcher } from "@/components/shared/role-switcher";
+import { BalanceTransferDialog } from "@/components/shared/balance-transfer-dialog";
 
 type DashboardStats = {
   balance: number;
+  clientBalance: number;
   totalEarned: number;
   totalSpent: number;
   pendingBalance: number;
@@ -111,10 +115,10 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
 export function StatsCards({ stats }: { stats: DashboardStats }) {
   const { t, lang } = useI18n();
   const cards = [
-    { label: t.dashboard.balance, value: stats.balance, icon: WalletIcon, color: "text-primary", bg: "bg-primary/10" },
-    { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-green-600", bg: "bg-green-500/10" },
-    { label: t.dashboard.completedJobs, value: stats.completedJobs, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10", isCount: true },
-    { label: t.dashboard.pendingJobs, value: stats.pendingJobs, icon: ClipboardList, color: "text-yellow-600", bg: "bg-yellow-500/10", isCount: true },
+    { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
+    { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10" },
+    { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10" },
+    { label: t.dashboard.completedJobs, value: stats.completedJobs, icon: ClipboardList, color: "text-yellow-600", bg: "bg-yellow-500/10", isCount: true },
   ];
 
   return (
@@ -139,6 +143,7 @@ export function StatsCards({ stats }: { stats: DashboardStats }) {
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
     balance: 0,
+    clientBalance: 0,
     totalEarned: 0,
     totalSpent: 0,
     pendingBalance: 0,
@@ -154,6 +159,7 @@ export function useDashboardStats() {
       const subs = subData.submissions || [];
       setStats({
         balance: walletData.wallet?.balance || 0,
+        clientBalance: walletData.wallet?.clientBalance || 0,
         totalEarned: walletData.wallet?.totalEarned || 0,
         totalSpent: walletData.wallet?.totalSpent || 0,
         pendingBalance: walletData.wallet?.pendingBalance || 0,
@@ -179,11 +185,41 @@ export function DashboardPage() {
 
   return (
     <DashboardLayout active="dashboard">
-      <div className="mb-5">
-        <h1 className="text-xl md:text-2xl font-bold">{t.dashboard.welcome}, {user?.name} 👋</h1>
+      <div className="mb-5 flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold">{t.dashboard.welcome}, {user?.name} 👋</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            {user?.activeRole === "CLIENT"
+              ? (lang === "bn" ? "আপনি এখন ক্লায়েন্ট মোডে আছেন — কাজ পোস্ট করতে পারবেন" : "You're in Client mode — post jobs")
+              : (lang === "bn" ? "আপনি এখন ফ্রিল্যান্সার মোডে আছেন — কাজ করতে পারবেন" : "You're in Freelancer mode — work on jobs")}
+          </p>
+        </div>
+        <RoleSwitcher />
       </div>
 
       <StatsCards stats={stats} />
+
+      {/* Balance transfer banner — only for freelancers */}
+      {user?.activeRole === "FREELANCER" && (
+        <Card className="mt-4 p-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+              <ArrowLeftRight className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">
+                {lang === "bn" ? "কাজ পোস্ট করতে চান?" : "Want to post jobs?"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {lang === "bn"
+                  ? "ফ্রিল্যান্সার ব্যালেন্স থেকে ক্লায়েন্ট ব্যালেন্সে টাকা ট্রান্সফার করুন।"
+                  : "Transfer money from your freelancer balance to client balance."}
+              </p>
+            </div>
+            <BalanceTransferDialog />
+          </div>
+        </Card>
+      )}
 
       {/* Job Recommendations */}
       <div className="mt-6">

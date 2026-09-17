@@ -8,6 +8,7 @@ import { Logo } from "./logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationsBell } from "./notifications-bell";
+import { RoleSwitcher } from "./role-switcher";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -107,6 +108,9 @@ export function Header() {
                     <Shield className="h-4 w-4" />
                     {t.nav.admin}
                   </Button>
+                )}
+                {user.role !== "ADMIN" && (
+                  <RoleSwitcher />
                 )}
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
                   <LogOut className="h-4 w-4" />

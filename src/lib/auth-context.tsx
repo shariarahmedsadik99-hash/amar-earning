@@ -8,6 +8,7 @@ type User = {
   username: string;
   email: string;
   role: string;
+  activeRole: string; // FREELANCER | CLIENT
   status: string;
   referralCode: string | null;
   createdAt: string;

@@ -15,7 +15,7 @@ export async function GET() {
 
   return NextResponse.json({
     user,
-    wallet: wallet ? { balance: wallet.balance, totalEarned: wallet.totalEarned, totalSpent: wallet.totalSpent, pendingBalance: wallet.pendingBalance } : null,
+    wallet: wallet ? { balance: wallet.balance, clientBalance: wallet.clientBalance, totalEarned: wallet.totalEarned, totalSpent: wallet.totalSpent, pendingBalance: wallet.pendingBalance } : null,
     unreadNotifications: unreadCount,
   });
 }

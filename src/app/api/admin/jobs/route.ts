@@ -75,16 +75,16 @@ export async function PATCH(req: NextRequest) {
           },
         });
       } else if (action === "reject") {
-        // Refund the job budget + service charge when rejected
+        // Refund the job budget + service charge to CLIENT balance when rejected
         const settings = await getSettings();
         const refundAmount = job.reward * job.workerLimit + settings.serviceCharge;
         const ownerWallet = await db.wallet.findUnique({ where: { userId: job.ownerId } });
         if (ownerWallet) {
-          const newBalance = ownerWallet.balance + refundAmount;
+          const newClientBalance = ownerWallet.clientBalance + refundAmount;
           await db.wallet.update({
             where: { userId: job.ownerId },
             data: {
-              balance: newBalance,
+              clientBalance: newClientBalance,
               totalSpent: { decrement: refundAmount },
             },
           });
@@ -93,8 +93,8 @@ export async function PATCH(req: NextRequest) {
               userId: job.ownerId,
               type: "REFUND",
               amount: refundAmount,
-              description: `কাজ প্রত্যাখ্যাত রিফান্ড: ${job.title}`,
-              balanceAfter: newBalance,
+              description: `কাজ প্রত্যাখ্যাত রিফান্ড (ক্লায়েন্ট ব্যালেন্সে): ${job.title}`,
+              balanceAfter: newClientBalance,
             },
           });
         }
