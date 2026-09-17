@@ -1252,3 +1252,36 @@ Work Log:
 Stage Summary:
 - Admin can now see ALL job post details (description, instructions, required proof, budget, deadline, owner info) before approving or rejecting.
 - Details button is on every job card in the Job Moderation view.
+
+---
+Task ID: dual-role-system
+Agent: main (Z.ai Code)
+Task: "Amar ei website e clien and freelancer er jonno 2 ta alada role kore daw ar tara chaile switch korte parbe ar duitar jonno alada alada blance thakbe ar freelancer chaile blance tar client blance e transfer kore job post korte parbe"
+
+Work Log:
+- Added User.activeRole field (FREELANCER | CLIENT, default FREELANCER) + Wallet.clientBalance (Float, default 0) to Prisma schema. Pushed DDL to Turso (ALTER TABLE).
+- Created creditClientBalance() + debitClientBalance() in src/lib/wallet.ts.
+- Updated getCurrentUser() to select activeRole.
+- Updated /api/auth/me to return clientBalance.
+- Created POST /api/role/switch: switches activeRole between FREELANCER and CLIENT.
+- Created POST /api/wallet/transfer: atomically moves money from freelancer balance to client balance (TRANSFER_OUT + TRANSFER_IN transactions).
+- Updated POST /api/jobs: now debits from clientBalance (not freelancer balance). Error message guides user to transfer.
+- Updated admin job reject: refund goes to clientBalance (not freelancer balance).
+- Created RoleSwitcher component (pill toggle Freelancer | Client) shown in header + dashboard.
+- Created BalanceTransferDialog component (amount input + flow visualization).
+- Updated dashboard StatsCards to show: Freelancer Balance, Client Balance, Total Earned, Completed Jobs.
+- Added role mode label + transfer banner (only in FREELANCER mode).
+- Verified via curl + agent-browser:
+  - GET /api/auth/me returns activeRole + clientBalance.
+  - Role switch: FREELANCER → CLIENT → FREELANCER works.
+  - Transfer: ৳25 moved (balance 65→40, clientBalance 0→25).
+  - Dashboard shows both balances + role switcher + transfer banner.
+  - Clicking 'Client' in header switches mode.
+- Committed (7caab09) and pushed to GitHub.
+
+Stage Summary:
+- Dual-role system (Freelancer/Client) with separate balances is live.
+- Users can switch roles anytime via the pill toggle in the header.
+- Freelancers can transfer earnings to client balance to post jobs.
+- Job posting now uses client balance; job earnings still go to freelancer balance.
+- Deposits/withdrawals continue to use freelancer balance.
