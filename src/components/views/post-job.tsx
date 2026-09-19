@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Calculator, Wallet, AlertCircle, ShieldCheck } from "lucide-react";
+import { Loader2, Calculator, Wallet, AlertCircle, ShieldCheck, PlusCircle } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -49,7 +49,7 @@ export function PostJobPage() {
     fetch("/api/categories").then((r) => r.json()).then((d) => setCategories(d.categories || []));
     fetch("/api/settings").then((r) => r.json()).then((d) => setServiceCharge(d.serviceCharge || 8));
     if (user) {
-      fetch("/api/wallet").then((r) => r.json()).then((d) => setBalance(d.wallet?.balance || 0));
+      fetch("/api/wallet").then((r) => r.json()).then((d) => setBalance(d.wallet?.clientBalance || 0));
     }
   }, [user]);
 
@@ -127,6 +127,30 @@ export function PostJobPage() {
     }
   };
 
+  // Only clients can post jobs
+  if (user && user.activeRole !== "CLIENT" && user.role !== "ADMIN") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-10 md:py-16">
+        <Card className="p-8 text-center">
+          <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+            <PlusCircle className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-semibold text-lg mb-1">
+            {lang === "bn" ? "কাজ পোস্ট ক্লায়েন্টদের জন্য" : "Job posting is for clients"}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+            {lang === "bn"
+              ? "কাজ পোস্ট করতে ক্লায়েন্ট মোডে স্যুইচ করুন। ফ্রিল্যান্সার হিসেবে আপনি কাজ সম্পন্ন করে আয় করতে পারবেন।"
+              : "Switch to Client mode to post jobs. As a freelancer you can earn by completing jobs."}
+          </p>
+          <Button onClick={() => navigate({ name: "available-jobs" } as Route)}>
+            {lang === "bn" ? "কাজ খুঁজুন" : "Find Jobs"}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 md:py-10">
       <div className="mb-6">
@@ -138,7 +162,7 @@ export function PostJobPage() {
       <Card className="p-4 mb-4 flex items-center justify-between bg-primary/5 border-primary/20">
         <div className="flex items-center gap-2">
           <Wallet className="h-5 w-5 text-primary" />
-          <span className="text-sm text-muted-foreground">{t.dashboard.balance}</span>
+          <span className="text-sm text-muted-foreground">{lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance"}</span>
         </div>
         <span className="text-lg font-bold text-primary">{t.common.currency}{formatMoney(balance, lang)}</span>
       </Card>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { useAuth } from "@/lib/auth-context";
 import { useRouter, type Route } from "@/lib/router";
 import { DashboardLayout } from "./dashboard";
 import { Card } from "@/components/ui/card";
@@ -35,6 +36,7 @@ type Withdrawal = {
 
 export function WithdrawPage() {
   const { t, lang } = useI18n();
+  const { user } = useAuth();
   const { navigate } = useRouter();
   const [wallet, setWallet] = useState<WalletData>({ balance: 0, pendingBalance: 0 });
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
@@ -103,6 +105,30 @@ export function WithdrawPage() {
   };
 
   if (loading) return <DashboardLayout active="withdraw"><LoadingState /></DashboardLayout>;
+
+  // Clients cannot withdraw (withdrawals are freelancer-only — they withdraw earnings)
+  if (user && user.activeRole === "CLIENT" && user.role !== "ADMIN") {
+    return (
+      <DashboardLayout active="withdraw">
+        <Card className="p-8 text-center">
+          <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+            <Banknote className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-semibold text-lg mb-1">
+            {lang === "bn" ? "উইথড্রয় ফ্রিল্যান্সারদের জন্য" : "Withdrawals are for freelancers"}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+            {lang === "bn"
+              ? "উইথড্রয় করতে ফ্রিল্যান্সার মোডে স্যুইচ করুন। ফ্রিল্যান্সাররা কাজ করে যে টাকা আয় করে তা উইথড্রয় করতে পারে।"
+              : "Switch to Freelancer mode to withdraw. Freelancers withdraw their job earnings."}
+          </p>
+          <Button onClick={() => navigate({ name: "dashboard" } as Route)}>
+            {lang === "bn" ? "ড্যাশবোর্ডে যান" : "Go to Dashboard"}
+          </Button>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout active="withdraw">

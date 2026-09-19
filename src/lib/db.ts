@@ -16,10 +16,8 @@ function createPrismaClient(): PrismaClient {
     return new PrismaClient({ adapter })
   }
 
-  // Local SQLite
-  const localUrl = process.env.DATABASE_URL || 'file:./db/custom.db'
+  // Local SQLite — use schema's datasource URL (don't override, to avoid path resolution issues)
   return new PrismaClient({
-    datasources: { db: { url: localUrl } },
     log: ['error'],
   })
 }

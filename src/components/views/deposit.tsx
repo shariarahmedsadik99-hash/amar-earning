@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n-context";
+import { useAuth } from "@/lib/auth-context";
 import { useRouter, type Route } from "@/lib/router";
 import { DashboardLayout } from "./dashboard";
 import { Card } from "@/components/ui/card";
@@ -49,6 +50,7 @@ type Deposit = {
 
 export function DepositPage() {
   const { t, lang } = useI18n();
+  const { user } = useAuth();
   const { navigate } = useRouter();
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
@@ -57,6 +59,10 @@ export function DepositPage() {
   const [form, setForm] = useState({ amount: "", senderNumber: "", transactionId: "" });
   const [submitting, setSubmitting] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Deposits are CLIENT-only. Freelancers should use job earnings.
+  const isClient = user?.activeRole === "CLIENT";
+  const isFreelancer = user && !isClient && user.role !== "ADMIN";
 
   useEffect(() => {
     Promise.all([
@@ -115,6 +121,30 @@ export function DepositPage() {
     return (
       <DashboardLayout active="deposit">
         <LoadingState />
+      </DashboardLayout>
+    );
+  }
+
+  // Freelancers cannot deposit (deposits are client-only)
+  if (isFreelancer) {
+    return (
+      <DashboardLayout active="deposit">
+        <Card className="p-8 text-center">
+          <div className="h-14 w-14 rounded-xl bg-muted/40 flex items-center justify-center mx-auto mb-4">
+            <ArrowDownToLine className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-semibold text-lg mb-1">
+            {lang === "bn" ? "ডিপোজিট ক্লায়েন্টদের জন্য" : "Deposits are for clients"}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+            {lang === "bn"
+              ? "ফ্রিল্যান্সার হিসেবে আপনি কাজ করে আয় করতে পারবেন। কাজ পোস্ট করতে চাইলে ক্লায়েন্ট মোডে স্যুইচ করুন।"
+              : "As a freelancer you earn by completing jobs. Switch to Client mode to deposit money for posting jobs."}
+          </p>
+          <Button onClick={() => navigate({ name: "available-jobs" } as Route)}>
+            {lang === "bn" ? "কাজ খুঁজুন" : "Find Jobs"}
+          </Button>
+        </Card>
       </DashboardLayout>
     );
   }

@@ -47,30 +47,54 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
   const { user } = useAuth();
   const { navigate } = useRouter();
 
-  const menu = [
+  // Role-aware menu
+  const isClient = user?.activeRole === "CLIENT";
+  const isFreelancer = !isClient && user?.role !== "ADMIN";
+
+  const freelancerMenu = [
     { name: "dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     { name: "available-jobs", label: t.nav.availableJobs, icon: Briefcase },
-    { name: "post-job", label: t.nav.postJob, icon: PlusCircle },
-    { name: "my-jobs", label: t.nav.myJobs, icon: Briefcase },
     { name: "my-submissions", label: t.nav.mySubmissions, icon: ClipboardList },
     { name: "my-bookmarks", label: t.bookmarks.title, icon: Bookmark },
     { name: "my-reports", label: t.userReports.myReports, icon: ShieldAlert },
     { name: "referrals", label: t.referrals.title, icon: Gift },
     { name: "wallet", label: t.nav.wallet, icon: WalletIcon },
-    { name: "deposit", label: lang === "bn" ? "টাকা যোগ" : "Deposit", icon: ArrowDownToLine },
     { name: "withdraw", label: t.nav.withdraw, icon: Banknote },
     { name: "profile", label: t.nav.profile, icon: User },
   ];
 
+  const clientMenu = [
+    { name: "dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { name: "post-job", label: t.nav.postJob, icon: PlusCircle },
+    { name: "my-jobs", label: t.nav.myJobs, icon: Briefcase },
+    { name: "wallet", label: t.nav.wallet, icon: WalletIcon },
+    { name: "deposit", label: lang === "bn" ? "টাকা যোগ" : "Deposit", icon: ArrowDownToLine },
+    { name: "my-reports", label: t.userReports.myReports, icon: ShieldAlert },
+    { name: "referrals", label: t.referrals.title, icon: Gift },
+    { name: "profile", label: t.nav.profile, icon: User },
+  ];
+
+  const menu = isClient ? clientMenu : freelancerMenu;
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+    <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4 md:py-8">
       <div className="flex gap-6">
         {/* Sidebar - desktop */}
         <aside className="hidden md:block w-56 shrink-0">
           <div className="sticky top-20 space-y-1">
-            <div className="px-3 py-2 mb-2">
-              <p className="text-xs text-muted-foreground">{t.dashboard.welcome}</p>
+            {/* Role badge */}
+            <div className="px-3 py-2.5 mb-2 rounded-xl bg-muted/40 border">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                {t.dashboard.welcome}
+              </p>
               <p className="font-semibold text-sm truncate">{user?.name}</p>
+              <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium" style={{
+                backgroundColor: isClient ? "rgb(34 197 94 / 0.1)" : "rgb(99 102 241 / 0.1)",
+                color: isClient ? "rgb(22 163 74)" : "rgb(79 70 229)",
+              }}>
+                <span className={`h-1.5 w-1.5 rounded-full ${isClient ? "bg-green-500" : "bg-indigo-500"}`} />
+                {isClient ? (lang === "bn" ? "ক্লায়েন্ট" : "Client") : (lang === "bn" ? "ফ্রিল্যান্সার" : "Freelancer")}
+              </div>
             </div>
             {menu.map((item) => (
               <button
@@ -78,11 +102,11 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
                 onClick={() => navigate({ name: item.name } as Route)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   active === item.name
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-4 w-4 shrink-0" />
                 {item.label}
               </button>
             ))}
@@ -106,7 +130,7 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
         </aside>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="flex-1 min-w-0 pb-20 md:pb-0">{children}</div>
       </div>
     </div>
   );
@@ -114,9 +138,12 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
 
 export function StatsCards({ stats }: { stats: DashboardStats }) {
   const { t, lang } = useI18n();
+  const { user } = useAuth();
+  const isClient = user?.activeRole === "CLIENT";
+
   const cards = [
-    { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
-    { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10" },
+    { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10", highlight: !isClient },
+    { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10", highlight: isClient },
     { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10" },
     { label: t.dashboard.completedJobs, value: stats.completedJobs, icon: ClipboardList, color: "text-yellow-600", bg: "bg-yellow-500/10", isCount: true },
   ];
@@ -124,7 +151,14 @@ export function StatsCards({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {cards.map((c, i) => (
-        <Card key={i} className="p-4">
+        <Card
+          key={i}
+          className={`p-4 transition-all ${
+            c.highlight
+              ? "ring-2 ring-primary/40 shadow-md"
+              : ""
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">{c.label}</span>
             <div className={`h-8 w-8 rounded-lg ${c.bg} flex items-center justify-center`}>
@@ -236,16 +270,31 @@ export function DashboardPage() {
         <WeekComparison />
       </div>
 
-      {/* Quick actions */}
+      {/* Quick actions — role-aware */}
       <div className="grid grid-cols-2 gap-3 mt-4">
-        <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "available-jobs" })}>
-          <Briefcase className="h-5 w-5 text-primary" />
-          <span className="text-sm">{t.nav.availableJobs}</span>
-        </Button>
-        <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "post-job" })}>
-          <PlusCircle className="h-5 w-5 text-primary" />
-          <span className="text-sm">{t.nav.postJob}</span>
-        </Button>
+        {user?.activeRole === "CLIENT" ? (
+          <>
+            <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "post-job" })}>
+              <PlusCircle className="h-5 w-5 text-primary" />
+              <span className="text-sm">{t.nav.postJob}</span>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "my-jobs" })}>
+              <Briefcase className="h-5 w-5 text-primary" />
+              <span className="text-sm">{t.nav.myJobs}</span>
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "available-jobs" })}>
+              <Briefcase className="h-5 w-5 text-primary" />
+              <span className="text-sm">{t.nav.availableJobs}</span>
+            </Button>
+            <Button variant="outline" className="h-auto py-4 flex flex-col gap-1" onClick={() => navigate({ name: "my-submissions" })}>
+              <ClipboardList className="h-5 w-5 text-primary" />
+              <span className="text-sm">{t.nav.mySubmissions}</span>
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Referral CTA */}
