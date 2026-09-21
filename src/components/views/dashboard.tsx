@@ -141,11 +141,14 @@ export function StatsCards({ stats }: { stats: DashboardStats }) {
   const { user } = useAuth();
   const isClient = user?.activeRole === "CLIENT";
 
+  // Only show the active role's balance + shared stats
   const cards = [
-    { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10", highlight: !isClient },
-    { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10", highlight: isClient },
+    isClient
+      ? { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10" }
+      : { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
     { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10" },
     { label: t.dashboard.completedJobs, value: stats.completedJobs, icon: ClipboardList, color: "text-yellow-600", bg: "bg-yellow-500/10", isCount: true },
+    { label: t.dashboard.pendingJobs, value: stats.pendingJobs, icon: ClipboardList, color: "text-orange-600", bg: "bg-orange-500/10", isCount: true },
   ];
 
   return (
@@ -153,11 +156,7 @@ export function StatsCards({ stats }: { stats: DashboardStats }) {
       {cards.map((c, i) => (
         <Card
           key={i}
-          className={`p-4 transition-all ${
-            c.highlight
-              ? "ring-2 ring-primary/40 shadow-md"
-              : ""
-          }`}
+          className="p-4 transition-all ring-1 ring-primary/20 shadow-sm"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">{c.label}</span>
