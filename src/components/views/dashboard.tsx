@@ -36,6 +36,7 @@ type DashboardStats = {
   balance: number;
   clientBalance: number;
   totalEarned: number;
+  totalDeposit: number;
   totalSpent: number;
   pendingBalance: number;
   completedJobs: number;
@@ -141,12 +142,22 @@ export function StatsCards({ stats }: { stats: DashboardStats }) {
   const { user } = useAuth();
   const isClient = user?.activeRole === "CLIENT";
 
-  // Only show the active role's balance + shared stats
-  const cards = [
+  // Only show the active role's balance + shared stats.
+  // Clients see Total Deposit instead of Total Earned.
+  const cards: Array<{
+    label: string;
+    value: number;
+    icon: typeof Briefcase;
+    color: string;
+    bg: string;
+    isCount?: boolean;
+  }> = [
     isClient
       ? { label: lang === "bn" ? "ক্লায়েন্ট ব্যালেন্স" : "Client Balance", value: stats.clientBalance, icon: WalletIcon, color: "text-green-600", bg: "bg-green-500/10" }
       : { label: lang === "bn" ? "ফ্রিল্যান্সার ব্যালেন্স" : "Freelancer Balance", value: stats.balance, icon: Briefcase, color: "text-primary", bg: "bg-primary/10" },
-    { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10" },
+    isClient
+      ? { label: lang === "bn" ? "মোট ডিপোজিট" : "Total Deposit", value: stats.totalDeposit, icon: ArrowDownToLine, color: "text-blue-600", bg: "bg-blue-500/10" }
+      : { label: t.dashboard.totalEarned, value: stats.totalEarned, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-500/10" },
     { label: t.dashboard.completedJobs, value: stats.completedJobs, icon: ClipboardList, color: "text-yellow-600", bg: "bg-yellow-500/10", isCount: true },
     { label: t.dashboard.pendingJobs, value: stats.pendingJobs, icon: ClipboardList, color: "text-orange-600", bg: "bg-orange-500/10", isCount: true },
   ];
@@ -178,6 +189,7 @@ export function useDashboardStats() {
     balance: 0,
     clientBalance: 0,
     totalEarned: 0,
+    totalDeposit: 0,
     totalSpent: 0,
     pendingBalance: 0,
     completedJobs: 0,
@@ -190,10 +202,16 @@ export function useDashboardStats() {
       fetch("/api/submissions?scope=mine").then((r) => r.json()),
     ]).then(([walletData, subData]) => {
       const subs = subData.submissions || [];
+      // Sum all DEPOSIT-type transactions to get total deposited
+      const txns = walletData.transactions || [];
+      const totalDeposit = txns
+        .filter((tx: { type: string }) => tx.type === "DEPOSIT")
+        .reduce((sum: number, tx: { amount: number }) => sum + tx.amount, 0);
       setStats({
         balance: walletData.wallet?.balance || 0,
         clientBalance: walletData.wallet?.clientBalance || 0,
         totalEarned: walletData.wallet?.totalEarned || 0,
+        totalDeposit,
         totalSpent: walletData.wallet?.totalSpent || 0,
         pendingBalance: walletData.wallet?.pendingBalance || 0,
         completedJobs: subs.filter((s: { status: string }) => s.status === "APPROVED").length,
