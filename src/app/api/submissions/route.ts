@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
             categoryId: true,
             ownerId: true,
             category: true,
+            owner: { select: { id: true, name: true, username: true } },
           },
         },
         user: { select: { id: true, name: true, username: true } },
