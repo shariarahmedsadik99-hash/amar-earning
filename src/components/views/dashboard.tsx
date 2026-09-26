@@ -17,6 +17,7 @@ import {
   Bell,
   Shield,
   ShieldAlert,
+  ShieldCheck,
   Home,
   Bookmark,
   Gift,
@@ -66,6 +67,7 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
 
   const clientMenu = [
     { name: "dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { name: "kyc", label: lang === "bn" ? "KYC যাচাই" : "KYC Verify", icon: ShieldCheck },
     { name: "post-job", label: t.nav.postJob, icon: PlusCircle },
     { name: "my-jobs", label: t.nav.myJobs, icon: Briefcase },
     { name: "wallet", label: t.nav.wallet, icon: WalletIcon },

@@ -24,6 +24,14 @@ model User {
   referredById  String?
   notifySettings String? @default("{\"submissionApproved\":true,\"submissionRejected\":true,\"withdrawalApproved\":true,\"withdrawalRejected\":true,\"jobCompleted\":true,\"announcement\":true}")
   withdrawPin  String?  // 4-digit hashed PIN for withdrawals
+  // KYC verification (required before job posting)
+  kycStatus     String   @default("NONE") // NONE | PENDING | VERIFIED | REJECTED
+  kycNidFront   String?  // URL to NID front image (R2)
+  kycNidBack    String?  // URL to NID back image (R2)
+  kycSelfie     String?  // URL to selfie/face verification image (R2)
+  kycSubmittedAt DateTime?
+  kycReviewedAt  DateTime?
+  kycRejectReason String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

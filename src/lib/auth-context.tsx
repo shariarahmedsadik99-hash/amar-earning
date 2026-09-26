@@ -10,6 +10,7 @@ type User = {
   role: string;
   activeRole: string; // FREELANCER | CLIENT
   status: string;
+  kycStatus: string; // NONE | PENDING | VERIFIED | REJECTED
   referralCode: string | null;
   createdAt: string;
 };

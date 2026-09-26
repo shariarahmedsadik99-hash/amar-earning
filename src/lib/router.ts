@@ -41,7 +41,9 @@ export type Route =
   | { name: "admin-settings" }
   | { name: "admin-announce" }
   | { name: "admin-disputes" }
-  | { name: "my-reports" };
+  | { name: "admin-kyc" }
+  | { name: "my-reports" }
+  | { name: "kyc" };
 
 function parseHash(): Route {
   if (typeof window === "undefined") return { name: "home" };
@@ -73,6 +75,8 @@ function parseHash(): Route {
       return { name: "my-bookmarks" };
     case "my-reports":
       return { name: "my-reports" };
+    case "kyc":
+      return { name: "kyc" };
     case "post-job":
       return { name: "post-job" };
     case "wallet":
@@ -116,6 +120,7 @@ function parseHash(): Route {
       if (parts[1] === "settings") return { name: "admin-settings" };
       if (parts[1] === "announce") return { name: "admin-announce" };
       if (parts[1] === "disputes") return { name: "admin-disputes" };
+      if (parts[1] === "kyc") return { name: "admin-kyc" };
       return { name: "admin" };
     default:
       return { name: "home" };
@@ -162,6 +167,10 @@ export function routeToHash(route: Route): string {
       return "#/admin/announce";
     case "admin-disputes":
       return "#/admin/disputes";
+    case "admin-kyc":
+      return "#/admin/kyc";
+    case "kyc":
+      return "#/kyc";
     case "public-profile":
       return `#/u/${route.username}`;
     default:

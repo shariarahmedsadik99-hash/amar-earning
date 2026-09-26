@@ -61,6 +61,14 @@ export async function POST(req: NextRequest) {
       deadline,
     } = body;
 
+    // Clients must be KYC-verified to post jobs (admins bypass)
+    if (user.role !== "ADMIN" && user.kycStatus !== "VERIFIED") {
+      return NextResponse.json(
+        { error: "কাজ পোস্ট করতে KYC যাচাই প্রয়োজন। NID ও selfie জমা দিন।" },
+        { status: 403 }
+      );
+    }
+
     if (!title || !description || !instructions || !requiredProof || !categoryId || !deadline) {
       return NextResponse.json({ error: "সব ফিল্ড পূরণ করুন" }, { status: 400 });
     }

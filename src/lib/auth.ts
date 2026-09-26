@@ -114,6 +114,7 @@ export async function getCurrentUser() {
         role: true,
         activeRole: true,
         status: true,
+        kycStatus: true,
         referralCode: true,
         createdAt: true,
       },

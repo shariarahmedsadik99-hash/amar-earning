@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Calculator, Wallet, AlertCircle, ShieldCheck, PlusCircle } from "lucide-react";
+import { Loader2, Calculator, Wallet, AlertCircle, ShieldCheck, PlusCircle, Clock } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -145,6 +145,43 @@ export function PostJobPage() {
           </p>
           <Button onClick={() => navigate({ name: "available-jobs" } as Route)}>
             {lang === "bn" ? "কাজ খুঁজুন" : "Find Jobs"}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // Client must be KYC-verified to post jobs
+  if (user && user.activeRole === "CLIENT" && user.role !== "ADMIN" && user.kycStatus !== "VERIFIED") {
+    const isPending = user.kycStatus === "PENDING";
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-10 md:py-16">
+        <Card className="p-8 text-center">
+          <div className={`h-14 w-14 rounded-xl flex items-center justify-center mx-auto mb-4 ${isPending ? "bg-yellow-500/10" : "bg-red-500/10"}`}>
+            {isPending ? (
+              <Clock className="h-6 w-6 text-yellow-600" />
+            ) : (
+              <ShieldCheck className="h-6 w-6 text-red-600" />
+            )}
+          </div>
+          <h2 className="font-semibold text-lg mb-1">
+            {isPending
+              ? (lang === "bn" ? "KYC যাচাই চলছে" : "KYC verification pending")
+              : (lang === "bn" ? "KYC যাচাই প্রয়োজন" : "KYC verification required")}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+            {isPending
+              ? (lang === "bn"
+                  ? "আপনার NID ও selfie অ্যাডমিন পর্যালোচনা করছেন। যাচাই হওয়ার পর আপনি কাজ পোস্ট করতে পারবেন।"
+                  : "Your NID and selfie are under admin review. You can post jobs once verified.")
+              : (lang === "bn"
+                  ? "কাজ পোস্ট করতে KYC যাচাই প্রয়োজন। NID ও selfie জমা দিন।"
+                  : "KYC verification is required to post jobs. Submit your NID and selfie.")}
+          </p>
+          <Button onClick={() => navigate({ name: "kyc" } as Route)} className="gap-2">
+            {isPending
+              ? (lang === "bn" ? "KYC স্ট্যাটাস দেখুন" : "View KYC Status")
+              : (lang === "bn" ? "KYC যাচাই করুন" : "Verify KYC")}
           </Button>
         </Card>
       </div>

@@ -26,6 +26,7 @@ import { FaqPage } from "@/components/views/faq";
 import { ReferralsPage } from "@/components/views/referrals";
 import { MyBookmarksPage } from "@/components/views/my-bookmarks";
 import { MyReportsPage } from "@/components/views/my-reports";
+import { KycPage } from "@/components/views/kyc";
 import { LeaderboardPage } from "@/components/views/leaderboard";
 import { CategoriesPage } from "@/components/views/categories";
 import { JobFeedPage } from "@/components/views/job-feed";
@@ -48,6 +49,7 @@ export default function Home() {
       "my-submissions",
       "my-bookmarks",
       "my-reports",
+      "kyc",
       "wallet",
       "withdraw",
       "deposit",
@@ -56,7 +58,7 @@ export default function Home() {
       "notifications",
       "notification-settings",
     ];
-    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-disputes", "admin-deposits", "admin-payment", "admin-settings", "admin-announce"];
+    const adminRoutes = ["admin", "admin-users", "admin-jobs", "admin-submissions", "admin-withdrawals", "admin-categories", "admin-reports", "admin-disputes", "admin-kyc", "admin-deposits", "admin-payment", "admin-settings", "admin-announce"];
 
     if (!user && (protectedRoutes.includes(route.name) || adminRoutes.includes(route.name))) {
       navigate({ name: "login" });
@@ -104,6 +106,8 @@ export default function Home() {
         return <MyBookmarksPage />;
       case "my-reports":
         return <MyReportsPage />;
+      case "kyc":
+        return <KycPage />;
       case "wallet":
         return <WalletPage />;
       case "withdraw":
@@ -138,6 +142,7 @@ export default function Home() {
       case "admin-categories":
       case "admin-reports":
       case "admin-disputes":
+      case "admin-kyc":
       case "admin-deposits":
       case "admin-payment":
       case "admin-settings":

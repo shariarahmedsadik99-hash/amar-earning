@@ -76,6 +76,7 @@ import {
   Clock,
   FileText,
   FileCheck,
+  ShieldCheck,
 } from "lucide-react";
 import { formatMoney, toBn, formatDate, formatDateTime, timeAgo } from "@/lib/format";
 import { AdminCharts } from "@/components/shared/admin-charts";
@@ -229,6 +230,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: "admin-categories", labelBn: "ক্যাটাগরি", labelEn: "Categories", icon: FolderTree },
   { route: "admin-reports", labelBn: "রিপোর্ট", labelEn: "Reports", icon: Flag },
   { route: "admin-disputes", labelBn: "বিরোধ", labelEn: "Disputes", icon: ShieldAlert },
+  { route: "admin-kyc", labelBn: "KYC যাচাই", labelEn: "KYC Verify", icon: ShieldCheck },
   { route: "admin-announce", labelBn: "অ্যানাউন্সমেন্ট", labelEn: "Announce", icon: Megaphone },
   { route: "admin-settings", labelBn: "সেটিংস", labelEn: "Settings", icon: SettingsIcon },
 ];
@@ -3308,6 +3310,215 @@ function DisputesView() {
 }
 
 /* =========================================================================
+ * KycReviewView - review NID + selfie submissions
+ * =======================================================================*/
+type KycUser = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  kycStatus: string;
+  kycNidFront: string | null;
+  kycNidBack: string | null;
+  kycSelfie: string | null;
+  kycSubmittedAt: string | null;
+  kycReviewedAt: string | null;
+  kycRejectReason: string | null;
+  createdAt: string;
+};
+
+function KycReviewView() {
+  const lang = useLang();
+  const [users, setUsers] = useState<KycUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("PENDING");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/kyc?status=${filter}`, { cache: "no-store" });
+      const data = await res.json();
+      setUsers(data.users || []);
+    } catch {
+      toast.error(L(lang, "লোড ব্যর্থ", "Failed"));
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, lang]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const act = async (userId: string, action: "verify" | "reject") => {
+    const reason = action === "reject"
+      ? prompt(L(lang, "প্রত্যাখ্যানের কারণ:", "Reject reason:"))
+      : undefined;
+    if (action === "reject" && !reason) return;
+    setActionLoading(`${userId}-${action}`);
+    try {
+      const res = await fetch("/api/admin/kyc", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action, rejectReason: reason }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(L(lang, "সম্পন্ন ✓", "Done ✓"));
+        load();
+      } else {
+        toast.error(data.error || "Failed");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const STATUS_BADGE: Record<string, string> = {
+    PENDING: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+    VERIFIED: "bg-green-500/10 text-green-600 border-green-500/20",
+    REJECTED: "bg-red-500/10 text-red-600 border-red-500/20",
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title={L(lang, "KYC যাচাই", "KYC Verification")}
+        description={L(lang, "NID ও selfie পর্যালোচনা করুন", "Review NID and selfie submissions")}
+      />
+
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {[
+          { v: "PENDING", bn: "অপেক্ষমাণ", en: "Pending" },
+          { v: "VERIFIED", bn: "যাচাই হয়েছে", en: "Verified" },
+          { v: "REJECTED", bn: "প্রত্যাখ্যাত", en: "Rejected" },
+        ].map((s) => (
+          <Button key={s.v} size="sm" variant={filter === s.v ? "default" : "outline"} onClick={() => setFilter(s.v)}>
+            {L(lang, s.bn, s.en)}
+          </Button>
+        ))}
+      </div>
+
+      {loading ? (
+        <LoadingState />
+      ) : users.length === 0 ? (
+        <Card className="p-8 text-center text-muted-foreground">
+          {L(lang, "কোনো KYC অনুরোধ নেই", "No KYC requests")}
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {users.map((u) => {
+            const isExpanded = expanded === u.id;
+            return (
+              <Card key={u.id} className="p-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">{u.name}</p>
+                    <p className="text-xs text-muted-foreground">@{u.username} • {u.email}</p>
+                    {u.kycSubmittedAt && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {L(lang, "জমা:", "Submitted:")} {formatDateTime(u.kycSubmittedAt, lang)}
+                      </p>
+                    )}
+                  </div>
+                  <Badge className={`shrink-0 ${STATUS_BADGE[u.kycStatus] || ""}`}>
+                    {u.kycStatus === "PENDING" ? L(lang, "অপেক্ষমাণ", "Pending") :
+                     u.kycStatus === "VERIFIED" ? L(lang, "যাচাই হয়েছে", "Verified") :
+                     L(lang, "প্রত্যাখ্যাত", "Rejected")}
+                  </Badge>
+                </div>
+
+                {u.kycStatus === "REJECTED" && u.kycRejectReason && (
+                  <p className="text-xs text-red-600 mb-2">⚠️ {u.kycRejectReason}</p>
+                )}
+
+                {/* Toggle expand to see images */}
+                {u.kycStatus === "PENDING" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs mb-2"
+                    onClick={() => setExpanded(isExpanded ? null : u.id)}
+                  >
+                    {isExpanded ? L(lang, "ছবি লুকান", "Hide images") : L(lang, "ছবি দেখুন", "View images")}
+                  </Button>
+                )}
+
+                {/* Image previews */}
+                {(isExpanded || u.kycStatus !== "PENDING") && (
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {[
+                      { label: L(lang, "NID সামনে", "NID Front"), url: u.kycNidFront },
+                      { label: L(lang, "NID পেছনে", "NID Back"), url: u.kycNidBack },
+                      { label: L(lang, "Selfie", "Selfie"), url: u.kycSelfie },
+                    ].map((img, i) => (
+                      <div key={i}>
+                        <p className="text-[10px] text-muted-foreground mb-1">{img.label}</p>
+                        {img.url ? (
+                          <a href={img.url} target="_blank" rel="noopener noreferrer">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img.url}
+                              alt={img.label}
+                              className="h-24 w-full object-cover rounded-lg border hover:ring-2 hover:ring-primary transition-all"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                            />
+                          </a>
+                        ) : (
+                          <div className="h-24 w-full rounded-lg border bg-muted/30 flex items-center justify-center text-[10px] text-muted-foreground">
+                            —
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {u.kycStatus === "PENDING" && (
+                  <div className="flex gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs flex-1"
+                      disabled={actionLoading === `${u.id}-verify`}
+                      onClick={() => act(u.id, "verify")}
+                    >
+                      {actionLoading === `${u.id}-verify` ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                      )}
+                      {L(lang, "যাচাই করুন", "Verify")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs flex-1 text-destructive"
+                      disabled={actionLoading === `${u.id}-reject`}
+                      onClick={() => act(u.id, "reject")}
+                    >
+                      {actionLoading === `${u.id}-reject` ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <XCircle className="h-3 w-3 mr-1" />
+                      )}
+                      {L(lang, "প্রত্যাখ্যান", "Reject")}
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
  * Main AdminPage
  * =======================================================================*/
 
@@ -3344,6 +3555,8 @@ export function AdminPage({ route }: { route: Route }) {
         return <ReportsView />;
       case "admin-disputes":
         return <DisputesView />;
+      case "admin-kyc":
+        return <KycReviewView />;
       case "admin-payment":
         return <PaymentGatewayView />;
       case "admin-deposits":
