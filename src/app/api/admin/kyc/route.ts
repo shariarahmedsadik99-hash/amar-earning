@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
         username: true,
         email: true,
         kycStatus: true,
+        kycDocType: true,
         kycNidFront: true,
         kycNidBack: true,
         kycSelfie: true,

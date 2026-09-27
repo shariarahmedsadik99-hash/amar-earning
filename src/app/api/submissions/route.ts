@@ -71,6 +71,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "লগইন করুন" }, { status: 401 });
     }
 
+    // Freelancers must be KYC-verified to submit work
+    if (user.role !== "ADMIN" && user.kycStatus !== "VERIFIED") {
+      return NextResponse.json(
+        { error: "কাজ করতে KYC যাচাই প্রয়োজন। NID/লাইসেন্স/পাসপোর্ট ও selfie জমা দিন।" },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { jobId, textProof, imageProof, urlProof } = body;
 

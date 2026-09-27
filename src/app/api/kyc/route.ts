@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
+const VALID_DOC_TYPES = ["NID", "LICENSE", "PASSPORT"];
+
 // GET - current user's KYC status
 export async function GET() {
   try {
@@ -14,6 +16,7 @@ export async function GET() {
       where: { id: user.id },
       select: {
         kycStatus: true,
+        kycDocType: true,
         kycNidFront: true,
         kycNidBack: true,
         kycSelfie: true,
@@ -30,7 +33,8 @@ export async function GET() {
   }
 }
 
-// POST - submit KYC (NID front, NID back, selfie URLs from R2)
+// POST - submit KYC with document type selection
+// Body: { docType: "NID"|"LICENSE"|"PASSPORT", docFront, docBack?, selfie }
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -39,11 +43,24 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { nidFront, nidBack, selfie } = body;
+    const { docType, docFront, docBack, selfie } = body;
 
-    if (!nidFront || !nidBack || !selfie) {
+    if (!VALID_DOC_TYPES.includes(docType)) {
       return NextResponse.json(
-        { error: "NID front, NID back, এবং selfie সব আবশ্যক" },
+        { error: "ডকুমেন্ট টাইপ সঠিক নয় (NID, LICENSE, বা PASSPORT)" },
+        { status: 400 }
+      );
+    }
+    if (!docFront || !selfie) {
+      return NextResponse.json(
+        { error: "ডকুমেন্ট ছবি এবং selfie আবশ্যক" },
+        { status: 400 }
+      );
+    }
+    // NID requires back image; LICENSE and PASSPORT only need front
+    if (docType === "NID" && !docBack) {
+      return NextResponse.json(
+        { error: "NID এর জন্য সামনে ও পেছনে উভয় ছবি আবশ্যক" },
         { status: 400 }
       );
     }
@@ -59,13 +76,14 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    // If pending, allow re-submit (overwrites previous submission)
+
     await db.user.update({
       where: { id: user.id },
       data: {
         kycStatus: "PENDING",
-        kycNidFront: nidFront,
-        kycNidBack: nidBack,
+        kycDocType: docType,
+        kycNidFront: docFront,
+        kycNidBack: docType === "NID" ? (docBack || null) : null,
         kycSelfie: selfie,
         kycSubmittedAt: new Date(),
         kycReviewedAt: null,
@@ -74,13 +92,18 @@ export async function POST(req: NextRequest) {
     });
 
     // Notify admins
+    const docTypeLabel: Record<string, string> = {
+      NID: "NID",
+      LICENSE: "ড্রাইভিং লাইসেন্স",
+      PASSPORT: "পাসপোর্ট",
+    };
     const admins = await db.user.findMany({ where: { role: "ADMIN" } });
     for (const admin of admins) {
       await db.notification.create({
         data: {
           userId: admin.id,
           title: "নতুন KYC যাচাইয়ের অনুরোধ",
-          message: `${user.name} (@${user.username}) NID ও selfie জমা দিয়েছেন। যাচাই করুন।`,
+          message: `${user.name} (@${user.username}) ${docTypeLabel[docType] || docType} ও selfie জমা দিয়েছেন। যাচাই করুন।`,
           type: "ANNOUNCEMENT",
         },
       });

@@ -3318,6 +3318,7 @@ type KycUser = {
   username: string;
   email: string;
   kycStatus: string;
+  kycDocType: string | null;
   kycNidFront: string | null;
   kycNidBack: string | null;
   kycSelfie: string | null;
@@ -3419,6 +3420,13 @@ function KycReviewView() {
                   <div className="min-w-0">
                     <p className="font-semibold text-sm">{u.name}</p>
                     <p className="text-xs text-muted-foreground">@{u.username} • {u.email}</p>
+                    {u.kycDocType && (
+                      <Badge variant="outline" className="mt-1 text-primary border-primary/30 text-[10px]">
+                        {u.kycDocType === "NID" ? L(lang, "NID", "NID") :
+                         u.kycDocType === "LICENSE" ? L(lang, "লাইসেন্স", "License") :
+                         L(lang, "পাসপোর্ট", "Passport")}
+                      </Badge>
+                    )}
                     {u.kycSubmittedAt && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         {L(lang, "জমা:", "Submitted:")} {formatDateTime(u.kycSubmittedAt, lang)}
@@ -3448,12 +3456,12 @@ function KycReviewView() {
                   </Button>
                 )}
 
-                {/* Image previews */}
+                {/* Image previews — docType-aware */}
                 {(isExpanded || u.kycStatus !== "PENDING") && (
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className={u.kycDocType === "NID" ? "grid grid-cols-3 gap-2 mb-3" : "grid grid-cols-2 gap-2 mb-3"}>
                     {[
-                      { label: L(lang, "NID সামনে", "NID Front"), url: u.kycNidFront },
-                      { label: L(lang, "NID পেছনে", "NID Back"), url: u.kycNidBack },
+                      { label: u.kycDocType === "NID" ? L(lang, "NID সামনে", "NID Front") : u.kycDocType === "LICENSE" ? L(lang, "লাইসেন্স", "License") : L(lang, "পাসপোর্ট", "Passport"), url: u.kycNidFront },
+                      ...(u.kycDocType === "NID" ? [{ label: L(lang, "NID পেছনে", "NID Back"), url: u.kycNidBack }] : []),
                       { label: L(lang, "Selfie", "Selfie"), url: u.kycSelfie },
                     ].map((img, i) => (
                       <div key={i}>
