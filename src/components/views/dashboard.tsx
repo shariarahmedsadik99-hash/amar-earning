@@ -57,7 +57,6 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
 
   const freelancerMenu = [
     { name: "dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
-    { name: "kyc", label: lang === "bn" ? "KYC যাচাই" : "KYC Verify", icon: ShieldCheck },
     { name: "available-jobs", label: t.nav.availableJobs, icon: Briefcase },
     { name: "my-submissions", label: t.nav.mySubmissions, icon: ClipboardList },
     { name: "my-bookmarks", label: t.bookmarks.title, icon: Bookmark },
@@ -70,7 +69,6 @@ export function DashboardLayout({ children, active }: { children: ReactNode; act
 
   const clientMenu = [
     { name: "dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
-    { name: "kyc", label: lang === "bn" ? "KYC যাচাই" : "KYC Verify", icon: ShieldCheck },
     { name: "post-job", label: t.nav.postJob, icon: PlusCircle },
     { name: "my-jobs", label: t.nav.myJobs, icon: Briefcase },
     { name: "wallet", label: t.nav.wallet, icon: WalletIcon },
@@ -252,41 +250,6 @@ export function DashboardPage() {
         </div>
         <RoleSwitcher />
       </div>
-
-      {/* KYC prompt banner — for unverified users */}
-      {user && user.role !== "ADMIN" && user.kycStatus !== "VERIFIED" && (
-        <Card className={cn("mt-4 mb-4 p-4 border-l-4", user.kycStatus === "PENDING" ? "border-yellow-500/40 bg-yellow-500/5" : "border-red-500/40 bg-red-500/5")}>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", user.kycStatus === "PENDING" ? "bg-yellow-500/10" : "bg-red-500/10")}>
-              {user.kycStatus === "PENDING" ? (
-                <Clock className="h-5 w-5 text-yellow-600" />
-              ) : (
-                <ShieldCheck className="h-5 w-5 text-red-600" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">
-                {user.kycStatus === "PENDING"
-                  ? (lang === "bn" ? "KYC যাচাই চলছে" : "KYC verification pending")
-                  : user.kycStatus === "REJECTED"
-                  ? (lang === "bn" ? "KYC প্রত্যাখ্যাত — আবার জমা দিন" : "KYC rejected — re-submit")
-                  : (lang === "bn" ? "KYC যাচাই প্রয়োজন!" : "KYC verification required!")}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {user.kycStatus === "PENDING"
-                  ? (lang === "bn" ? "আপনার ডকুমেন্ট অ্যাডমিন পর্যালোচনা করছেন।" : "Your document is under admin review.")
-                  : (lang === "bn" ? "কাজ করতে বা কাজ পোস্ট করতে KYC যাচাই প্রয়োজন।" : "KYC verification is required to work or post jobs.")}
-              </p>
-            </div>
-            <Button size="sm" onClick={() => navigate({ name: "kyc" } as Route)} className="gap-2">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {user.kycStatus === "PENDING"
-                ? (lang === "bn" ? "স্ট্যাটাস দেখুন" : "View Status")
-                : (lang === "bn" ? "যাচাই করুন" : "Verify Now")}
-            </Button>
-          </div>
-        </Card>
-      )}
 
       <StatsCards stats={stats} />
 

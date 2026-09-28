@@ -35,6 +35,7 @@ import {
   Bookmark,
   PlusCircle,
   XCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { formatMoney, formatDate, toBn } from "@/lib/format";
 
@@ -428,6 +429,27 @@ export function JobDetailPage({ jobId }: { jobId: string }) {
               </Button>
             </div>
           </form>
+        </Card>
+      ) : user && user.role !== "ADMIN" && user.kycStatus !== "VERIFIED" ? (
+        /* KYC gate — freelancer can't start work without verification */
+        <Card className="p-5 text-center border-l-4 border-red-500/40 bg-red-500/5">
+          <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto mb-3">
+            <ShieldCheck className="h-6 w-6 text-red-600" />
+          </div>
+          <h3 className="font-semibold text-sm mb-1">
+            {lang === "bn" ? "KYC যাচাই প্রয়োজন" : "KYC Verification Required"}
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3 max-w-sm mx-auto">
+            {user.kycStatus === "PENDING"
+              ? (lang === "bn" ? "আপনার ডকুমেন্ট অ্যাডমিন পর্যালোচনা করছেন। যাচাই হওয়ার পর কাজ শুরু করতে পারবেন।" : "Your document is under admin review. You can start work once verified.")
+              : (lang === "bn" ? "কাজ শুরু করতে KYC যাচাই প্রয়োজন। NID/লাইসেন্স/পাসপোর্ট ও selfie জমা দিন।" : "KYC verification is required to start working. Submit your NID/License/Passport and selfie.")}
+          </p>
+          <Button size="sm" onClick={() => navigate({ name: "kyc" } as Route)} className="gap-2">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {user.kycStatus === "PENDING"
+              ? (lang === "bn" ? "স্ট্যাটাস দেখুন" : "View Status")
+              : (lang === "bn" ? "KYC যাচাই করুন" : "Verify KYC")}
+          </Button>
         </Card>
       ) : (
         <Button size="lg" className="w-full h-12 text-base" onClick={() => setShowProof(true)}>
