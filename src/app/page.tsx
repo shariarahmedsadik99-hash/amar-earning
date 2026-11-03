@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
 import { BottomNav } from "@/components/shared/bottom-nav";
+import { AppDownloadPopup } from "@/components/shared/app-download-popup";
 import { useRouter } from "@/lib/router";
 import { useAuth } from "@/lib/auth-context";
 import { HomePage } from "@/components/views/home";
@@ -165,6 +166,7 @@ export default function Home() {
       </main>
       {!isAuthPage && !isAdminPage && <Footer />}
       <BottomNav />
+      {!isAuthPage && !isAdminPage && <AppDownloadPopup />}
     </div>
   );
 }
